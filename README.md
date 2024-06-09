@@ -1,0 +1,81 @@
+<div align="center">
+  <img src="assets/logo.png"/>
+  <h2> TUI for managing wifi </h2>
+</div>
+
+## 💡 Prerequisites
+
+A Linux based OS with [iwd](https://iwd.wiki.kernel.org/) and [ConnMan](https://git.kernel.org/pub/scm/network/connman/connman.git/about/) installed.
+
+## 🚀 Installation
+
+### 📥 Binary release
+
+You can download the pre-built binaries from the release page [release page](https://github.com/pythops/impala/releases)
+
+### 📦 crates.io
+
+You can install `impala` from [crates.io](https://crates.io/crates/impala)
+
+```shell
+cargo install impala
+```
+
+### ⚒️ Build from source
+
+Run the following command:
+
+```shell
+git clone https://github.com/pythops/impala
+cd impala
+cargo build --release
+```
+
+This will produce an executable file at `target/release/impala` that you can copy to a directory in your `$PATH`.
+
+## 🪄 Usage
+
+### Global
+
+`Tab`: Switch between different sections.
+
+`j` or `Down` : Scroll down.
+
+`k` or `Up`: Scroll up.
+
+`s`: Start scanning.
+
+`Space`: Connect/Disconnect the network.
+
+`?`: Show help.
+
+`esc`: Dismiss the help pop-up.
+
+`q` or `ctrl+c`: Quit the app.
+
+### Device
+
+`i`: Show device information.
+
+### Known Networks
+
+`d`: Remove the network from the known networks list.
+
+## Custom keybindings
+
+Keybindings can be customized in the config file `$HOME/.config/impala/config.toml`
+
+```toml
+toggle_scanning = "s"
+toggle_connect = " "
+
+[device]
+infos = "i"
+
+[known_network]
+remove = "d"
+```
+
+## ⚖️ License
+
+GPLv3
