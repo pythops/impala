@@ -1,0 +1,42 @@
+---
+name: Release
+on:
+  push:
+    tags:
+      - v[0-9]+.*
+jobs:
+  build:
+    permissions:
+      contents: write
+    continue-on-error: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install the dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y musl-tools podman binutils-aarch64-linux-gnu musl-tools
+          cargo binstall --no-confirm cross
+
+      - name: Build for x86_64
+        run: |
+          CROSS_CONTAINER_ENGINE=podman cross build --target=x86_64-unknown-linux-gnu --release
+          cp target/x86_64-unknown-linux-gnu/release/impala impala-x86_64-unknown-linux-gnu
+          strip impala-x86_64-unknown-linux-gnu
+
+      - name: Build for arm64
+        run: |
+          CROSS_CONTAINER_ENGINE=podman cross build --target=aarch64-unknown-linux-gnu --release
+          cp target/aarch64-unknown-linux-gnu/release/impala impala-aarch64-unknown-linux-gnu
+          aarch64-linux-gnu-strip impala-aarch64-unknown-linux-gnu
+
+      - name: Upload Binary
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "impala*"
+          body: |
+            [Release.md](${{ github.server_url }}/${{ github.repository }}/blob/main/Release.md)
