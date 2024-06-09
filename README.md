@@ -1,6 +1,8 @@
 <div align="center">
   <img src="assets/logo.png"/>
   <h2> TUI for managing wifi </h2>
+  <br>
+  <img src="https://github.com/pythops/impala/assets/57548585/3cfdf034-9b00-41ba-85ac-a079b5cf6b65"/>
 </div>
 
 ## 💡 Prerequisites
