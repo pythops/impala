@@ -1,10 +1,10 @@
 [package]
 name = "impala"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["pythops <contact@pythops.com>"]
 license = "GPL-3.0"
 edition = "2021"
-description = "TUI for managing wifi."
+description = "TUI for managing wifi"
 readme = "Readme.md"
 homepage = "https://github.com/pythops/impala"
 repository = "https://github.com/pythops/impala"
