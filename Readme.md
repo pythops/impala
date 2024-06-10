@@ -6,7 +6,7 @@
 
 ## 💡 Prerequisites
 
-A Linux based OS with [iwd](https://iwd.wiki.kernel.org/) and [ConnMan](https://git.kernel.org/pub/scm/network/connman/connman.git/about/) installed.
+A Linux based OS with [iwd](https://iwd.wiki.kernel.org/) installed.
 
 ## 🚀 Installation
 
