@@ -1,3 +1,4 @@
+use chrono::{DateTime, FixedOffset};
 use iwdrs::known_netowk::KnownNetwork as iwdKnownNetwork;
 
 use anyhow::Result;
@@ -16,7 +17,7 @@ pub struct KnownNetwork {
     pub netowrk_type: String,
     pub is_autoconnect: bool,
     pub is_hidden: bool,
-    pub last_connected: String,
+    pub last_connected: Option<DateTime<FixedOffset>>,
 }
 
 impl KnownNetwork {
@@ -25,7 +26,10 @@ impl KnownNetwork {
         let netowrk_type = n.network_type().await?;
         let is_autoconnect = n.get_autoconnect().await?;
         let is_hidden = n.hidden().await?;
-        let last_connected = n.last_connected_time().await?;
+        let last_connected = match n.last_connected_time().await {
+            Ok(v) => DateTime::parse_from_rfc3339(&v).ok(),
+            Err(_) => None,
+        };
 
         Ok(Self {
             n,

@@ -23,6 +23,7 @@ clap = { version = "4", features = ["derive", "cargo"] }
 terminal-light = "1"
 anyhow = "1"
 iwdrs = "0.1"
+chrono = "0.4"
 
 [profile.release]
 strip = true

@@ -268,33 +268,49 @@ impl App {
 
                 if let Some(connected_net) = &self.station.connected_network {
                     if connected_net.name == net.name {
-                        Row::new(vec![
+                        let mut row = vec![
                             Line::from("󰸞"),
                             Line::from(net.name.clone()),
                             Line::from(net.netowrk_type.clone()).centered(),
                             Line::from(net.is_hidden.to_string()),
                             Line::from(net.is_autoconnect.to_string()).centered(),
-                            Line::from(net.last_connected.clone()),
-                        ])
+                        ];
+                        if let Some(date) = net.last_connected {
+                            let formatted_date = date.format("%Y-%m-%d %H:%M").to_string();
+                            row.push(Line::from(formatted_date));
+                        }
+
+                        Row::new(row)
                     } else {
-                        Row::new(vec![
+                        let mut row = vec![
                             Line::from(""),
                             Line::from(net.name.clone()),
                             Line::from(net.netowrk_type.clone()).centered(),
                             Line::from(net.is_hidden.to_string()),
                             Line::from(net.is_autoconnect.to_string()).centered(),
-                            Line::from(net.last_connected.clone()),
-                        ])
+                        ];
+                        if let Some(date) = net.last_connected {
+                            let formatted_date = date.format("%Y-%m-%d %H:%M").to_string();
+                            row.push(Line::from(formatted_date));
+                        }
+
+                        Row::new(row)
                     }
                 } else {
-                    Row::new(vec![
+                    let mut row = vec![
                         Line::from(""),
                         Line::from(net.name.clone()),
                         Line::from(net.netowrk_type.clone()).centered(),
                         Line::from(net.is_hidden.to_string()),
-                        Line::from(net.is_autoconnect.to_string()).centered(),
-                        Line::from(net.last_connected.clone()),
-                    ])
+                        Line::from(net.is_autoconnect.to_string()),
+                    ];
+
+                    if let Some(date) = net.last_connected {
+                        let formatted_date = date.format("%Y-%m-%d %H:%M").to_string();
+                        row.push(Line::from(formatted_date));
+                    }
+
+                    Row::new(row)
                 }
             })
             .collect();
@@ -305,7 +321,7 @@ impl App {
             Constraint::Length(8),
             Constraint::Length(6),
             Constraint::Length(12),
-            Constraint::Length(15),
+            Constraint::Fill(1),
         ];
 
         let known_networks_table = Table::new(rows, widths)
