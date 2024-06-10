@@ -25,16 +25,16 @@ pub struct Device {
 pub struct Adapter {
     pub a: iwdAdapter,
     pub name: String,
-    pub model: String,
-    pub vendor: String,
+    pub model: Option<String>,
+    pub vendor: Option<String>,
     pub supported_modes: Vec<String>,
 }
 
 impl Adapter {
     pub async fn new(a: iwdAdapter) -> Result<Self> {
         let name = a.name().await?;
-        let model = a.model().await?;
-        let vendor = a.vendor().await?;
+        let model = a.model().await.ok();
+        let vendor = a.vendor().await.ok();
         let supported_modes = a.supported_modes().await?;
         Ok(Self {
             a,
@@ -99,7 +99,7 @@ impl Device {
             )
             .split(popup_layout[1])[1];
 
-        let rows = vec![
+        let mut rows = vec![
             Row::new(vec![
                 Cell::from("name").style(Style::default().bold().yellow()),
                 Cell::from(self.adapter.name.clone()),
@@ -109,18 +109,24 @@ impl Device {
                 Cell::from(self.address.clone()),
             ]),
             Row::new(vec![
-                Cell::from("model").style(Style::default().bold().yellow()),
-                Cell::from(self.adapter.model.clone()),
-            ]),
-            Row::new(vec![
-                Cell::from("vendor").style(Style::default().bold().yellow()),
-                Cell::from(self.adapter.vendor.clone()),
-            ]),
-            Row::new(vec![
                 Cell::from("Supported modes").style(Style::default().bold().yellow()),
                 Cell::from(self.adapter.supported_modes.clone().join(" ")),
             ]),
         ];
+
+        if let Some(model) = &self.adapter.model {
+            rows.push(Row::new(vec![
+                Cell::from("model").style(Style::default().bold().yellow()),
+                Cell::from(model.clone()),
+            ]))
+        }
+
+        if let Some(vendor) = &self.adapter.vendor {
+            rows.push(Row::new(vec![
+                Cell::from("vendor").style(Style::default().bold().yellow()),
+                Cell::from(vendor.clone()),
+            ]))
+        }
 
         let widths = [Constraint::Length(20), Constraint::Fill(1)];
 
