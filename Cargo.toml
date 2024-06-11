@@ -24,6 +24,9 @@ terminal-light = "1"
 anyhow = "1"
 iwdrs = "0.1"
 chrono = "0.4"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-error = "0.2"
 
 [profile.release]
 strip = true
