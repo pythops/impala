@@ -1,8 +1,11 @@
 use std::{
     error,
+    process::exit,
     sync::{atomic::AtomicBool, Arc},
 };
 use tui_input::Input;
+
+use tracing::error;
 
 use async_channel::{Receiver, Sender};
 use futures::FutureExt;
@@ -70,7 +73,16 @@ pub async fn request_confirmation(
 
 impl App {
     pub async fn new(config: Arc<Config>) -> AppResult<Self> {
-        let session = Arc::new(iwdrs::session::Session::new().await?);
+        let session = {
+            match iwdrs::session::Session::new().await {
+                Ok(session) => Arc::new(session),
+                Err(e) => {
+                    error!("Can not access the iwd service");
+                    error!("{}", e.to_string());
+                    exit(1);
+                }
+            }
+        };
 
         let (s, r) = async_channel::unbounded();
 

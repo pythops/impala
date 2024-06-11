@@ -3,6 +3,7 @@ use impala::app::{App, AppResult};
 use impala::config::Config;
 use impala::event::{Event, EventHandler};
 use impala::handler::handle_key_events;
+use impala::tracing::Tracing;
 use impala::tui::Tui;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
@@ -11,6 +12,7 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
+    Tracing::init().unwrap();
     Command::new("impala")
         .version(crate_version!())
         .get_matches();
