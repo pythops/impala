@@ -8,10 +8,10 @@ use crate::auth::Auth;
 
 pub fn render(app: &mut App, frame: &mut Frame) {
     // App
-    app.render(frame);
+    app.adapter.render(frame, app.color_mode, app.focused_block);
 
-    if app.focused_block == FocusedBlock::DeviceInfos {
-        app.device.render(frame, app.color_mode);
+    if app.focused_block == FocusedBlock::AdapterInfos {
+        app.adapter.render_adapter(frame, app.color_mode);
     }
 
     // Popup
