@@ -313,13 +313,7 @@ impl Adapter {
         };
 
         let ap_is_scanning = match self.device.access_point.as_ref() {
-            Some(ap) => {
-                if let Some(is_scanning) = ap.is_scanning {
-                    is_scanning
-                } else {
-                    false
-                }
-            }
+            Some(ap) => ap.is_scanning.unwrap_or_default(),
             None => false,
         };
 
