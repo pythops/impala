@@ -39,7 +39,7 @@ pub async fn handle_key_events(
         }
 
         // Start Scan
-        KeyCode::Char(c) if c == config.start_scanning => {
+        KeyCode::Char(c) if c == config.station.start_scanning => {
             match app.adapter.device.mode.as_str() {
                 "station" => {
                     app.adapter
@@ -96,7 +96,6 @@ pub async fn handle_key_events(
                     }
                 },
 
-                //TODO:
                 FocusedBlock::Device => match key_event.code {
                     KeyCode::Char(c) if c == config.device.infos => {
                         app.focused_block = FocusedBlock::AdapterInfos;
@@ -109,7 +108,10 @@ pub async fn handle_key_events(
                         "station" => {
                             match key_event.code {
                                 // Remove a known network
-                                KeyCode::Char(c) if c == config.known_network.remove => {
+                                KeyCode::Char(c)
+                                    if c == config.station.known_network.remove
+                                        && app.focused_block == FocusedBlock::KnownNetworks =>
+                                {
                                     if let Some(net_index) = app
                                         .adapter
                                         .device
@@ -133,7 +135,7 @@ pub async fn handle_key_events(
                                 }
 
                                 // Connect/Disconnect
-                                KeyCode::Char(c) if c == config.toggle_connect => match app
+                                KeyCode::Char(c) if c == config.station.toggle_connect => match app
                                     .focused_block
                                 {
                                     FocusedBlock::NewNetworks => {
@@ -285,7 +287,6 @@ pub async fn handle_key_events(
 
                                 // Scroll down
                                 KeyCode::Char('j') | KeyCode::Down => match app.focused_block {
-                                    FocusedBlock::Device => {}
                                     FocusedBlock::KnownNetworks => {
                                         if !app
                                             .adapter
@@ -388,7 +389,6 @@ pub async fn handle_key_events(
                                 },
 
                                 KeyCode::Char('k') | KeyCode::Up => match app.focused_block {
-                                    FocusedBlock::Device => {}
                                     FocusedBlock::KnownNetworks => {
                                         if !app
                                             .adapter

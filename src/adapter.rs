@@ -535,7 +535,6 @@ impl Adapter {
         // Station
 
         let row = Row::new(vec![
-            self.device.name.clone(),
             self.device
                 .station
                 .as_ref()
@@ -552,17 +551,12 @@ impl Adapter {
                 .to_string(),
         ]);
 
-        let widths = [
-            Constraint::Length(8),
-            Constraint::Length(12),
-            Constraint::Length(10),
-        ];
+        let widths = [Constraint::Length(12), Constraint::Length(10)];
 
         let station_table = Table::new(vec![row], widths)
             .header({
                 if focused_block == FocusedBlock::Station {
                     Row::new(vec![
-                        Cell::from("Name").style(Style::default().fg(Color::Yellow)),
                         Cell::from("State").style(Style::default().fg(Color::Yellow)),
                         Cell::from("Scanning").style(Style::default().fg(Color::Yellow)),
                     ])
@@ -570,10 +564,6 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
                         Cell::from("State").style(match color_mode {
                             ColorMode::Dark => Style::default().fg(Color::White),
                             ColorMode::Light => Style::default().fg(Color::Black),

@@ -5,41 +5,14 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
-    #[serde(default = "default_start_scanning")]
-    pub start_scanning: char,
-
-    #[serde(default = "default_toggle_connect")]
-    pub toggle_connect: char,
-
-    #[serde(default)]
-    pub known_network: KnownNetwork,
-
     #[serde(default)]
     pub device: Device,
-}
 
-fn default_start_scanning() -> char {
-    's'
-}
+    #[serde(default)]
+    pub station: Station,
 
-fn default_toggle_connect() -> char {
-    ' '
-}
-
-#[derive(Deserialize, Debug)]
-pub struct KnownNetwork {
-    #[serde(default = "default_remove_known_network")]
-    pub remove: char,
-}
-
-impl Default for KnownNetwork {
-    fn default() -> Self {
-        Self { remove: 'd' }
-    }
-}
-
-fn default_remove_known_network() -> char {
-    'd'
+    #[serde(default)]
+    pub ap: AccessPoint,
 }
 
 // Device
@@ -57,6 +30,70 @@ impl Default for Device {
 
 fn default_show_device_infos() -> char {
     'i'
+}
+
+// Station
+#[derive(Deserialize, Debug)]
+pub struct Station {
+    #[serde(default = "default_station_start_scanning")]
+    pub start_scanning: char,
+
+    #[serde(default = "default_station_toggle_connect")]
+    pub toggle_connect: char,
+
+    #[serde(default)]
+    pub known_network: KnownNetwork,
+}
+
+impl Default for Station {
+    fn default() -> Self {
+        Self {
+            start_scanning: 's',
+            toggle_connect: ' ',
+            known_network: KnownNetwork::default(),
+        }
+    }
+}
+
+fn default_station_start_scanning() -> char {
+    's'
+}
+
+fn default_station_toggle_connect() -> char {
+    ' '
+}
+
+#[derive(Deserialize, Debug)]
+pub struct KnownNetwork {
+    #[serde(default = "default_station_remove_known_network")]
+    pub remove: char,
+}
+
+impl Default for KnownNetwork {
+    fn default() -> Self {
+        Self { remove: 'd' }
+    }
+}
+
+fn default_station_remove_known_network() -> char {
+    'd'
+}
+
+// Access Point
+#[derive(Deserialize, Debug)]
+pub struct AccessPoint {
+    #[serde(default = "default_ap_start")]
+    pub start: char,
+}
+
+impl Default for AccessPoint {
+    fn default() -> Self {
+        Self { start: 'n' }
+    }
+}
+
+fn default_ap_start() -> char {
+    'n'
 }
 
 impl Config {
