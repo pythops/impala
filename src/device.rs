@@ -5,7 +5,7 @@ use iwdrs::{device::Device as iwdDevice, session::Session};
 
 use tracing::error;
 
-use crate::station::Station;
+use crate::{access_point::AccessPoint, station::Station};
 
 #[derive(Debug, Clone)]
 pub struct Device {
@@ -16,11 +16,12 @@ pub struct Device {
     pub mode: String,
     pub is_powered: bool,
     pub station: Option<Station>,
+    pub access_point: Option<AccessPoint>,
 }
 
 impl Device {
     pub async fn new(session: Arc<Session>) -> Result<Self> {
-        let device = session.device().context("Not device found")?;
+        let device = session.device().context("No device found")?;
 
         let name = device.name().await?;
         let address = device.address().await?;
@@ -38,6 +39,17 @@ impl Device {
             None => None,
         };
 
+        let access_point = match session.access_point() {
+            Some(iwdrs_access_point) => match AccessPoint::new(iwdrs_access_point).await {
+                Ok(v) => Some(v),
+                Err(e) => {
+                    error!("{}", e.to_string());
+                    None
+                }
+            },
+            None => None,
+        };
+
         Ok(Self {
             session,
             device,
@@ -46,38 +58,70 @@ impl Device {
             mode,
             is_powered,
             station,
+            access_point,
         })
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
-        let mode = self.device.get_mode().await?;
-        let is_powered = self.device.is_powered().await?;
-        self.mode = mode;
+        self.is_powered = self.device.is_powered().await?;
+        let current_mode = self.device.get_mode().await?;
 
-        if self.station.is_none() {
-            self.station = match self.session.station() {
-                Some(iwdrs_station) => match Station::new(iwdrs_station).await {
-                    Ok(v) => Some(v),
-                    Err(e) => {
-                        error!("{}", e.to_string());
-                        None
-                    }
-                },
-                None => None,
-            };
-        }
-
-        match self.mode.as_str() {
+        match current_mode.as_str() {
             "station" => {
-                if self.station.is_some() {
-                    self.station.as_mut().unwrap().refresh().await?;
+                match self.mode.as_str() {
+                    "station" => {
+                        // refresh exisiting station
+                        if let Some(station) = &mut self.station {
+                            station.refresh().await?;
+                        }
+                    }
+                    "ap" => {
+                        // Switch mode from ap to station
+                        self.access_point = None;
+                        self.station = match self.session.station() {
+                            Some(iwdrs_station) => match Station::new(iwdrs_station).await {
+                                Ok(v) => Some(v),
+                                Err(e) => {
+                                    error!("{}", e.to_string());
+                                    None
+                                }
+                            },
+                            None => None,
+                        };
+                    }
+                    _ => {}
                 }
             }
-            "access_point" => {}
+            "ap" => {
+                match self.mode.as_str() {
+                    "station" => {
+                        self.station = None;
+                        self.access_point = match self.session.access_point() {
+                            Some(iwdrs_access_point) => {
+                                match AccessPoint::new(iwdrs_access_point).await {
+                                    Ok(v) => Some(v),
+                                    Err(e) => {
+                                        error!("{}", e.to_string());
+                                        None
+                                    }
+                                }
+                            }
+                            None => None,
+                        };
+                    }
+                    "ap" => {
+                        // Switch mode
+                        if self.access_point.is_some() {
+                            self.access_point.as_mut().unwrap().refresh().await?;
+                        }
+                    }
+                    _ => {}
+                }
+            }
             _ => {}
         }
 
-        self.is_powered = is_powered;
+        self.mode = current_mode;
         Ok(())
     }
 }

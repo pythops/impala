@@ -58,6 +58,9 @@ pub async fn handle_key_events(
         KeyCode::Tab => match app.adapter.device.mode.as_str() {
             "station" => match app.focused_block {
                 FocusedBlock::Device => {
+                    app.focused_block = FocusedBlock::Station;
+                }
+                FocusedBlock::Station => {
                     app.focused_block = FocusedBlock::KnownNetworks;
                 }
                 FocusedBlock::KnownNetworks => {
@@ -68,7 +71,15 @@ pub async fn handle_key_events(
                 }
                 _ => {}
             },
-            "access_point" => {}
+            "ap" => match app.focused_block {
+                FocusedBlock::Device => {
+                    app.focused_block = FocusedBlock::AccessPoint;
+                }
+                FocusedBlock::AccessPoint => {
+                    app.focused_block = FocusedBlock::Device;
+                }
+                _ => {}
+            },
             _ => {}
         },
 

@@ -18,6 +18,8 @@ pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FocusedBlock {
     Device,
+    Station,
+    AccessPoint,
     KnownNetworks,
     NewNetworks,
     Help,
@@ -123,7 +125,7 @@ impl App {
         self.notifications.retain(|n| n.ttl > 0);
         self.notifications.iter_mut().for_each(|n| n.ttl -= 1);
 
-        self.adapter.device.refresh().await?;
+        self.adapter.refresh().await?;
 
         Ok(())
     }
