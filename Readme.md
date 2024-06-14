@@ -52,6 +52,8 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 `k` or `Up`: Scroll up.
 
+`r`: Switch adapter mode.
+
 `?`: Show help.
 
 `esc`: Dismiss the help pop-up.

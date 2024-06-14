@@ -5,6 +5,9 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
+    #[serde(default = "default_switch_mode")]
+    pub switch_mode: char,
+
     #[serde(default)]
     pub device: Device,
 
@@ -13,6 +16,10 @@ pub struct Config {
 
     #[serde(default)]
     pub ap: AccessPoint,
+}
+
+fn default_switch_mode() -> char {
+    'r'
 }
 
 // Device

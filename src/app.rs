@@ -1,3 +1,10 @@
+use ratatui::{
+    layout::{Alignment, Constraint, Direction, Layout},
+    style::{Color, Style, Stylize},
+    text::Text,
+    widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
+    Frame,
+};
 use std::{
     error,
     process::exit,
@@ -47,6 +54,9 @@ pub struct App {
     pub authentication_required: Arc<AtomicBool>,
     pub passkey_sender: Sender<String>,
     pub passkey_input: Input,
+    pub mode: Option<String>,
+    pub selected_mode: String,
+    pub current_mode: String,
 }
 
 pub async fn request_confirmation(
@@ -61,7 +71,7 @@ pub async fn request_confirmation(
 }
 
 impl App {
-    pub async fn new(config: Arc<Config>) -> AppResult<Self> {
+    pub async fn new(config: Arc<Config>, mode: Option<String>) -> AppResult<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -74,6 +84,10 @@ impl App {
         };
 
         let adapter = Adapter::new(session.clone()).await.unwrap();
+
+        let current_mode = adapter.device.mode.clone();
+
+        let selected_mode = String::from("station");
 
         let (s, r) = async_channel::unbounded();
 
@@ -110,7 +124,159 @@ impl App {
             authentication_required: authentication_required.clone(),
             passkey_sender: s,
             passkey_input: Input::default(),
+            mode,
+            selected_mode,
+            current_mode,
         })
+    }
+
+    pub async fn reset(mode: String) -> AppResult<()> {
+        let session = {
+            match iwdrs::session::Session::new().await {
+                Ok(session) => Arc::new(session),
+                Err(e) => {
+                    error!("Can not access the iwd service");
+                    error!("{}", e.to_string());
+                    exit(1);
+                }
+            }
+        };
+
+        let adapter = Adapter::new(session.clone()).await.unwrap();
+        adapter.device.set_mode(mode).await?;
+        Ok(())
+    }
+
+    pub fn render(&self, frame: &mut Frame) {
+        let popup_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(
+                [
+                    Constraint::Percentage(45),
+                    Constraint::Min(8),
+                    Constraint::Percentage(45),
+                ]
+                .as_ref(),
+            )
+            .split(frame.size());
+
+        let area = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Length((frame.size().width - 20) / 2),
+                    Constraint::Min(40),
+                    Constraint::Length((frame.size().width - 20) / 2),
+                ]
+                .as_ref(),
+            )
+            .split(popup_layout[1])[1];
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(
+                [
+                    Constraint::Length(1),
+                    Constraint::Length(3),
+                    Constraint::Length(1),
+                    Constraint::Length(1),
+                    Constraint::Length(1),
+                    Constraint::Length(1),
+                ]
+                .as_ref(),
+            )
+            .split(area);
+
+        let (message_area, station_choice_area, ap_choice_area) = (chunks[1], chunks[2], chunks[3]);
+
+        let station_choice_area = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Length(2),
+                    Constraint::Fill(1),
+                    Constraint::Length(2),
+                ]
+                .as_ref(),
+            )
+            .split(station_choice_area)[1];
+
+        let ap_choice_area = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Length(2),
+                    Constraint::Fill(1),
+                    Constraint::Length(2),
+                ]
+                .as_ref(),
+            )
+            .split(ap_choice_area)[1];
+
+        let message_area = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Length(2),
+                    Constraint::Fill(1),
+                    Constraint::Length(2),
+                ]
+                .as_ref(),
+            )
+            .split(message_area)[1];
+
+        let (ap_text, station_text) = match self.selected_mode.as_str() {
+            "ap" => match self.current_mode.as_str() {
+                "ap" => (
+                    Text::from("  Access Point (current)"),
+                    Text::from("   Station"),
+                ),
+                "station" => (
+                    Text::from("  Access Point"),
+                    Text::from("   Station (current)"),
+                ),
+                _ => (Text::from("  Access Point"), Text::from("   Station")),
+            },
+            "station" => match self.current_mode.as_str() {
+                "ap" => (
+                    Text::from("   Access Point (current)"),
+                    Text::from("  Station"),
+                ),
+                "station" => (
+                    Text::from("   Access Point"),
+                    Text::from("  Station (current)"),
+                ),
+                _ => (Text::from("  Access Point"), Text::from("   Station")),
+            },
+            _ => panic!("unknwon mode"),
+        };
+
+        let message = Paragraph::new("Choose a mode: ")
+            .alignment(Alignment::Center)
+            .style(Style::default().fg(Color::White))
+            .block(Block::new().padding(Padding::uniform(1)));
+
+        let station_choice = Paragraph::new(station_text)
+            .style(Style::default().fg(Color::White))
+            .block(Block::new().padding(Padding::horizontal(4)));
+
+        let ap_choice = Paragraph::new(ap_text)
+            .style(Style::default().fg(Color::White))
+            .block(Block::new().padding(Padding::horizontal(4)));
+
+        frame.render_widget(Clear, area);
+
+        frame.render_widget(
+            Block::new()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Thick)
+                .style(Style::default().green())
+                .border_style(Style::default().fg(Color::Green)),
+            area,
+        );
+        frame.render_widget(message, message_area);
+        frame.render_widget(ap_choice, ap_choice_area);
+        frame.render_widget(station_choice, station_choice_area);
     }
 
     pub async fn send_passkey(&mut self) -> AppResult<()> {

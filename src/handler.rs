@@ -15,6 +15,38 @@ pub async fn handle_key_events(
     sender: UnboundedSender<Event>,
     config: Arc<Config>,
 ) -> AppResult<()> {
+    if app.mode.is_none() {
+        match key_event.code {
+            KeyCode::Char('q') => {
+                app.quit();
+            }
+            KeyCode::Char('c') | KeyCode::Char('C') => {
+                if key_event.modifiers == KeyModifiers::CONTROL {
+                    app.quit();
+                }
+            }
+
+            KeyCode::Char('j') => {
+                if app.selected_mode == "station" {
+                    app.selected_mode = "ap".to_string();
+                }
+            }
+
+            KeyCode::Char('k') => {
+                if app.selected_mode == "ap" {
+                    app.selected_mode = "station".to_string();
+                }
+            }
+
+            KeyCode::Enter => {
+                sender.send(Event::Reset(app.selected_mode.clone()))?;
+            }
+
+            _ => {}
+        }
+        return Ok(());
+    }
+
     match key_event.code {
         KeyCode::Char('q') => {
             app.quit();
@@ -28,6 +60,11 @@ pub async fn handle_key_events(
         // Show help
         KeyCode::Char('?') => {
             app.focused_block = FocusedBlock::Help;
+        }
+
+        // Reset
+        KeyCode::Char('r') => {
+            app.mode = None;
         }
 
         // Discard help popup

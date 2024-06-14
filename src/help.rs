@@ -39,6 +39,10 @@ impl Help {
                 ),
                 (Cell::from("j or Down").bold(), "Scroll down"),
                 (Cell::from("k or Up").bold(), "Scroll up"),
+                (
+                    Cell::from(config.switch_mode.to_string()).bold(),
+                    "Switch adapter mode",
+                ),
                 (Cell::from("?").bold(), "Show help"),
                 (Cell::from("q or ctrl+c").bold(), "Quit"),
                 (Cell::from(""), ""),

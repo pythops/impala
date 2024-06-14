@@ -19,7 +19,7 @@ async fn main() -> AppResult<()> {
 
     let config = Arc::new(Config::new());
 
-    let mut app = App::new(config.clone()).await?;
+    let mut app = App::new(config.clone(), None).await?;
 
     let backend = CrosstermBackend::new(io::stderr());
     let terminal = Terminal::new(backend)?;
@@ -42,6 +42,10 @@ async fn main() -> AppResult<()> {
             }
             Event::Notification(notification) => {
                 app.notifications.push(notification);
+            }
+            Event::Reset(mode) => {
+                App::reset(mode.clone()).await?;
+                app = App::new(config.clone(), Some(mode)).await?;
             }
             _ => {}
         }
