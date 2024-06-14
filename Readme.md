@@ -52,10 +52,6 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 `k` or `Up`: Scroll up.
 
-`s`: Start scanning.
-
-`Space`: Connect/Disconnect the network.
-
 `?`: Show help.
 
 `esc`: Dismiss the help pop-up.
@@ -66,9 +62,19 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 `i`: Show device information.
 
+### Station
+
+`s`: Start scanning.
+`Space`: Connect/Disconnect the network.
+
 ### Known Networks
 
 `d`: Remove the network from the known networks list.
+
+### Access Point
+
+`n`: Start a new access point.
+`x`: Stop the running access point.
 
 ## Custom keybindings
 

@@ -78,6 +78,19 @@ impl Help {
                     Cell::from(config.station.known_network.remove.to_string()).bold(),
                     "Remove the network from the known networks list",
                 ),
+                (Cell::from(""), ""),
+                (
+                    Cell::from("## Access Point").style(Style::new().bold().fg(Color::Yellow)),
+                    "",
+                ),
+                (
+                    Cell::from(config.ap.start.to_string()).bold(),
+                    "Start a new access point",
+                ),
+                (
+                    Cell::from(config.ap.stop.to_string()).bold(),
+                    "Stop the running access point",
+                ),
             ],
         }
     }
