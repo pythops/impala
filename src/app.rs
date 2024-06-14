@@ -25,6 +25,7 @@ pub enum FocusedBlock {
     Help,
     AuthKey,
     AdapterInfos,
+    AccessPointInput,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

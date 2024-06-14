@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::access_point::APFocusedSection;
 use crate::app::{App, AppResult, FocusedBlock};
 use crate::config::Config;
 use crate::event::Event;
@@ -50,7 +51,15 @@ pub async fn handle_key_events(
                         .scan(sender)
                         .await?
                 }
-                "access_point" => {}
+                "access_point" => {
+                    app.adapter
+                        .device
+                        .access_point
+                        .as_mut()
+                        .unwrap()
+                        .scan(sender)
+                        .await?
+                }
                 _ => {}
             };
         }
@@ -78,6 +87,14 @@ pub async fn handle_key_events(
                 FocusedBlock::AccessPoint => {
                     app.focused_block = FocusedBlock::Device;
                 }
+                FocusedBlock::AccessPointInput => {
+                    if let Some(ap) = &mut app.adapter.device.access_point {
+                        match ap.focused_section {
+                            APFocusedSection::SSID => ap.focused_section = APFocusedSection::PSK,
+                            APFocusedSection::PSK => ap.focused_section = APFocusedSection::SSID,
+                        };
+                    }
+                }
                 _ => {}
             },
             _ => {}
@@ -93,6 +110,27 @@ pub async fn handle_key_events(
                     _ => {
                         app.passkey_input
                             .handle_event(&crossterm::event::Event::Key(key_event));
+                    }
+                },
+
+                FocusedBlock::AccessPointInput => match key_event.code {
+                    KeyCode::Enter => {
+                        if let Some(ap) = &mut app.adapter.device.access_point {
+                            ap.start(sender).await?;
+                            app.focused_block = FocusedBlock::Device;
+                        }
+                    }
+                    _ => {
+                        if let Some(ap) = &mut app.adapter.device.access_point {
+                            match ap.focused_section {
+                                APFocusedSection::SSID => ap
+                                    .ssid
+                                    .handle_event(&crossterm::event::Event::Key(key_event)),
+                                APFocusedSection::PSK => ap
+                                    .psk
+                                    .handle_event(&crossterm::event::Event::Key(key_event)),
+                            };
+                        }
                     }
                 },
 
@@ -473,7 +511,21 @@ pub async fn handle_key_events(
                                 _ => {}
                             }
                         }
-                        "access_point" => {}
+                        "ap" => match key_event.code {
+                            KeyCode::Char(c) if c == config.ap.start => {
+                                if let Some(ap) = &app.adapter.device.access_point {
+                                    // Start AP
+                                    ap.ap_start
+                                        .store(true, std::sync::atomic::Ordering::Relaxed);
+                                }
+                            }
+                            KeyCode::Char(c) if c == config.ap.stop => {
+                                if let Some(ap) = &app.adapter.device.access_point {
+                                    ap.stop(sender).await?;
+                                }
+                            }
+                            _ => {}
+                        },
                         _ => {}
                     }
                 }

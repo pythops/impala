@@ -84,16 +84,26 @@ fn default_station_remove_known_network() -> char {
 pub struct AccessPoint {
     #[serde(default = "default_ap_start")]
     pub start: char,
+
+    #[serde(default = "default_ap_stop")]
+    pub stop: char,
 }
 
 impl Default for AccessPoint {
     fn default() -> Self {
-        Self { start: 'n' }
+        Self {
+            start: 'n',
+            stop: 'x',
+        }
     }
 }
 
 fn default_ap_start() -> char {
     'n'
+}
+
+fn default_ap_stop() -> char {
+    'x'
 }
 
 impl Config {
