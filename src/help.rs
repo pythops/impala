@@ -40,19 +40,8 @@ impl Help {
                 (Cell::from("j or Down").bold(), "Scroll down"),
                 (Cell::from("k or Up").bold(), "Scroll up"),
                 (
-                    Cell::from(config.start_scanning.to_string()).bold(),
-                    "Start scanning",
-                ),
-                (
-                    Cell::from({
-                        if config.toggle_connect == ' ' {
-                            "Space".to_string()
-                        } else {
-                            config.toggle_connect.to_string()
-                        }
-                    })
-                    .bold(),
-                    "Connect/Disconnect the network",
+                    Cell::from(config.switch_mode.to_string()).bold(),
+                    "Switch adapter mode",
                 ),
                 (Cell::from("?").bold(), "Show help"),
                 (Cell::from("q or ctrl+c").bold(), "Quit"),
@@ -67,12 +56,44 @@ impl Help {
                 ),
                 (Cell::from(""), ""),
                 (
-                    Cell::from("## Known Networks").style(Style::new().bold().fg(Color::Yellow)),
+                    Cell::from("## Station").style(Style::new().bold().fg(Color::Yellow)),
                     "",
                 ),
                 (
-                    Cell::from(config.known_network.remove.to_string()).bold(),
+                    Cell::from(config.station.start_scanning.to_string()).bold(),
+                    "Start scanning",
+                ),
+                (
+                    Cell::from({
+                        if config.station.toggle_connect == ' ' {
+                            "Space".to_string()
+                        } else {
+                            config.station.toggle_connect.to_string()
+                        }
+                    })
+                    .bold(),
+                    "Connect/Disconnect the network",
+                ),
+                (
+                    Cell::from("### Known Networks").style(Style::new().bold().fg(Color::Yellow)),
+                    "",
+                ),
+                (
+                    Cell::from(config.station.known_network.remove.to_string()).bold(),
                     "Remove the network from the known networks list",
+                ),
+                (Cell::from(""), ""),
+                (
+                    Cell::from("## Access Point").style(Style::new().bold().fg(Color::Yellow)),
+                    "",
+                ),
+                (
+                    Cell::from(config.ap.start.to_string()).bold(),
+                    "Start a new access point",
+                ),
+                (
+                    Cell::from(config.ap.stop.to_string()).bold(),
+                    "Stop the running access point",
                 ),
             ],
         }

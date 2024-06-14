@@ -25,3 +25,7 @@ pub mod known_network;
 pub mod auth;
 
 pub mod tracing;
+
+pub mod adapter;
+
+pub mod access_point;

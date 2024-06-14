@@ -1,8 +1,7 @@
-use std::sync::{atomic::AtomicBool, Arc};
-
 use anyhow::Result;
 use futures::future::join_all;
 use iwdrs::station::Station as iwdStation;
+use ratatui::widgets::TableState;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
@@ -20,6 +19,8 @@ pub struct Station {
     pub connected_network: Option<Network>,
     pub new_networks: Vec<(Network, i16)>,
     pub known_networks: Vec<(Network, i16)>,
+    pub known_networks_state: TableState,
+    pub new_networks_state: TableState,
 }
 
 impl Station {
@@ -64,6 +65,21 @@ impl Station {
             .filter(|(net, _signal)| net.known_network.is_some())
             .collect();
 
+        let mut new_networks_state = TableState::default();
+        if new_networks.is_empty() {
+            new_networks_state.select(None);
+        } else {
+            new_networks_state.select(Some(0));
+        }
+
+        let mut known_networks_state = TableState::default();
+
+        if known_networks.is_empty() {
+            known_networks_state.select(None);
+        } else {
+            known_networks_state.select(Some(0));
+        }
+
         Ok(Self {
             s,
             state,
@@ -71,13 +87,11 @@ impl Station {
             connected_network,
             new_networks,
             known_networks,
+            known_networks_state,
+            new_networks_state,
         })
     }
-    pub async fn refresh(
-        &mut self,
-        refresh_new_network_state: Arc<AtomicBool>,
-        refresh_known_network_state: Arc<AtomicBool>,
-    ) -> Result<()> {
+    pub async fn refresh(&mut self) -> Result<()> {
         let state = self.s.state().await?;
         let is_scanning = self.s.is_scanning().await?;
         let connected_network = {
@@ -120,19 +134,33 @@ impl Station {
             .collect();
 
         self.state = state;
-        self.connected_network = connected_network;
         self.is_scanning = is_scanning;
 
         if self.new_networks.len() != new_networks.len() {
-            refresh_new_network_state.store(true, std::sync::atomic::Ordering::Relaxed);
+            let mut new_networks_state = TableState::default();
+            if new_networks.is_empty() {
+                new_networks_state.select(None);
+            } else {
+                new_networks_state.select(Some(0));
+            }
+
+            self.new_networks_state = new_networks_state;
+            self.new_networks = new_networks;
         }
-        self.new_networks = new_networks;
 
         if self.known_networks.len() != known_networks.len() {
-            refresh_known_network_state.store(true, std::sync::atomic::Ordering::Relaxed);
+            let mut known_networks_state = TableState::default();
+            if known_networks.is_empty() {
+                known_networks_state.select(None);
+            } else {
+                known_networks_state.select(Some(0));
+            }
+            self.known_networks_state = known_networks_state;
+            self.known_networks = known_networks;
         }
 
-        self.known_networks = known_networks;
+        self.connected_network = connected_network;
+
         Ok(())
     }
 

@@ -52,9 +52,7 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 `k` or `Up`: Scroll up.
 
-`s`: Start scanning.
-
-`Space`: Connect/Disconnect the network.
+`r`: Switch adapter mode.
 
 `?`: Show help.
 
@@ -66,22 +64,38 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 `i`: Show device information.
 
+### Station
+
+`s`: Start scanning.
+`Space`: Connect/Disconnect the network.
+
 ### Known Networks
 
 `d`: Remove the network from the known networks list.
+
+### Access Point
+
+`n`: Start a new access point.
+`x`: Stop the running access point.
 
 ## Custom keybindings
 
 Keybindings can be customized in the config file `$HOME/.config/impala/config.toml`
 
 ```toml
-toggle_scanning = "s"
-toggle_connect = " "
 
 [device]
 infos = "i"
 
-[known_network]
+[access_point]
+start = 's'
+stop = 'x'
+
+[station]
+toggle_scanning = "s"
+toggle_connect = " "
+
+[station.known_network]
 remove = "d"
 ```
 
