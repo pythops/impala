@@ -606,6 +606,20 @@ pub async fn handle_key_events(
                                             ap.stop(sender).await?;
                                         }
                                     }
+
+                                    // Scroll down
+                                    KeyCode::Char('j') | KeyCode::Down => {
+                                        if app.focused_block == FocusedBlock::Help {
+                                            app.help.scroll_down();
+                                        }
+                                    }
+
+                                    KeyCode::Char('k') | KeyCode::Up => {
+                                        if app.focused_block == FocusedBlock::Help {
+                                            app.help.scroll_up();
+                                        }
+                                    }
+
                                     _ => {}
                                 },
                                 _ => {}
