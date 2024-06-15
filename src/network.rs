@@ -50,7 +50,17 @@ impl Network {
                 NotificationLevel::Info,
                 sender,
             )?,
-            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, sender)?,
+            Err(e) => {
+                if e.to_string().contains("net.connman.iwd.Aborted") {
+                    Notification::send(
+                        "Connection canceled".to_string(),
+                        NotificationLevel::Info,
+                        sender,
+                    )?
+                } else {
+                    Notification::send(e.to_string(), NotificationLevel::Error, sender)?
+                }
+            }
         }
         Ok(())
     }

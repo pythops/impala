@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style, Stylize},
@@ -53,6 +54,7 @@ pub struct App {
     pub agent_manager: iwdrs::agent::AgentManager,
     pub authentication_required: Arc<AtomicBool>,
     pub passkey_sender: Sender<String>,
+    pub cancel_signal_sender: Sender<()>,
     pub passkey_input: Input,
     pub mode: Option<String>,
     pub selected_mode: String,
@@ -61,12 +63,28 @@ pub struct App {
 
 pub async fn request_confirmation(
     authentication_required: Arc<AtomicBool>,
-    rx: Receiver<String>,
+    rx_key: Receiver<String>,
+    rx_cancel: Receiver<()>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     authentication_required.store(true, std::sync::atomic::Ordering::Relaxed);
-    match rx.recv().await {
-        Ok(passkey) => Ok(passkey),
-        Err(e) => Err(e.into()),
+
+    tokio::select! {
+    r = rx_key.recv() =>  {
+            match r {
+                Ok(key) => Ok(key),
+                Err(_) => Err(anyhow!("Failed to receive the key").into()),
+            }
+        }
+
+    r = rx_cancel.recv() => {
+            match r {
+                Ok(_) => {
+                        Err(anyhow!("Operation Canceled").into())},
+                Err(_) => Err(anyhow!("Failed to receive cancel signal").into()),
+            }
+
+        }
+
     }
 }
 
@@ -89,7 +107,8 @@ impl App {
 
         let selected_mode = String::from("station");
 
-        let (s, r) = async_channel::unbounded();
+        let (passkey_sender, passkey_receiver) = async_channel::unbounded();
+        let (cancel_signal_sender, cancel_signal_receiver) = async_channel::unbounded();
 
         let authentication_required = Arc::new(AtomicBool::new(false));
         let authentication_required_caller = authentication_required.clone();
@@ -98,7 +117,11 @@ impl App {
             request_passphrase_fn: Box::new(move || {
                 {
                     let auth_clone = authentication_required_caller.clone();
-                    request_confirmation(auth_clone, r.clone())
+                    request_confirmation(
+                        auth_clone,
+                        passkey_receiver.clone(),
+                        cancel_signal_receiver.clone(),
+                    )
                 }
                 .boxed()
             }),
@@ -122,7 +145,8 @@ impl App {
             adapter,
             agent_manager,
             authentication_required: authentication_required.clone(),
-            passkey_sender: s,
+            passkey_sender,
+            cancel_signal_sender,
             passkey_input: Input::default(),
             mode,
             selected_mode,
@@ -282,6 +306,14 @@ impl App {
     pub async fn send_passkey(&mut self) -> AppResult<()> {
         let passkey: String = self.passkey_input.value().into();
         self.passkey_sender.send(passkey).await?;
+        self.authentication_required
+            .store(false, std::sync::atomic::Ordering::Relaxed);
+        self.passkey_input.reset();
+        Ok(())
+    }
+
+    pub async fn cancel_auth(&mut self) -> AppResult<()> {
+        self.cancel_signal_sender.send(()).await?;
         self.authentication_required
             .store(false, std::sync::atomic::Ordering::Relaxed);
         self.passkey_input.reset();
