@@ -79,6 +79,14 @@ pub async fn handle_key_events(
                 }
                 app.focused_block = FocusedBlock::AccessPoint;
             }
+            KeyCode::Tab => {
+                if let Some(ap) = &mut app.adapter.device.access_point {
+                    match ap.focused_section {
+                        APFocusedSection::SSID => ap.focused_section = APFocusedSection::PSK,
+                        APFocusedSection::PSK => ap.focused_section = APFocusedSection::SSID,
+                    }
+                }
+            }
             _ => {
                 if let Some(ap) = &mut app.adapter.device.access_point {
                     match ap.focused_section {
