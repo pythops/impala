@@ -27,11 +27,15 @@ fn default_switch_mode() -> char {
 pub struct Device {
     #[serde(default = "default_show_device_infos")]
     pub infos: char,
+    pub toggle_power: char,
 }
 
 impl Default for Device {
     fn default() -> Self {
-        Self { infos: 'i' }
+        Self {
+            infos: 'i',
+            toggle_power: 'o',
+        }
     }
 }
 

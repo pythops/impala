@@ -54,6 +54,10 @@ impl Help {
                     Cell::from(config.device.infos.to_string()).bold(),
                     "Show device information",
                 ),
+                (
+                    Cell::from(config.device.toggle_power.to_string()).bold(),
+                    "Toggle device power",
+                ),
                 (Cell::from(""), ""),
                 (
                     Cell::from("## Station").style(Style::new().bold().fg(Color::Yellow)),

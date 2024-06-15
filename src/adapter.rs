@@ -91,11 +91,13 @@ impl Adapter {
         };
 
         // Device
-        let row = Row::new(vec![
-            self.device.name.clone(),
-            self.device.mode.clone(),
-            self.device.is_powered.clone().to_string(),
-        ]);
+        let row = Row::new(vec![self.device.name.clone(), self.device.mode.clone(), {
+            if self.device.is_powered {
+                "On".to_string()
+            } else {
+                "Off".to_string()
+            }
+        }]);
 
         let widths = [
             Constraint::Length(8),
@@ -192,7 +194,13 @@ impl Adapter {
         let row = Row::new(vec![
             self.device.name.clone(),
             "Access Point".to_string(),
-            self.device.is_powered.clone().to_string(),
+            {
+                if self.device.is_powered {
+                    "On".to_string()
+                } else {
+                    "Off".to_string()
+                }
+            },
             self.device.address.clone(),
         ]);
 
@@ -447,7 +455,13 @@ impl Adapter {
         let row = Row::new(vec![
             self.device.name.clone(),
             "station".to_string(),
-            self.device.is_powered.clone().to_string(),
+            {
+                if self.device.is_powered {
+                    "On".to_string()
+                } else {
+                    "Off".to_string()
+                }
+            },
             self.device.address.clone(),
         ]);
 

@@ -63,6 +63,7 @@ This will produce an executable file at `target/release/impala` that you can cop
 ### Device
 
 `i`: Show device information.
+`o`: Toggle device power.
 
 ### Station
 
@@ -88,6 +89,7 @@ switch = "r"
 
 [device]
 infos = "i"
+toggle_power = "o"
 
 [access_point]
 start = 's'

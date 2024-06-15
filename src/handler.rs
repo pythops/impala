@@ -4,6 +4,7 @@ use crate::access_point::APFocusedSection;
 use crate::app::{App, AppResult, FocusedBlock};
 use crate::config::Config;
 use crate::event::Event;
+use crate::notification::Notification;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tokio::sync::mpsc::UnboundedSender;
@@ -203,6 +204,47 @@ pub async fn handle_key_events(
                             KeyCode::Char(c) if c == config.device.infos => {
                                 app.focused_block = FocusedBlock::AdapterInfos;
                             }
+
+                            KeyCode::Char(c) if c == config.device.toggle_power => {
+                                if app.adapter.device.is_powered {
+                                    match app.adapter.device.power_off().await {
+                                        Ok(()) => {
+                                            sender.send(Event::Reset(app.current_mode.clone()))?;
+                                            Notification::send(
+                                                "Device Powered Off".to_string(),
+                                                crate::notification::NotificationLevel::Info,
+                                                sender.clone(),
+                                            )?;
+                                        }
+                                        Err(e) => {
+                                            Notification::send(
+                                                e.to_string(),
+                                                crate::notification::NotificationLevel::Error,
+                                                sender.clone(),
+                                            )?;
+                                        }
+                                    }
+                                } else {
+                                    match app.adapter.device.power_on().await {
+                                        Ok(()) => {
+                                            sender.send(Event::Reset(app.current_mode.clone()))?;
+                                            Notification::send(
+                                                "Device Powered On".to_string(),
+                                                crate::notification::NotificationLevel::Info,
+                                                sender.clone(),
+                                            )?;
+                                        }
+                                        Err(e) => {
+                                            Notification::send(
+                                                e.to_string(),
+                                                crate::notification::NotificationLevel::Error,
+                                                sender.clone(),
+                                            )?;
+                                        }
+                                    }
+                                }
+                            }
+
                             _ => {}
                         },
 

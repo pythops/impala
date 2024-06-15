@@ -67,6 +67,16 @@ impl Device {
         Ok(())
     }
 
+    pub async fn power_off(&self) -> Result<()> {
+        self.device.set_power(false).await?;
+        Ok(())
+    }
+
+    pub async fn power_on(&self) -> Result<()> {
+        self.device.set_power(true).await?;
+        Ok(())
+    }
+
     pub async fn refresh(&mut self) -> Result<()> {
         self.is_powered = self.device.is_powered().await?;
         let current_mode = self.device.get_mode().await?;
