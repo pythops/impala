@@ -32,7 +32,7 @@ impl Help {
                     Cell::from("## Global").style(Style::new().bold().fg(Color::Yellow)),
                     "",
                 ),
-                (Cell::from("Esc").bold(), "Dismiss help pop-up"),
+                (Cell::from("Esc").bold(), "Dismiss different pop-ups"),
                 (
                     Cell::from("Tab").bold(),
                     "Switch between different sections",
@@ -40,7 +40,7 @@ impl Help {
                 (Cell::from("j or Down").bold(), "Scroll down"),
                 (Cell::from("k or Up").bold(), "Scroll up"),
                 (
-                    Cell::from(config.switch_mode.to_string()).bold(),
+                    Cell::from(format!("ctrl {}", config.switch)).bold(),
                     "Switch adapter mode",
                 ),
                 (Cell::from("?").bold(), "Show help"),

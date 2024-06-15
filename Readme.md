@@ -52,11 +52,11 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 `k` or `Up`: Scroll up.
 
-`r`: Switch adapter mode.
+`ctrl+r`: Switch adapter mode.
 
 `?`: Show help.
 
-`esc`: Dismiss the help pop-up.
+`esc`: Dismiss the different pop-ups.
 
 `q` or `ctrl+c`: Quit the app.
 
@@ -83,6 +83,8 @@ This will produce an executable file at `target/release/impala` that you can cop
 Keybindings can be customized in the config file `$HOME/.config/impala/config.toml`
 
 ```toml
+
+switch = "r"
 
 [device]
 infos = "i"
