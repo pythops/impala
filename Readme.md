@@ -63,20 +63,25 @@ This will produce an executable file at `target/release/impala` that you can cop
 ### Device
 
 `i`: Show device information.
+
 `o`: Toggle device power.
 
 ### Station
 
 `s`: Start scanning.
+
 `Space`: Connect/Disconnect the network.
 
 ### Known Networks
+
+`a`: Enable/Disable auto-connect.
 
 `d`: Remove the network from the known networks list.
 
 ### Access Point
 
 `n`: Start a new access point.
+
 `x`: Stop the running access point.
 
 ## Custom keybindings
@@ -100,6 +105,7 @@ toggle_scanning = "s"
 toggle_connect = " "
 
 [station.known_network]
+toggle_autoconnect = "a"
 remove = "d"
 ```
 

@@ -111,8 +111,6 @@ impl Station {
                         Ok(network) => Ok((network, signal.to_owned())),
                         Err(e) => Err(e),
                     }
-                    // let network = Network::new(n.clone()).await.unwrap();
-                    // (network, signal.to_owned())
                 })
                 .collect::<Vec<_>>();
             let results = join_all(collected_futures).await;
@@ -157,6 +155,18 @@ impl Station {
             }
             self.known_networks_state = known_networks_state;
             self.known_networks = known_networks;
+        } else {
+            self.known_networks.iter_mut().for_each(|(net, signal)| {
+                let n = known_networks
+                    .iter()
+                    .find(|(refreshed_net, _signal)| refreshed_net.name == net.name);
+
+                if let Some((refreshed_net, refreshed_signal)) = n {
+                    net.known_network.as_mut().unwrap().is_autoconnect =
+                        refreshed_net.known_network.as_ref().unwrap().is_autoconnect;
+                    *signal = *refreshed_signal;
+                }
+            })
         }
 
         self.connected_network = connected_network;

@@ -280,6 +280,39 @@ pub async fn handle_key_events(
                                             }
                                         }
 
+                                        // Toggle autoconnect
+                                        KeyCode::Char(c)
+                                            if c == config
+                                                .station
+                                                .known_network
+                                                .toggle_autoconnect
+                                                && app.focused_block
+                                                    == FocusedBlock::KnownNetworks =>
+                                        {
+                                            if let Some(net_index) = app
+                                                .adapter
+                                                .device
+                                                .station
+                                                .as_ref()
+                                                .unwrap()
+                                                .known_networks_state
+                                                .selected()
+                                            {
+                                                let (net, _signal) = &app
+                                                    .adapter
+                                                    .device
+                                                    .station
+                                                    .as_ref()
+                                                    .unwrap()
+                                                    .known_networks[net_index];
+
+                                                let known_net = net.known_network.as_ref().unwrap();
+                                                known_net
+                                                    .toggle_autoconnect(sender.clone())
+                                                    .await?;
+                                            }
+                                        }
+
                                         // Connect/Disconnect
                                         KeyCode::Char(c) if c == config.station.toggle_connect => {
                                             match app.focused_block {

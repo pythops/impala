@@ -54,4 +54,35 @@ impl KnownNetwork {
         )?;
         Ok(())
     }
+
+    pub async fn toggle_autoconnect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+        if self.is_autoconnect {
+            match self.n.set_autoconnect(false).await {
+                Ok(_) => {
+                    Notification::send(
+                        format!("Disable Autoconnect for: {}", self.name),
+                        NotificationLevel::Info,
+                        sender.clone(),
+                    )?;
+                }
+                Err(e) => {
+                    Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?;
+                }
+            }
+        } else {
+            match self.n.set_autoconnect(true).await {
+                Ok(_) => {
+                    Notification::send(
+                        format!("Enable Autoconnect for: {}", self.name),
+                        NotificationLevel::Info,
+                        sender.clone(),
+                    )?;
+                }
+                Err(e) => {
+                    Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?;
+                }
+            }
+        }
+        Ok(())
+    }
 }
