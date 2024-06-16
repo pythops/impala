@@ -144,6 +144,16 @@ impl Station {
 
             self.new_networks_state = new_networks_state;
             self.new_networks = new_networks;
+        } else {
+            self.new_networks.iter_mut().for_each(|(net, signal)| {
+                let n = new_networks
+                    .iter()
+                    .find(|(refreshed_net, _signal)| refreshed_net.name == net.name);
+
+                if let Some((_, refreshed_signal)) = n {
+                    *signal = *refreshed_signal;
+                }
+            })
         }
 
         if self.known_networks.len() != known_networks.len() {
