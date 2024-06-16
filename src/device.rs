@@ -40,7 +40,7 @@ impl Device {
         };
 
         let access_point = match session.access_point() {
-            Some(iwdrs_access_point) => match AccessPoint::new(iwdrs_access_point).await {
+            Some(_) => match AccessPoint::new(session.clone()).await {
                 Ok(v) => Some(v),
                 Err(e) => {
                     error!("{}", e.to_string());
@@ -112,15 +112,13 @@ impl Device {
                     "station" => {
                         self.station = None;
                         self.access_point = match self.session.access_point() {
-                            Some(iwdrs_access_point) => {
-                                match AccessPoint::new(iwdrs_access_point).await {
-                                    Ok(v) => Some(v),
-                                    Err(e) => {
-                                        error!("{}", e.to_string());
-                                        None
-                                    }
+                            Some(_) => match AccessPoint::new(self.session.clone()).await {
+                                Ok(v) => Some(v),
+                                Err(e) => {
+                                    error!("{}", e.to_string());
+                                    None
                                 }
-                            }
+                            },
                             None => None,
                         };
                     }

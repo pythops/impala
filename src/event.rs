@@ -49,18 +49,10 @@ impl EventHandler {
                           _sender.send(Event::Key(key)).unwrap();
                         }
                       },
-                      CrosstermEvent::Mouse(mouse) => {
-                        _sender.send(Event::Mouse(mouse)).unwrap();
-                      },
                       CrosstermEvent::Resize(x, y) => {
                         _sender.send(Event::Resize(x, y)).unwrap();
                       },
-                      CrosstermEvent::FocusLost => {
-                      },
-                      CrosstermEvent::FocusGained => {
-                      },
-                      CrosstermEvent::Paste(_) => {
-                      },
+                      _ => {}
                     }
                   }
                 };

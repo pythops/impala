@@ -68,6 +68,7 @@ pub async fn handle_key_events(
             KeyCode::Enter => {
                 if let Some(ap) = &mut app.adapter.device.access_point {
                     ap.start(sender.clone()).await?;
+                    sender.send(Event::Reset(app.current_mode.clone()))?;
                     app.focused_block = FocusedBlock::Device;
                 }
             }
@@ -179,6 +180,15 @@ pub async fn handle_key_events(
                             app.focused_block = FocusedBlock::AccessPoint;
                         }
                         FocusedBlock::AccessPoint => {
+                            if let Some(ap) = app.adapter.device.access_point.as_ref() {
+                                if ap.connected_devices.is_empty() {
+                                    app.focused_block = FocusedBlock::Device;
+                                } else {
+                                    app.focused_block = FocusedBlock::AccessPointConnectedDevices;
+                                }
+                            }
+                        }
+                        FocusedBlock::AccessPointConnectedDevices => {
                             app.focused_block = FocusedBlock::Device;
                         }
                         FocusedBlock::AccessPointInput => {

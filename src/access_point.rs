@@ -1,7 +1,8 @@
 use std::sync::{atomic::AtomicBool, Arc};
 
 use anyhow::Result;
-use iwdrs::access_point::AccessPoint as iwdAccessPoint;
+
+use iwdrs::session::Session;
 use tokio::sync::mpsc::UnboundedSender;
 
 use ratatui::{
@@ -27,7 +28,7 @@ pub enum APFocusedSection {
 
 #[derive(Debug, Clone)]
 pub struct AccessPoint {
-    pub a: iwdAccessPoint,
+    session: Arc<Session>,
     pub has_started: bool,
     pub name: Option<String>,
     pub frequency: Option<u32>,
@@ -38,24 +39,41 @@ pub struct AccessPoint {
     pub ssid: Input,
     pub psk: Input,
     pub focused_section: APFocusedSection,
+    pub connected_devices: Vec<String>,
 }
 
 impl AccessPoint {
-    pub async fn new(a: iwdAccessPoint) -> Result<Self> {
-        let has_started = a.has_started().await?;
-        let name = a.name().await?;
-        let frequency = a.frequency().await?;
-        let is_scanning = a.is_scanning().await.ok();
-        let supported_ciphers = a.pairwise_ciphers().await?;
-        let used_cipher = a.group_cipher().await?;
+    pub async fn new(session: Arc<Session>) -> Result<Self> {
+        let iwd_access_point = session.access_point().unwrap();
+        let iwd_access_point_diagnotic = session.access_point_diagnostic();
+
+        let has_started = iwd_access_point.has_started().await?;
+        let name = iwd_access_point.name().await?;
+        let frequency = iwd_access_point.frequency().await?;
+        let is_scanning = iwd_access_point.is_scanning().await.ok();
+        let supported_ciphers = iwd_access_point.pairwise_ciphers().await?;
+        let used_cipher = iwd_access_point.group_cipher().await?;
         let ap_start = Arc::new(AtomicBool::new(false));
 
         let ssid = Input::default();
         let psk = Input::default();
         let focused_section = APFocusedSection::SSID;
 
+        let connected_devices = {
+            if let Some(d) = iwd_access_point_diagnotic {
+                let diagnostic = d.get().await?;
+
+                diagnostic
+                    .iter()
+                    .map(|v| v["Address"].clone().trim_matches('"').to_string())
+                    .collect()
+            } else {
+                Vec::new()
+            }
+        };
+
         Ok(Self {
-            a,
+            session,
             has_started,
             name,
             frequency,
@@ -66,6 +84,7 @@ impl AccessPoint {
             ssid,
             psk,
             focused_section,
+            connected_devices,
         })
     }
 
@@ -189,18 +208,30 @@ impl AccessPoint {
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
-        self.has_started = self.a.has_started().await?;
-        self.name = self.a.name().await?;
-        self.frequency = self.a.frequency().await?;
-        self.is_scanning = self.a.is_scanning().await.ok();
-        self.supported_ciphers = self.a.pairwise_ciphers().await?;
-        self.used_cipher = self.a.group_cipher().await?;
+        let iwd_access_point = self.session.access_point().unwrap();
+        let iwd_access_point_diagnotic = self.session.access_point_diagnostic();
+
+        self.has_started = iwd_access_point.has_started().await?;
+        self.name = iwd_access_point.name().await?;
+        self.frequency = iwd_access_point.frequency().await?;
+        self.is_scanning = iwd_access_point.is_scanning().await.ok();
+        self.supported_ciphers = iwd_access_point.pairwise_ciphers().await?;
+        self.used_cipher = iwd_access_point.group_cipher().await?;
+
+        if let Some(d) = iwd_access_point_diagnotic {
+            let diagnostic = d.get().await?;
+            self.connected_devices = diagnostic
+                .iter()
+                .map(|v| v["Address"].clone().trim_matches('"').to_string())
+                .collect()
+        }
 
         Ok(())
     }
 
     pub async fn scan(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
-        match self.a.scan().await {
+        let iwd_access_point = self.session.access_point().unwrap();
+        match iwd_access_point.scan().await {
             Ok(_) => Notification::send(
                 "Start Scanning".to_string(),
                 NotificationLevel::Info,
@@ -213,7 +244,11 @@ impl AccessPoint {
     }
 
     pub async fn start(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
-        match self.a.start(self.ssid.value(), self.psk.value()).await {
+        let iwd_access_point = self.session.access_point().unwrap();
+        match iwd_access_point
+            .start(self.ssid.value(), self.psk.value())
+            .await
+        {
             Ok(_) => Notification::send(
                 format!("AP Started\nSSID: {}", self.ssid.value()),
                 NotificationLevel::Info,
@@ -228,7 +263,8 @@ impl AccessPoint {
     }
 
     pub async fn stop(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
-        match self.a.stop().await {
+        let iwd_access_point = self.session.access_point().unwrap();
+        match iwd_access_point.stop().await {
             Ok(_) => Notification::send("AP Stopped".to_string(), NotificationLevel::Info, sender)?,
             Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?,
         }

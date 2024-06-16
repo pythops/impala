@@ -7,7 +7,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style, Stylize},
     text::Line,
-    widgets::{Block, BorderType, Borders, Cell, Clear, Padding, Row, Table, TableState},
+    widgets::{Block, BorderType, Borders, Cell, Clear, List, Padding, Row, Table, TableState},
     Frame,
 };
 
@@ -181,13 +181,30 @@ impl Adapter {
         color_mode: ColorMode,
         focused_block: FocusedBlock,
     ) {
-        let (device_block, access_point_block) = {
+        let any_connected_devices = match self.device.access_point.as_ref() {
+            Some(ap) => !ap.connected_devices.is_empty(),
+            None => false,
+        };
+
+        let (device_block, access_point_block, connected_devices_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .constraints(if any_connected_devices {
+                    &[
+                        Constraint::Percentage(33),
+                        Constraint::Percentage(33),
+                        Constraint::Percentage(33),
+                    ]
+                } else {
+                    &[
+                        Constraint::Percentage(50),
+                        Constraint::Percentage(50),
+                        Constraint::Fill(1),
+                    ]
+                })
                 .margin(1)
                 .split(frame.size());
-            (chunks[0], chunks[1])
+            (chunks[0], chunks[1], chunks[2])
         };
 
         // Device
@@ -429,6 +446,51 @@ impl Adapter {
             access_point_block,
             &mut access_point_state,
         );
+
+        // Connected devices
+        if any_connected_devices {
+            let devices = self
+                .device
+                .access_point
+                .as_ref()
+                .unwrap()
+                .connected_devices
+                .clone();
+
+            let connected_devices_list = List::new(devices)
+                .block(
+                    Block::bordered()
+                        .title("Connected Devices")
+                        .title_style({
+                            if focused_block == FocusedBlock::AccessPointConnectedDevices {
+                                Style::default().bold()
+                            } else {
+                                Style::default()
+                            }
+                        })
+                        .borders(Borders::ALL)
+                        .border_style({
+                            if focused_block == FocusedBlock::AccessPointConnectedDevices {
+                                Style::default().fg(Color::Green)
+                            } else {
+                                Style::default()
+                            }
+                        })
+                        .border_type({
+                            if focused_block == FocusedBlock::AccessPointConnectedDevices {
+                                BorderType::Thick
+                            } else {
+                                BorderType::default()
+                            }
+                        }),
+                )
+                .style(match color_mode {
+                    ColorMode::Dark => Style::default().fg(Color::White),
+                    ColorMode::Light => Style::default().fg(Color::Black),
+                });
+
+            frame.render_widget(connected_devices_list, connected_devices_block);
+        }
     }
 
     pub fn render_station_mode(
