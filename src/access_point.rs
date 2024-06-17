@@ -61,12 +61,13 @@ impl AccessPoint {
 
         let connected_devices = {
             if let Some(d) = iwd_access_point_diagnotic {
-                let diagnostic = d.get().await?;
-
-                diagnostic
-                    .iter()
-                    .map(|v| v["Address"].clone().trim_matches('"').to_string())
-                    .collect()
+                match d.get().await {
+                    Ok(diagnostic) => diagnostic
+                        .iter()
+                        .map(|v| v["Address"].clone().trim_matches('"').to_string())
+                        .collect(),
+                    Err(_) => Vec::new(),
+                }
             } else {
                 Vec::new()
             }
@@ -219,11 +220,12 @@ impl AccessPoint {
         self.used_cipher = iwd_access_point.group_cipher().await?;
 
         if let Some(d) = iwd_access_point_diagnotic {
-            let diagnostic = d.get().await?;
-            self.connected_devices = diagnostic
-                .iter()
-                .map(|v| v["Address"].clone().trim_matches('"').to_string())
-                .collect()
+            if let Ok(diagnostic) = d.get().await {
+                self.connected_devices = diagnostic
+                    .iter()
+                    .map(|v| v["Address"].clone().trim_matches('"').to_string())
+                    .collect()
+            }
         }
 
         Ok(())
