@@ -338,8 +338,18 @@ impl Adapter {
         };
 
         let ap_is_scanning = match self.device.access_point.as_ref() {
-            Some(ap) => ap.is_scanning.unwrap_or_default(),
-            None => false,
+            Some(ap) => {
+                if ap.has_started {
+                    match ap.is_scanning {
+                        Some(v) => v.to_string(),
+                        None => "-".to_string(),
+                    }
+                } else {
+                    "-".to_string()
+                }
+            }
+
+            None => "-".to_string(),
         };
 
         let row = Row::new(vec![
@@ -353,7 +363,7 @@ impl Adapter {
             ap_name,
             ap_frequency,
             ap_used_cipher,
-            ap_is_scanning.to_string(),
+            ap_is_scanning,
         ]);
 
         let widths = [
