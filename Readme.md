@@ -1,8 +1,13 @@
 <div align="center">
   <h2> TUI for managing wifi </h2>
-  <br>
-  <img src="https://github.com/pythops/impala/assets/57548585/3cfdf034-9b00-41ba-85ac-a079b5cf6b65"/>
 </div>
+
+## 📸 Demo
+
+|                                          Station                                          |                                       Access Point                                        |
+| :---------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: |
+| ![](https://github.com/pythops/impala/assets/57548585/26ecfa92-f881-4d6b-b725-4c65f7a8a399) | ![](https://github.com/pythops/impala/assets/57548585/b1e8a1f9-b438-4a18-b86e-5e3a0436578c) |
+
 
 ## 💡 Prerequisites
 
