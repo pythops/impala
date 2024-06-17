@@ -687,8 +687,9 @@ pub async fn handle_key_events(
                                         }
                                     }
                                     KeyCode::Char(c) if c == config.ap.stop => {
-                                        if let Some(ap) = &app.adapter.device.access_point {
+                                        if let Some(ap) = &mut app.adapter.device.access_point {
                                             ap.stop(sender).await?;
+                                            ap.connected_devices = Vec::new();
                                         }
                                     }
 
