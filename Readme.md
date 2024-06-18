@@ -4,10 +4,9 @@
 
 ## 📸 Demo
 
-|                                          Station                                          |                                       Access Point                                        |
-| :---------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: |
+|                                           Station                                           |                                        Access Point                                         |
+| :-----------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------: |
 | ![](https://github.com/pythops/impala/assets/57548585/26ecfa92-f881-4d6b-b725-4c65f7a8a399) | ![](https://github.com/pythops/impala/assets/57548585/b1e8a1f9-b438-4a18-b86e-5e3a0436578c) |
-
 
 ## 💡 Prerequisites
 
@@ -33,6 +32,12 @@ You can install `impala` from the [AUR](https://aur.archlinux.org/packages/impal
 
 ```bash
 paru -S impala
+```
+
+### Nixpkgs
+
+```shell
+nix-env -iA nixpkgs.impala
 ```
 
 ### ⚒️ Build from source
