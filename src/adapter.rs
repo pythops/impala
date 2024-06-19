@@ -714,55 +714,49 @@ impl Adapter {
             .iter()
             .map(|(net, signal)| {
                 let net = net.known_network.as_ref().unwrap();
+                let signal = format!("{}%", {
+                    if *signal / 100 >= -50 {
+                        100
+                    } else {
+                        2 * (100 + signal / 100)
+                    }
+                });
 
                 if let Some(connected_net) =
                     &self.device.station.as_ref().unwrap().connected_network
                 {
                     if connected_net.name == net.name {
-                        let mut row = vec![
+                        let row = vec![
                             Line::from("󰸞"),
                             Line::from(net.name.clone()),
                             Line::from(net.netowrk_type.clone()).centered(),
                             Line::from(net.is_hidden.to_string()),
                             Line::from(net.is_autoconnect.to_string()).centered(),
-                            Line::from(signal.to_string()).centered(),
+                            Line::from(signal).centered(),
                         ];
-                        if let Some(date) = net.last_connected {
-                            let formatted_date = date.format("%Y-%m-%d %H:%M").to_string();
-                            row.push(Line::from(formatted_date));
-                        }
 
                         Row::new(row)
                     } else {
-                        let mut row = vec![
+                        let row = vec![
                             Line::from(""),
                             Line::from(net.name.clone()),
                             Line::from(net.netowrk_type.clone()).centered(),
                             Line::from(net.is_hidden.to_string()),
                             Line::from(net.is_autoconnect.to_string()).centered(),
-                            Line::from(signal.to_string()).centered(),
+                            Line::from(signal).centered(),
                         ];
-                        if let Some(date) = net.last_connected {
-                            let formatted_date = date.format("%Y-%m-%d %H:%M").to_string();
-                            row.push(Line::from(formatted_date));
-                        }
 
                         Row::new(row)
                     }
                 } else {
-                    let mut row = vec![
+                    let row = vec![
                         Line::from(""),
                         Line::from(net.name.clone()),
                         Line::from(net.netowrk_type.clone()).centered(),
                         Line::from(net.is_hidden.to_string()),
                         Line::from(net.is_autoconnect.to_string()),
-                        Line::from(signal.to_string()).centered(),
+                        Line::from(signal).centered(),
                     ];
-
-                    if let Some(date) = net.last_connected {
-                        let formatted_date = date.format("%Y-%m-%d %H:%M").to_string();
-                        row.push(Line::from(formatted_date));
-                    }
 
                     Row::new(row)
                 }
@@ -775,8 +769,7 @@ impl Adapter {
             Constraint::Length(8),
             Constraint::Length(6),
             Constraint::Length(12),
-            Constraint::Length(12),
-            Constraint::Fill(1),
+            Constraint::Length(6),
         ];
 
         let known_networks_table = Table::new(rows, widths)
@@ -788,7 +781,7 @@ impl Adapter {
                         Cell::from("Security").style(Style::default().fg(Color::Yellow)),
                         Cell::from("Hidden").style(Style::default().fg(Color::Yellow)),
                         Cell::from("Auto Connect").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Last Connected").style(Style::default().fg(Color::Yellow)),
+                        Cell::from("Signal").style(Style::default().fg(Color::Yellow)),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -811,7 +804,7 @@ impl Adapter {
                             ColorMode::Dark => Style::default().fg(Color::White),
                             ColorMode::Light => Style::default().fg(Color::Black),
                         }),
-                        Cell::from("Last Connected").style(match color_mode {
+                        Cell::from("Signal").style(match color_mode {
                             ColorMode::Dark => Style::default().fg(Color::White),
                             ColorMode::Light => Style::default().fg(Color::Black),
                         }),
@@ -883,7 +876,13 @@ impl Adapter {
                     Line::from(net.name.clone()),
                     Line::from(net.netowrk_type.clone()).centered(),
                     Line::from({
-                        let signal = 100 + signal / 100;
+                        let signal = {
+                            if *signal / 100 >= -50 {
+                                100
+                            } else {
+                                2 * (100 + signal / 100)
+                            }
+                        };
                         match signal {
                             n if n >= 75 => format!("{:2}% 󰤨", signal),
                             n if (50..75).contains(&n) => format!("{:2}% 󰤥", signal),
