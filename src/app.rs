@@ -178,7 +178,7 @@ impl App {
             .constraints(
                 [
                     Constraint::Percentage(45),
-                    Constraint::Min(8),
+                    Constraint::Min(10),
                     Constraint::Percentage(45),
                 ]
                 .as_ref(),
@@ -189,9 +189,9 @@ impl App {
             .direction(Direction::Horizontal)
             .constraints(
                 [
-                    Constraint::Length((frame.size().width - 20) / 2),
-                    Constraint::Min(40),
-                    Constraint::Length((frame.size().width - 20) / 2),
+                    Constraint::Length((frame.size().width - 50) / 2),
+                    Constraint::Min(50),
+                    Constraint::Length((frame.size().width - 50) / 2),
                 ]
                 .as_ref(),
             )
@@ -207,12 +207,14 @@ impl App {
                     Constraint::Length(1),
                     Constraint::Length(1),
                     Constraint::Length(1),
+                    Constraint::Length(1),
                 ]
                 .as_ref(),
             )
             .split(area);
 
-        let (message_area, station_choice_area, ap_choice_area) = (chunks[1], chunks[2], chunks[3]);
+        let (message_area, station_choice_area, ap_choice_area, help_area) =
+            (chunks[1], chunks[2], chunks[3], chunks[6]);
 
         let station_choice_area = Layout::default()
             .direction(Direction::Horizontal)
@@ -276,25 +278,33 @@ impl App {
             _ => panic!("unknwon mode"),
         };
 
-        let message = Paragraph::new("Choose a mode: ")
+        let message = Paragraph::new("Please select a mode:")
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::White))
             .block(Block::new().padding(Padding::uniform(1)));
 
         let station_choice = Paragraph::new(station_text)
             .style(Style::default().fg(Color::White))
-            .block(Block::new().padding(Padding::horizontal(4)));
+            .block(Block::new().padding(Padding::horizontal(10)));
 
         let ap_choice = Paragraph::new(ap_text)
             .style(Style::default().fg(Color::White))
-            .block(Block::new().padding(Padding::horizontal(4)));
+            .block(Block::new().padding(Padding::horizontal(10)));
+
+        let help = Paragraph::new(
+            Text::from(" Scroll down: j | Scroll up: k | Enter: Confirm ")
+                .style(Style::default().blue()),
+        )
+        .alignment(Alignment::Center)
+        .style(Style::default())
+        .block(Block::new().padding(Padding::horizontal(1)));
 
         frame.render_widget(Clear, area);
 
         frame.render_widget(
             Block::new()
                 .borders(Borders::ALL)
-                .border_type(BorderType::Thick)
+                .border_type(BorderType::Rounded)
                 .style(Style::default().green())
                 .border_style(Style::default().fg(Color::Green)),
             area,
@@ -302,6 +312,7 @@ impl App {
         frame.render_widget(message, message_area);
         frame.render_widget(ap_choice, ap_choice_area);
         frame.render_widget(station_choice, station_choice_area);
+        frame.render_widget(help, help_area);
     }
 
     pub async fn send_passkey(&mut self) -> AppResult<()> {
