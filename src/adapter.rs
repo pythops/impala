@@ -712,7 +712,7 @@ impl Adapter {
             .unwrap()
             .known_networks
             .iter()
-            .map(|(net, _signal)| {
+            .map(|(net, signal)| {
                 let net = net.known_network.as_ref().unwrap();
 
                 if let Some(connected_net) =
@@ -725,6 +725,7 @@ impl Adapter {
                             Line::from(net.netowrk_type.clone()).centered(),
                             Line::from(net.is_hidden.to_string()),
                             Line::from(net.is_autoconnect.to_string()).centered(),
+                            Line::from(signal.to_string()).centered(),
                         ];
                         if let Some(date) = net.last_connected {
                             let formatted_date = date.format("%Y-%m-%d %H:%M").to_string();
@@ -739,6 +740,7 @@ impl Adapter {
                             Line::from(net.netowrk_type.clone()).centered(),
                             Line::from(net.is_hidden.to_string()),
                             Line::from(net.is_autoconnect.to_string()).centered(),
+                            Line::from(signal.to_string()).centered(),
                         ];
                         if let Some(date) = net.last_connected {
                             let formatted_date = date.format("%Y-%m-%d %H:%M").to_string();
@@ -754,6 +756,7 @@ impl Adapter {
                         Line::from(net.netowrk_type.clone()).centered(),
                         Line::from(net.is_hidden.to_string()),
                         Line::from(net.is_autoconnect.to_string()),
+                        Line::from(signal.to_string()).centered(),
                     ];
 
                     if let Some(date) = net.last_connected {
@@ -771,6 +774,7 @@ impl Adapter {
             Constraint::Length(15),
             Constraint::Length(8),
             Constraint::Length(6),
+            Constraint::Length(12),
             Constraint::Length(12),
             Constraint::Fill(1),
         ];
@@ -874,20 +878,19 @@ impl Adapter {
             .unwrap()
             .new_networks
             .iter()
-            // .filter(|(net, _signal)| net.kn)
             .map(|(net, signal)| {
                 Row::new(vec![
                     Line::from(net.name.clone()),
                     Line::from(net.netowrk_type.clone()).centered(),
                     Line::from({
-                        match signal / 100 {
-                            n if n >= -25 => String::from("󰤨"),
-                            n if (-50..-25).contains(&n) => String::from("󰤥"),
-                            n if (-75..-50).contains(&n) => String::from("󰤢"),
-                            _ => String::from("󰤟"),
+                        let signal = 100 + signal / 100;
+                        match signal {
+                            n if n >= 75 => format!("{:2}% 󰤨", signal),
+                            n if (50..75).contains(&n) => format!("{:2}% 󰤥", signal),
+                            n if (25..50).contains(&n) => format!("{:2}% 󰤢", signal),
+                            _ => format!("{:2}% 󰤟", signal),
                         }
-                    })
-                    .centered(),
+                    }),
                 ])
             })
             .collect();
