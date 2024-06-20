@@ -620,7 +620,42 @@ impl Adapter {
 
         // Station
 
-        let row = Row::new(vec![
+        let station_frequency = {
+            match self.device.station.as_ref() {
+                Some(station) => {
+                    if station.state == "connected" {
+                        match station.diagnostic.get("Frequency") {
+                            Some(f) => {
+                                let f: f32 = f.parse().unwrap();
+                                format!("{:.2} GHz", f / 1000.0)
+                            }
+                            None => String::from("-"),
+                        }
+                    } else {
+                        String::from("-")
+                    }
+                }
+                None => String::from("-"),
+            }
+        };
+
+        let station_security = {
+            match self.device.station.as_ref() {
+                Some(station) => {
+                    if station.state == "connected" {
+                        match station.diagnostic.get("Security") {
+                            Some(f) => f.trim_matches('"').to_string(),
+                            None => String::from("-"),
+                        }
+                    } else {
+                        String::from("-")
+                    }
+                }
+                None => String::from("-"),
+            }
+        };
+
+        let row = vec![
             self.device
                 .station
                 .as_ref()
@@ -635,9 +670,18 @@ impl Adapter {
                 .is_scanning
                 .clone()
                 .to_string(),
-        ]);
+            station_frequency,
+            station_security,
+        ];
 
-        let widths = [Constraint::Length(12), Constraint::Length(10)];
+        let row = Row::new(row);
+
+        let widths = [
+            Constraint::Length(12),
+            Constraint::Length(10),
+            Constraint::Length(10),
+            Constraint::Fill(1),
+        ];
 
         let station_table = Table::new(vec![row], widths)
             .header({
@@ -645,6 +689,8 @@ impl Adapter {
                     Row::new(vec![
                         Cell::from("State").style(Style::default().fg(Color::Yellow)),
                         Cell::from("Scanning").style(Style::default().fg(Color::Yellow)),
+                        Cell::from("Frequency").style(Style::default().fg(Color::Yellow)),
+                        Cell::from("Security").style(Style::default().fg(Color::Yellow)),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -655,6 +701,14 @@ impl Adapter {
                             ColorMode::Light => Style::default().fg(Color::Black),
                         }),
                         Cell::from("Scanning").style(match color_mode {
+                            ColorMode::Dark => Style::default().fg(Color::White),
+                            ColorMode::Light => Style::default().fg(Color::Black),
+                        }),
+                        Cell::from("Frequency").style(match color_mode {
+                            ColorMode::Dark => Style::default().fg(Color::White),
+                            ColorMode::Light => Style::default().fg(Color::Black),
+                        }),
+                        Cell::from("Security").style(match color_mode {
                             ColorMode::Dark => Style::default().fg(Color::White),
                             ColorMode::Light => Style::default().fg(Color::Black),
                         }),

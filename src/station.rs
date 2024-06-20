@@ -1,6 +1,8 @@
+use std::{collections::HashMap, sync::Arc};
+
 use anyhow::Result;
 use futures::future::join_all;
-use iwdrs::station::Station as iwdStation;
+use iwdrs::session::Session;
 use ratatui::widgets::TableState;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -13,7 +15,7 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct Station {
-    pub s: iwdStation,
+    pub session: Arc<Session>,
     pub state: String,
     pub is_scanning: bool,
     pub connected_network: Option<Network>,
@@ -21,13 +23,17 @@ pub struct Station {
     pub known_networks: Vec<(Network, i16)>,
     pub known_networks_state: TableState,
     pub new_networks_state: TableState,
+    pub diagnostic: HashMap<String, String>,
 }
 
 impl Station {
-    pub async fn new(s: iwdStation) -> Result<Self> {
-        let state = s.state().await?;
+    pub async fn new(session: Arc<Session>) -> Result<Self> {
+        let iwd_station = session.station().unwrap();
+        let iwd_station_diagnostic = session.station_diagnostic();
+
+        let state = iwd_station.state().await?;
         let connected_network = {
-            if let Some(n) = s.connected_network().await? {
+            if let Some(n) = iwd_station.connected_network().await? {
                 let network = Network::new(n.clone()).await?;
                 Some(network)
             } else {
@@ -35,8 +41,8 @@ impl Station {
             }
         };
 
-        let is_scanning = s.is_scanning().await?;
-        let discovered_networks = s.discovered_networks().await?;
+        let is_scanning = iwd_station.is_scanning().await?;
+        let discovered_networks = iwd_station.discovered_networks().await?;
         let networks = {
             let collected_futures = discovered_networks
                 .iter()
@@ -80,8 +86,16 @@ impl Station {
             known_networks_state.select(Some(0));
         }
 
+        let mut diagnostic: HashMap<String, String> = HashMap::new();
+
+        if let Some(station_diagnostic) = iwd_station_diagnostic {
+            if let Ok(d) = station_diagnostic.get().await {
+                diagnostic = d;
+            }
+        }
+
         Ok(Self {
-            s,
+            session,
             state,
             is_scanning,
             connected_network,
@@ -89,20 +103,25 @@ impl Station {
             known_networks,
             known_networks_state,
             new_networks_state,
+            diagnostic,
         })
     }
+
     pub async fn refresh(&mut self) -> Result<()> {
-        let state = self.s.state().await?;
-        let is_scanning = self.s.is_scanning().await?;
+        let iwd_station = self.session.station().unwrap();
+        let iwd_station_diagnostic = self.session.station_diagnostic();
+
+        let state = iwd_station.state().await?;
+        let is_scanning = iwd_station.is_scanning().await?;
         let connected_network = {
-            if let Some(n) = self.s.connected_network().await? {
+            if let Some(n) = iwd_station.connected_network().await? {
                 let network = Network::new(n.clone()).await?;
                 Some(network.to_owned())
             } else {
                 None
             }
         };
-        let discovered_networks = self.s.discovered_networks().await?;
+        let discovered_networks = iwd_station.discovered_networks().await?;
         let networks = {
             let collected_futures = discovered_networks
                 .iter()
@@ -181,11 +200,18 @@ impl Station {
 
         self.connected_network = connected_network;
 
+        if let Some(station_diagnostic) = iwd_station_diagnostic {
+            if let Ok(d) = station_diagnostic.get().await {
+                self.diagnostic = d;
+            }
+        }
+
         Ok(())
     }
 
     pub async fn scan(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
-        match self.s.scan().await {
+        let iwd_station = self.session.station().unwrap();
+        match iwd_station.scan().await {
             Ok(_) => Notification::send(
                 "Start Scanning".to_string(),
                 NotificationLevel::Info,
@@ -198,7 +224,8 @@ impl Station {
     }
 
     pub async fn disconnect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
-        match self.s.disconnect().await {
+        let iwd_station = self.session.station().unwrap();
+        match iwd_station.disconnect().await {
             Ok(_) => Notification::send(
                 format!(
                     "Disconnected from {}",

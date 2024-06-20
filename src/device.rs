@@ -29,7 +29,7 @@ impl Device {
         let is_powered = device.is_powered().await?;
 
         let station = match session.station() {
-            Some(iwdrs_station) => match Station::new(iwdrs_station).await {
+            Some(_) => match Station::new(session.clone()).await {
                 Ok(v) => Some(v),
                 Err(e) => {
                     error!("{}", e.to_string());
@@ -94,7 +94,7 @@ impl Device {
                         // Switch mode from ap to station
                         self.access_point = None;
                         self.station = match self.session.station() {
-                            Some(iwdrs_station) => match Station::new(iwdrs_station).await {
+                            Some(_) => match Station::new(self.session.clone()).await {
                                 Ok(v) => Some(v),
                                 Err(e) => {
                                     error!("{}", e.to_string());

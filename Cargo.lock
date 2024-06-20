@@ -852,9 +852,9 @@ checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
 name = "iwdrs"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd7228b9e21f497877a6a571d9f5b75e49769de0d51d99dfa69e650e9648dfe9"
+checksum = "dd1e90335706a26d18121ddb16695946a2ebc4f586d58b2a68aff735a51a0454"
 dependencies = [
  "anyhow",
  "uuid",
@@ -950,9 +950,9 @@ dependencies = [
 
 [[package]]
 name = "miniz_oxide"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87dfd01fe195c66b572b37921ad8803d010623c0aca821bea2302239d155cdae"
+checksum = "b8a240ddb74feaf34a79a7add65a741f3167852fba007066dcac1ca548d89c08"
 dependencies = [
  "adler",
 ]
