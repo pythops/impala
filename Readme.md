@@ -101,6 +101,7 @@ Keybindings can be customized in the config file `$HOME/.config/impala/config.to
 ```toml
 
 switch = "r"
+mode = "station"
 
 [device]
 infos = "i"

@@ -29,3 +29,5 @@ pub mod tracing;
 pub mod adapter;
 
 pub mod access_point;
+
+pub mod cli;

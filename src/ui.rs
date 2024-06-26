@@ -8,7 +8,7 @@ use crate::auth::Auth;
 
 pub fn render(app: &mut App, frame: &mut Frame) {
     // Select mode
-    if app.mode.is_none() {
+    if app.reset_mode {
         app.render(frame);
     } else {
         // App

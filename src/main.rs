@@ -1,8 +1,9 @@
-use clap::{crate_version, Command};
 use impala::app::{App, AppResult};
+use impala::cli;
 use impala::config::Config;
 use impala::event::{Event, EventHandler};
 use impala::handler::handle_key_events;
+use impala::help::Help;
 use impala::tracing::Tracing;
 use impala::tui::Tui;
 use ratatui::backend::CrosstermBackend;
@@ -13,17 +14,23 @@ use std::sync::Arc;
 #[tokio::main]
 async fn main() -> AppResult<()> {
     Tracing::init().unwrap();
-    Command::new("impala")
-        .version(crate_version!())
-        .get_matches();
+
+    let args = cli::cli().get_matches();
 
     let config = Arc::new(Config::new());
 
-    let mut app = App::new(config.clone(), None).await?;
+    let mode = args.get_one::<String>("mode").cloned();
+
+    let help = Help::new(config.clone());
+
+    let mode = mode.unwrap_or_else(|| config.mode.clone());
+
+    App::reset(mode.clone()).await?;
+    let mut app = App::new(help.clone(), mode).await?;
 
     let backend = CrosstermBackend::new(io::stderr());
     let terminal = Terminal::new(backend)?;
-    let events = EventHandler::new(250);
+    let events = EventHandler::new(500);
     let mut tui = Tui::new(terminal, events);
     tui.init()?;
 
@@ -45,7 +52,7 @@ async fn main() -> AppResult<()> {
             }
             Event::Reset(mode) => {
                 App::reset(mode.clone()).await?;
-                app = App::new(config.clone(), Some(mode)).await?;
+                app = App::new(help.clone(), mode).await?;
             }
             _ => {}
         }

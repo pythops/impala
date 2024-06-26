@@ -8,6 +8,9 @@ pub struct Config {
     #[serde(default = "default_switch_mode")]
     pub switch: char,
 
+    #[serde(default = "default_device_mode")]
+    pub mode: String,
+
     #[serde(default)]
     pub device: Device,
 
@@ -20,6 +23,10 @@ pub struct Config {
 
 fn default_switch_mode() -> char {
     'r'
+}
+
+fn default_device_mode() -> String {
+    String::from("station")
 }
 
 // Device

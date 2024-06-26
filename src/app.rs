@@ -19,7 +19,7 @@ use async_channel::{Receiver, Sender};
 use futures::FutureExt;
 use iwdrs::{agent::Agent, session::Session};
 
-use crate::{adapter::Adapter, config::Config, help::Help, notification::Notification};
+use crate::{adapter::Adapter, help::Help, notification::Notification};
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -57,9 +57,10 @@ pub struct App {
     pub passkey_sender: Sender<String>,
     pub cancel_signal_sender: Sender<()>,
     pub passkey_input: Input,
-    pub mode: Option<String>,
+    pub mode: String,
     pub selected_mode: String,
     pub current_mode: String,
+    pub reset_mode: bool,
 }
 
 pub async fn request_confirmation(
@@ -90,7 +91,7 @@ pub async fn request_confirmation(
 }
 
 impl App {
-    pub async fn new(config: Arc<Config>, mode: Option<String>) -> AppResult<Self> {
+    pub async fn new(help: Help, mode: String) -> AppResult<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -139,7 +140,7 @@ impl App {
         Ok(Self {
             running: true,
             focused_block: FocusedBlock::Device,
-            help: Help::new(config),
+            help,
             color_mode,
             notifications: Vec::new(),
             session,
@@ -152,6 +153,7 @@ impl App {
             mode,
             selected_mode,
             current_mode,
+            reset_mode: false,
         })
     }
 

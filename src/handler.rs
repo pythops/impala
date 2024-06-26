@@ -16,7 +16,7 @@ pub async fn handle_key_events(
     sender: UnboundedSender<Event>,
     config: Arc<Config>,
 ) -> AppResult<()> {
-    if app.mode.is_none() {
+    if app.reset_mode {
         match key_event.code {
             KeyCode::Char('q') => {
                 app.quit();
@@ -122,7 +122,7 @@ pub async fn handle_key_events(
                 KeyCode::Char(c)
                     if c == config.switch && key_event.modifiers == KeyModifiers::CONTROL =>
                 {
-                    app.mode = None;
+                    app.reset_mode = true;
                 }
 
                 // Discard help popup

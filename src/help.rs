@@ -12,7 +12,7 @@ use ratatui::{
 
 use crate::{app::ColorMode, config::Config};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Help {
     block_height: usize,
     state: TableState,
@@ -171,7 +171,7 @@ impl Help {
             ScrollbarState::new(rows_len).position(self.state.selected().unwrap_or_default());
         frame.render_stateful_widget(
             scrollbar,
-            block.inner(&Margin {
+            block.inner(Margin {
                 vertical: 1,
                 horizontal: 0,
             }),
