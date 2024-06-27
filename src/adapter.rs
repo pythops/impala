@@ -938,10 +938,10 @@ impl Adapter {
                             }
                         };
                         match signal {
-                            n if n >= 75 => format!("{:2}% 󰤨", signal),
-                            n if (50..75).contains(&n) => format!("{:2}% 󰤥", signal),
-                            n if (25..50).contains(&n) => format!("{:2}% 󰤢", signal),
-                            _ => format!("{:2}% 󰤟", signal),
+                            n if n >= 75 => format!("{:3}% 󰤨", signal),
+                            n if (50..75).contains(&n) => format!("{:3}% 󰤥", signal),
+                            n if (25..50).contains(&n) => format!("{:3}% 󰤢", signal),
+                            _ => format!("{:3}% 󰤟", signal),
                         }
                     }),
                 ])
