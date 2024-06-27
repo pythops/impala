@@ -1,3 +1,11 @@
+## v0.2.1 - 2024-06-27
+
+### Added
+
+- Signal strength in %
+- Show Security and Frequency for connected network
+- Choose startup mode from cli or config
+
 ## v0.2 - 2024-06-17
 
 ### Added
