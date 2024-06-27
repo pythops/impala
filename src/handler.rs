@@ -344,9 +344,16 @@ pub async fn handle_key_events(
                                                             .unwrap()
                                                             .new_networks[net_index]
                                                             .clone();
+
+                                                        let mode = app.current_mode.clone();
                                                         tokio::spawn(async move {
                                                             net.connect(sender.clone())
                                                                 .await
+                                                                .unwrap();
+
+                                                            sender
+                                                                .clone()
+                                                                .send(Event::Reset(mode))
                                                                 .unwrap();
                                                         });
                                                     }
