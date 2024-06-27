@@ -4,9 +4,7 @@
 
 ## 📸 Demo
 
-|                                           Station                                           |                                        Access Point                                         |
-| :-----------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------: |
-| ![](https://github.com/pythops/impala/assets/57548585/26ecfa92-f881-4d6b-b725-4c65f7a8a399) | ![](https://github.com/pythops/impala/assets/57548585/b1e8a1f9-b438-4a18-b86e-5e3a0436578c) |
+![](https://github.com/pythops/impala/assets/57548585/b96e7af4-cba4-49c7-a36f-12c83839134d)
 
 ## 💡 Prerequisites
 
