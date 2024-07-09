@@ -109,7 +109,7 @@ infos = "i"
 toggle_power = "o"
 
 [access_point]
-start = 's'
+start = 'n'
 stop = 'x'
 
 [station]
