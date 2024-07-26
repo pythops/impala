@@ -30,7 +30,7 @@ async fn main() -> AppResult<()> {
 
     let backend = CrosstermBackend::new(io::stderr());
     let terminal = Terminal::new(backend)?;
-    let events = EventHandler::new(500);
+    let events = EventHandler::new(50000);
     let mut tui = Tui::new(terminal, events);
     tui.init()?;
 
