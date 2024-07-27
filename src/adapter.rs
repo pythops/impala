@@ -1049,7 +1049,9 @@ impl Adapter {
         color_mode: ColorMode,
         focused_block: FocusedBlock,
     ) {
-        if false {
+        let screen_height = frame.size().height;
+        if screen_height > 30 {
+
             let (device_block, station_block, known_networks_block, new_networks_block) = {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
