@@ -13,7 +13,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{ColorMode, FocusedBlock},
+    app::{ColorMode, CharSet, FocusedBlock},
     device::Device,
 };
 
@@ -1049,8 +1049,7 @@ impl Adapter {
         color_mode: ColorMode,
         focused_block: FocusedBlock,
     ) {
-        let screen_height = frame.size().height;
-        if screen_height > 30 {
+        if frame.size().height > 30 {
 
             let (device_block, station_block, known_networks_block, new_networks_block) = {
                 let chunks = Layout::default()
@@ -1099,9 +1098,32 @@ impl Adapter {
                 (chunks[0], chunks[1])
             };
 
+            // Differentiate selected tab with ASCII
+            fn format_tab_title(unicode: bool, focused_block: FocusedBlock,
+                title_block: FocusedBlock, title: &str) -> String {
+                if !unicode && (focused_block == title_block) {
+                    format!("[{}]", title.to_uppercase())
+                } else {
+                    format!(" {} ", title)
+                }
+            }
+
+            let unicode = false;
+            let device_tab_title = format_tab_title(unicode, focused_block,
+                FocusedBlock::Device, "Device");
+            let station_tab_title = format_tab_title(unicode, focused_block,
+                FocusedBlock::Station, "Station");
+            let known_networks_tab_title = format_tab_title(unicode, focused_block,
+                FocusedBlock::KnownNetworks,
+                if frame.size().width >= 56 { "Known networks" } else { "Known nets" });
+            let new_networks_tab_title = format_tab_title(unicode, focused_block,
+                FocusedBlock::NewNetworks,
+                if frame.size().width >= 56 { "New networks" } else { "New nets" });
+
             let tabs = Tabs::new(vec![
-                "Device", "Station", "Known networks", "New networks"
-            ])
+                device_tab_title, station_tab_title, known_networks_tab_title,
+                    new_networks_tab_title]
+            )
             .style(Style::default().fg(Color::White));
 
             if focused_block == FocusedBlock::Device {

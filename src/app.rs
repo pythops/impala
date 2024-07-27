@@ -43,6 +43,12 @@ pub enum ColorMode {
     Light,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CharSet {
+    Unicode,
+    Ascii
+}
+
 #[derive(Debug)]
 pub struct App {
     pub running: bool,
