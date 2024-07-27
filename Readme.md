@@ -115,6 +115,7 @@ stop = 'x'
 [station]
 toggle_scanning = "s"
 toggle_connect = " "
+auto_scan = true
 
 [station.known_network]
 toggle_autoconnect = "a"

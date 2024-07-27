@@ -19,7 +19,7 @@ use async_channel::{Receiver, Sender};
 use futures::FutureExt;
 use iwdrs::{agent::Agent, session::Session};
 
-use crate::{adapter::Adapter, help::Help, notification::Notification};
+use crate::{adapter::Adapter, config::Config, help::Help, notification::Notification};
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -91,7 +91,7 @@ pub async fn request_confirmation(
 }
 
 impl App {
-    pub async fn new(help: Help, mode: String) -> AppResult<Self> {
+    pub async fn new(help: Help, config: Arc<Config>, mode: String) -> AppResult<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -102,6 +102,18 @@ impl App {
                 }
             }
         };
+
+        // Start scanning if enabled
+        if config.station.auto_scan {
+            let iwd_station = session.station().unwrap();
+            match iwd_station.scan().await {
+                Ok(_) => (),
+                Err(e) => {
+                    error!("Failed to start scan");
+                    error!("{}", e.to_string());
+                }
+            }
+        }
 
         let adapter = Adapter::new(session.clone()).await.unwrap();
 

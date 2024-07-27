@@ -59,6 +59,9 @@ pub struct Station {
     #[serde(default = "default_station_toggle_connect")]
     pub toggle_connect: char,
 
+    #[serde(default = "default_station_auto_scan")]
+    pub auto_scan: bool,
+
     #[serde(default)]
     pub known_network: KnownNetwork,
 }
@@ -69,6 +72,7 @@ impl Default for Station {
             start_scanning: 's',
             toggle_connect: ' ',
             known_network: KnownNetwork::default(),
+            auto_scan: true,
         }
     }
 }
@@ -99,6 +103,10 @@ impl Default for KnownNetwork {
 
 fn default_station_remove_known_network() -> char {
     'd'
+}
+
+fn default_station_auto_scan() -> bool {
+    true
 }
 
 // Access Point

@@ -26,7 +26,7 @@ async fn main() -> AppResult<()> {
     let mode = mode.unwrap_or_else(|| config.mode.clone());
 
     App::reset(mode.clone()).await?;
-    let mut app = App::new(help.clone(), mode).await?;
+    let mut app = App::new(help.clone(), config.clone(), mode).await?;
 
     let backend = CrosstermBackend::new(io::stderr());
     let terminal = Terminal::new(backend)?;
@@ -52,7 +52,7 @@ async fn main() -> AppResult<()> {
             }
             Event::Reset(mode) => {
                 App::reset(mode.clone()).await?;
-                app = App::new(help.clone(), mode).await?;
+                app = App::new(help.clone(), config.clone(), mode).await?;
             }
             _ => {}
         }
