@@ -102,6 +102,8 @@ impl Adapter {
             }
         }]);
 
+        let narrow_mode =  frame.size().width < 72;
+
         let widths = [
             Constraint::Length(8),
             Constraint::Length(8),
@@ -163,7 +165,7 @@ impl Adapter {
                         }
                     }),
             )
-            .column_spacing(3)
+            .column_spacing(if narrow_mode { 1 } else { 3 })
             .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
                 _ => Style::default().fg(Color::White),
@@ -223,10 +225,12 @@ impl Adapter {
             self.device.address.clone(),
         ]);
 
+        let narrow_mode =  frame.size().width < 72;
+
         let widths = [
             Constraint::Length(8),
             Constraint::Length(12),
-            Constraint::Length(10),
+            Constraint::Length(9),
             Constraint::Fill(1),
         ];
 
@@ -290,7 +294,7 @@ impl Adapter {
                         }
                     }),
             )
-            .column_spacing(3)
+            .column_spacing(if narrow_mode { 1 } else { 3 })
             .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
                 _ => Style::default().fg(Color::White),
@@ -368,6 +372,8 @@ impl Adapter {
             ap_is_scanning,
         ]);
 
+        let narrow_mode =  frame.size().width < 72;
+
         let widths = [
             Constraint::Length(10),
             Constraint::Length(15),
@@ -441,7 +447,7 @@ impl Adapter {
                         }
                     }),
             )
-            .column_spacing(3)
+            .column_spacing(if narrow_mode { 1 } else { 3 })
             .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
                 _ => Style::default().fg(Color::White),
@@ -525,6 +531,8 @@ impl Adapter {
             self.device.address.clone(),
         ]);
 
+        let narrow_mode =  frame.size().width < 72;
+
         let widths = [
             Constraint::Length(8),
             Constraint::Length(8),
@@ -592,7 +600,7 @@ impl Adapter {
                         }
                     }),
             )
-            .column_spacing(3)
+            .column_spacing(if narrow_mode { 1 } else { 3 })
             .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
                 _ => Style::default().fg(Color::White),
@@ -670,6 +678,8 @@ impl Adapter {
 
         let row = Row::new(row);
 
+        let narrow_mode =  frame.size().width < 72;
+
         let widths = [
             Constraint::Length(12),
             Constraint::Length(10),
@@ -737,7 +747,7 @@ impl Adapter {
                         }
                     }),
             )
-            .column_spacing(3)
+            .column_spacing(if narrow_mode { 1 } else { 3 })
             .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
                 _ => Style::default().fg(Color::White),
@@ -782,7 +792,7 @@ impl Adapter {
             {
                 if connected_net.name == net.name {
                     let row = vec![
-                        Line::from("󰸞"),
+                        Line::from(if self.config.unicode { "󰸞" } else { "*" }),
                         Line::from(net.name.clone()),
                         Line::from(net.netowrk_type.clone()).centered(),
                         Line::from(net.is_hidden.to_string()),
@@ -818,12 +828,14 @@ impl Adapter {
         })
         .collect();
 
+        let narrow_mode =  frame.size().width < 72;
+
         let widths = [
-            Constraint::Length(2),
+            Constraint::Length(1),
             Constraint::Length(15),
             Constraint::Length(8),
             Constraint::Length(6),
-            Constraint::Length(12),
+            Constraint::Length(if narrow_mode { 7 } else { 12 }),
             Constraint::Length(6),
         ];
 
@@ -835,7 +847,8 @@ impl Adapter {
                         Cell::from("Name").style(Style::default().fg(Color::Yellow)),
                         Cell::from("Security").style(Style::default().fg(Color::Yellow)),
                         Cell::from("Hidden").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Auto Connect").style(Style::default().fg(Color::Yellow)),
+                        Cell::from(if narrow_mode { "AutoCon" } else { "Auto Connect" })
+                            .style(Style::default().fg(Color::Yellow)),
                         Cell::from("Signal").style(Style::default().fg(Color::Yellow)),
                     ])
                     .style(Style::new().bold())
@@ -894,7 +907,7 @@ impl Adapter {
                         }
                     }),
             )
-            .column_spacing(4)
+            .column_spacing(if narrow_mode { 1 } else { 4 })
             .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
                 _ => Style::default().fg(Color::White),
@@ -944,21 +957,29 @@ impl Adapter {
                             2 * (100 + signal / 100)
                         }
                     };
-                    match signal {
-                        n if n >= 75 => format!("{:3}% 󰤨", signal),
-                        n if (50..75).contains(&n) => format!("{:3}% 󰤥", signal),
-                        n if (25..50).contains(&n) => format!("{:3}% 󰤢", signal),
-                        _ => format!("{:3}% 󰤟", signal),
-                    }
+
+                    let signal_level = match signal {
+                        n if n >= 75
+                            => if self.config.unicode { "󰤨" } else { "(****))" },
+                        n if (50..75).contains(&n)
+                            => if self.config.unicode { "󰤥" } else { "(*** )" },
+                        n if (25..50).contains(&n)
+                            => if self.config.unicode { "󰤢" } else { "(**  )" },
+                        _ => if self.config.unicode { "󰤟" } else { "(*   )" },
+                    };
+
+                    format!("{:3}% {}", signal, signal_level)
                 }),
             ])
         })
         .collect();
 
+        let narrow_mode =  frame.size().width < 72;
+
         let widths = [
             Constraint::Length(15),
             Constraint::Length(8),
-            Constraint::Length(6),
+            Constraint::Length(if self.config.unicode { 6 } else { 11 }),
         ];
 
         let new_networks_table = Table::new(rows, widths)
@@ -1016,7 +1037,7 @@ impl Adapter {
                         }
                     }),
             )
-            .column_spacing(4)
+            .column_spacing(if narrow_mode { 1 } else { 4 })
             .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
                 _ => Style::default().fg(Color::White),
