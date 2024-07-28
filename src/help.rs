@@ -38,7 +38,7 @@ impl Help {
                 ),
                 (Cell::from("Esc").bold(), "Dismiss different pop-ups"),
                 (
-                    Cell::from("Tab or Shift+Tab").bold(),
+                    Cell::from("Tab, Shift+Tab, Left, Right, h, l").bold(),
                     "Switch between different sections",
                 ),
                 (Cell::from("j or Down").bold(), "Scroll down"),

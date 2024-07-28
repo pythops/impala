@@ -131,6 +131,13 @@ pub async fn handle_key_events(
                         || app.focused_block == FocusedBlock::AdapterInfos
                     {
                         app.focused_block = FocusedBlock::Device;
+                    } else if app.focused_block == FocusedBlock::Device
+                        || app.focused_block == FocusedBlock::Station
+                        || app.focused_block == FocusedBlock::AccessPoint
+                        || app.focused_block == FocusedBlock::KnownNetworks
+                        || app.focused_block == FocusedBlock::NewNetworks
+                    {
+                        app.quit();
                     }
                 }
 
@@ -159,103 +166,105 @@ pub async fn handle_key_events(
                     };
                 }
 
-                KeyCode::Tab => match app.adapter.device.mode.as_str() {
-                    "station" => match app.focused_block {
-                        FocusedBlock::Device => {
-                            app.focused_block = FocusedBlock::Station;
-                        }
-                        FocusedBlock::Station => {
-                            app.focused_block = FocusedBlock::KnownNetworks;
-                        }
-                        FocusedBlock::KnownNetworks => {
-                            app.focused_block = FocusedBlock::NewNetworks;
-                        }
-                        FocusedBlock::NewNetworks => {
-                            app.focused_block = FocusedBlock::Device;
-                        }
-                        _ => {}
-                    },
-                    "ap" => match app.focused_block {
-                        FocusedBlock::Device => {
-                            app.focused_block = FocusedBlock::AccessPoint;
-                        }
-                        FocusedBlock::AccessPoint => {
-                            if let Some(ap) = app.adapter.device.access_point.as_ref() {
-                                if ap.connected_devices.is_empty() {
-                                    app.focused_block = FocusedBlock::Device;
-                                } else {
-                                    app.focused_block = FocusedBlock::AccessPointConnectedDevices;
+                KeyCode::Tab | KeyCode::Char('l') | KeyCode::Right =>
+                    match app.adapter.device.mode.as_str() {
+                        "station" => match app.focused_block {
+                            FocusedBlock::Device => {
+                                app.focused_block = FocusedBlock::Station;
+                            }
+                            FocusedBlock::Station => {
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+                            FocusedBlock::KnownNetworks => {
+                                app.focused_block = FocusedBlock::NewNetworks;
+                            }
+                            FocusedBlock::NewNetworks => {
+                                app.focused_block = FocusedBlock::Device;
+                            }
+                            _ => {}
+                        },
+                        "ap" => match app.focused_block {
+                            FocusedBlock::Device => {
+                                app.focused_block = FocusedBlock::AccessPoint;
+                            }
+                            FocusedBlock::AccessPoint => {
+                                if let Some(ap) = app.adapter.device.access_point.as_ref() {
+                                    if ap.connected_devices.is_empty() {
+                                        app.focused_block = FocusedBlock::Device;
+                                    } else {
+                                        app.focused_block = FocusedBlock::AccessPointConnectedDevices;
+                                    }
                                 }
                             }
-                        }
-                        FocusedBlock::AccessPointConnectedDevices => {
-                            app.focused_block = FocusedBlock::Device;
-                        }
-                        FocusedBlock::AccessPointInput => {
-                            if let Some(ap) = &mut app.adapter.device.access_point {
-                                match ap.focused_section {
-                                    APFocusedSection::SSID => {
-                                        ap.focused_section = APFocusedSection::PSK
-                                    }
-                                    APFocusedSection::PSK => {
-                                        ap.focused_section = APFocusedSection::SSID
-                                    }
-                                };
+                            FocusedBlock::AccessPointConnectedDevices => {
+                                app.focused_block = FocusedBlock::Device;
                             }
-                        }
+                            FocusedBlock::AccessPointInput => {
+                                if let Some(ap) = &mut app.adapter.device.access_point {
+                                    match ap.focused_section {
+                                        APFocusedSection::SSID => {
+                                            ap.focused_section = APFocusedSection::PSK
+                                        }
+                                        APFocusedSection::PSK => {
+                                            ap.focused_section = APFocusedSection::SSID
+                                        }
+                                    };
+                                }
+                            }
+                            _ => {}
+                        },
                         _ => {}
                     },
-                    _ => {}
-                },
 
-                KeyCode::BackTab => match app.adapter.device.mode.as_str() {
-                    "station" => match app.focused_block {
-                        FocusedBlock::Device => {
-                            app.focused_block = FocusedBlock::NewNetworks;
-                        }
-                        FocusedBlock::Station => {
-                            app.focused_block = FocusedBlock::Device;
-                        }
-                        FocusedBlock::KnownNetworks => {
-                            app.focused_block = FocusedBlock::Station;
-                        }
-                        FocusedBlock::NewNetworks => {
-                            app.focused_block = FocusedBlock::KnownNetworks;
-                        }
-                        _ => {}
-                    },
-                    "ap" => match app.focused_block {
-                        FocusedBlock::Device => {
-                            if let Some(ap) = app.adapter.device.access_point.as_ref() {
-                                if ap.connected_devices.is_empty() {
-                                    app.focused_block = FocusedBlock::AccessPoint;
-                                } else {
-                                    app.focused_block = FocusedBlock::AccessPointConnectedDevices;
+                    KeyCode::BackTab | KeyCode::Char('h') | KeyCode::Left =>
+                    match app.adapter.device.mode.as_str() {
+                        "station" => match app.focused_block {
+                            FocusedBlock::Device => {
+                                app.focused_block = FocusedBlock::NewNetworks;
+                            }
+                            FocusedBlock::Station => {
+                                app.focused_block = FocusedBlock::Device;
+                            }
+                            FocusedBlock::KnownNetworks => {
+                                app.focused_block = FocusedBlock::Station;
+                            }
+                            FocusedBlock::NewNetworks => {
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+                            _ => {}
+                        },
+                        "ap" => match app.focused_block {
+                            FocusedBlock::Device => {
+                                if let Some(ap) = app.adapter.device.access_point.as_ref() {
+                                    if ap.connected_devices.is_empty() {
+                                        app.focused_block = FocusedBlock::AccessPoint;
+                                    } else {
+                                        app.focused_block = FocusedBlock::AccessPointConnectedDevices;
+                                    }
                                 }
                             }
-                        }
-                        FocusedBlock::AccessPoint => {
-                            app.focused_block = FocusedBlock::Device;
-                        }
-                        FocusedBlock::AccessPointConnectedDevices => {
-                            app.focused_block = FocusedBlock::AccessPoint;
-                        }
-                        FocusedBlock::AccessPointInput => {
-                            if let Some(ap) = &mut app.adapter.device.access_point {
-                                match ap.focused_section {
-                                    APFocusedSection::SSID => {
-                                        ap.focused_section = APFocusedSection::PSK
-                                    }
-                                    APFocusedSection::PSK => {
-                                        ap.focused_section = APFocusedSection::SSID
-                                    }
-                                };
+                            FocusedBlock::AccessPoint => {
+                                app.focused_block = FocusedBlock::Device;
                             }
-                        }
+                            FocusedBlock::AccessPointConnectedDevices => {
+                                app.focused_block = FocusedBlock::AccessPoint;
+                            }
+                            FocusedBlock::AccessPointInput => {
+                                if let Some(ap) = &mut app.adapter.device.access_point {
+                                    match ap.focused_section {
+                                        APFocusedSection::SSID => {
+                                            ap.focused_section = APFocusedSection::PSK
+                                        }
+                                        APFocusedSection::PSK => {
+                                            ap.focused_section = APFocusedSection::SSID
+                                        }
+                                    };
+                                }
+                            }
+                            _ => {}
+                        },
                         _ => {}
                     },
-                    _ => {}
-                },
 
                 _ => {
                     match app.focused_block {

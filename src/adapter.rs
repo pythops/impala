@@ -8,7 +8,7 @@ use ratatui::{
     style::{Color, Style, Stylize},
     text::Line,
     widgets::{Block, BorderType, Borders, Cell, Clear, List, Padding, Row, Table,
-        TableState, Tabs},
+        TableState, Tabs, Paragraph},
     Frame,
 };
 
@@ -1061,6 +1061,24 @@ impl Adapter {
         );
     }
 
+    pub fn render_status_bar(&self, frame: &mut Frame, status_bar_block: Rect) {
+        let status_bar_content = Paragraph::new(format!(
+            "Q: quit Arrows/HJKL: move Space: connect ?: help"
+        ))
+        .style(Style::default()
+            .fg(match self.config.color_mode {
+                ColorMode::Light => Color::White,
+                _ => Color::Black
+            })
+            .bg(match self.config.color_mode {
+                ColorMode::Light => Color::Black,
+                _ => Color::White
+            })
+        );
+
+        frame.render_widget(status_bar_content, status_bar_block);
+    }
+
     pub fn render_station_mode(
         &self,
         frame: &mut Frame,
@@ -1104,15 +1122,16 @@ impl Adapter {
 
         // Render compact tabs view
         } else {
-            let (tab_bar_block, content_block) = {
+            let (tab_bar_block, content_block, status_bar_block) = {
                 let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
                     Constraint::Length(1),
                     Constraint::Min(0),
+                    Constraint::Length(1),
                 ].as_ref())
                 .split(frame.size());
-                (chunks[0], chunks[1])
+                (chunks[0], chunks[1], chunks[2])
             };
 
             // Differentiate selected tab with ASCII
@@ -1166,6 +1185,8 @@ impl Adapter {
                     false /* don't render title */,
                     true /* new networks block focused */ );
             }
+
+            self.render_status_bar(frame, status_bar_block);
         }
     }
 
