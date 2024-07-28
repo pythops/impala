@@ -103,6 +103,7 @@ Keybindings can be customized in the config file `$HOME/.config/impala/config.to
 
 switch = "r"
 mode = "station"
+color_mode = "auto"
 unicode = true
 
 [device]

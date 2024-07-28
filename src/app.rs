@@ -37,24 +37,12 @@ pub enum FocusedBlock {
     AccessPointConnectedDevices,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ColorMode {
-    Dark,
-    Light,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum CharSet {
-    Unicode,
-    Ascii
-}
-
 #[derive(Debug)]
 pub struct App {
     pub running: bool,
     pub focused_block: FocusedBlock,
     pub help: Help,
-    pub color_mode: ColorMode,
+    pub config: Arc<Config>,
     pub notifications: Vec<Notification>,
     pub session: Arc<Session>,
     pub adapter: Adapter,
@@ -121,7 +109,7 @@ impl App {
             }
         }
 
-        let adapter = Adapter::new(session.clone()).await.unwrap();
+        let adapter = Adapter::new(config.clone(), session.clone()).await.unwrap();
 
         let current_mode = adapter.device.mode.clone();
 
@@ -149,17 +137,11 @@ impl App {
 
         let agent_manager = session.register_agent(agent).await?;
 
-        let color_mode = match terminal_light::luma() {
-            Ok(luma) if luma > 0.6 => ColorMode::Light,
-            Ok(_) => ColorMode::Dark,
-            Err(_) => ColorMode::Dark,
-        };
-
         Ok(Self {
             running: true,
             focused_block: FocusedBlock::Device,
             help,
-            color_mode,
+            config: config.clone(),
             notifications: Vec::new(),
             session,
             adapter,
@@ -187,7 +169,7 @@ impl App {
             }
         };
 
-        let adapter = Adapter::new(session.clone()).await.unwrap();
+        let adapter = Adapter::new(Arc::new(Config::default()), session.clone()).await.unwrap();
         adapter.device.set_mode(mode).await?;
         Ok(())
     }

@@ -1,7 +1,26 @@
 use toml;
 
 use dirs;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ColorMode {
+    Auto,
+    Dark,
+    Light,
+}
+
+impl<'de> Deserialize<'de> for ColorMode {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: Deserializer<'de>, {
+        let s: String = Deserialize::deserialize(deserializer)?;
+        match s.to_lowercase().as_str() {
+            "auto" => Ok(ColorMode::Auto),
+            "light" => Ok(ColorMode::Light),
+            _ => Ok(ColorMode::Dark),
+        }
+    }
+}
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -13,6 +32,9 @@ pub struct Config {
 
     #[serde(default = "default_unicode")]
     pub unicode: bool,
+
+    #[serde(default = "default_color_mode")]
+    pub color_mode: ColorMode,
 
     #[serde(default)]
     pub device: Device,
@@ -34,6 +56,10 @@ fn default_device_mode() -> String {
 
 fn default_unicode() -> bool {
     true
+}
+
+fn default_color_mode() -> ColorMode {
+    ColorMode::Auto
 }
 
 // Device

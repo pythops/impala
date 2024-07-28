@@ -1,6 +1,6 @@
 use impala::app::{App, AppResult};
 use impala::cli;
-use impala::config::Config;
+use impala::config::{Config, ColorMode};
 use impala::event::{Event, EventHandler};
 use impala::handler::handle_key_events;
 use impala::help::Help;
@@ -17,7 +17,21 @@ async fn main() -> AppResult<()> {
 
     let args = cli::cli().get_matches();
 
-    let config = Arc::new(Config::new());
+    let config = Arc::new({
+        let mut config = Config::new();
+
+        // Automatically detect color mode
+        if config.color_mode == ColorMode::Auto {
+
+            config.color_mode = match terminal_light::luma() {
+                Ok(luma) if luma > 0.6 => ColorMode::Light,
+                Ok(_) => ColorMode::Dark,
+                Err(_) => ColorMode::Dark,
+            };
+        }
+
+        config
+    });
 
     let mode = args.get_one::<String>("mode").cloned();
 

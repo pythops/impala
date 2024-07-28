@@ -13,12 +13,14 @@ use ratatui::{
 };
 
 use crate::{
-    app::{ColorMode, CharSet, FocusedBlock},
+    config::{Config, ColorMode},
+    app::FocusedBlock,
     device::Device,
 };
 
 #[derive(Debug, Clone)]
 pub struct Adapter {
+    pub config: Arc<Config>,
     pub adapter: iwdAdapter,
     pub is_powered: bool,
     pub name: String,
@@ -29,7 +31,7 @@ pub struct Adapter {
 }
 
 impl Adapter {
-    pub async fn new(session: Arc<Session>) -> Result<Self> {
+    pub async fn new(config: Arc<Config>, session: Arc<Session>) -> Result<Self> {
         let adapter = session.adapter().context("No adapter found")?;
 
         let is_powered = adapter.is_powered().await?;
@@ -40,6 +42,7 @@ impl Adapter {
         let device = Device::new(session.clone()).await?;
 
         Ok(Self {
+            config: config.clone(),
             adapter,
             is_powered,
             name,
@@ -56,30 +59,29 @@ impl Adapter {
         Ok(())
     }
 
-    pub fn render(&self, frame: &mut Frame, color_mode: ColorMode, focused_block: FocusedBlock) {
+    pub fn render(&self, frame: &mut Frame, focused_block: FocusedBlock) {
         match self.device.mode.as_str() {
             "station" => {
                 if self.device.station.is_some() {
-                    self.render_station_mode(frame, color_mode, focused_block);
+                    self.render_station_mode(frame, focused_block);
                 } else {
-                    self.render_other_mode(frame, color_mode, focused_block);
+                    self.render_other_mode(frame, focused_block);
                 }
             }
             "ap" => {
                 if self.device.access_point.is_some() {
-                    self.render_access_point_mode(frame, color_mode, focused_block);
+                    self.render_access_point_mode(frame, focused_block);
                 } else {
-                    self.render_other_mode(frame, color_mode, focused_block);
+                    self.render_other_mode(frame, focused_block);
                 }
             }
-            _ => self.render_other_mode(frame, color_mode, focused_block),
+            _ => self.render_other_mode(frame, focused_block),
         }
     }
 
     pub fn render_other_mode(
         &self,
         frame: &mut Frame,
-        color_mode: ColorMode,
         focused_block: FocusedBlock,
     ) {
         let device_block = {
@@ -118,17 +120,17 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Name").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Mode").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Mode").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Powered").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Powered").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
                     ])
                     .style(Style::new().bold())
@@ -162,9 +164,9 @@ impl Adapter {
                     }),
             )
             .column_spacing(3)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
+            .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
+                _ => Style::default().fg(Color::White),
             })
             .highlight_style(if focused_block == FocusedBlock::Device {
                 Style::default().bg(Color::DarkGray)
@@ -179,7 +181,6 @@ impl Adapter {
     pub fn render_access_point_mode(
         &self,
         frame: &mut Frame,
-        color_mode: ColorMode,
         focused_block: FocusedBlock,
     ) {
         let any_connected_devices = match self.device.access_point.as_ref() {
@@ -242,21 +243,21 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Name").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Mode").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Mode").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Powered").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Powered").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Address").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Address").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
                     ])
                     .style(Style::new().bold())
@@ -290,9 +291,9 @@ impl Adapter {
                     }),
             )
             .column_spacing(3)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
+            .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
+                _ => Style::default().fg(Color::White),
             })
             .highlight_style(if focused_block == FocusedBlock::Device {
                 Style::default().bg(Color::DarkGray)
@@ -389,25 +390,25 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Started").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Started").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("SSID").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("SSID").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Frequency").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Frequency").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Cipher").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Cipher").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Scanning").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Scanning").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
                     ])
                     .style(Style::new().bold())
@@ -441,9 +442,9 @@ impl Adapter {
                     }),
             )
             .column_spacing(3)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
+            .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
+                _ => Style::default().fg(Color::White),
             })
             .highlight_style(if focused_block == FocusedBlock::AccessPoint {
                 Style::default().bg(Color::DarkGray)
@@ -495,9 +496,9 @@ impl Adapter {
                             }
                         }),
                 )
-                .style(match color_mode {
-                    ColorMode::Dark => Style::default().fg(Color::White),
+                .style(match self.config.color_mode {
                     ColorMode::Light => Style::default().fg(Color::Black),
+                    _ => Style::default().fg(Color::White),
                 });
 
             frame.render_widget(connected_devices_list, connected_devices_block);
@@ -508,7 +509,6 @@ impl Adapter {
         &self,
         frame: &mut Frame,
         device_block: Rect,
-        color_mode: ColorMode,
         render_title: bool,
         is_focused: bool,
     ) {
@@ -545,21 +545,21 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Name").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Mode").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Mode").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Powered").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Powered").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Address").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Address").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
                     ])
                     .style(Style::new().bold())
@@ -593,9 +593,9 @@ impl Adapter {
                     }),
             )
             .column_spacing(3)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
+            .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
+                _ => Style::default().fg(Color::White),
             })
             .highlight_style(if is_focused {
                 Style::default().bg(Color::DarkGray)
@@ -611,7 +611,6 @@ impl Adapter {
         &self,
         frame: &mut Frame,
         station_block: Rect,
-        color_mode: ColorMode,
         render_title: bool,
         is_focused: bool,
     ) {
@@ -691,21 +690,21 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("State").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("State").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Scanning").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Scanning").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Frequency").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Frequency").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Security").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Security").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
                     ])
                     .style(Style::new().bold())
@@ -739,9 +738,9 @@ impl Adapter {
                     }),
             )
             .column_spacing(3)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
+            .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
+                _ => Style::default().fg(Color::White),
             })
             .highlight_style(if is_focused {
                 Style::default().bg(Color::DarkGray)
@@ -757,7 +756,6 @@ impl Adapter {
         &self,
         frame: &mut Frame,
         known_networks_block: Rect,
-        color_mode: ColorMode,
         render_title: bool,
         is_focused: bool,
     ) {
@@ -845,25 +843,25 @@ impl Adapter {
                 } else {
                     Row::new(vec![
                         Cell::from(""),
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Name").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Security").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Security").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Hidden").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Hidden").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Auto Connect").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Auto Connect").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Signal").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Signal").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
                     ])
                     .style(Style::new().bold())
@@ -897,9 +895,9 @@ impl Adapter {
                     }),
             )
             .column_spacing(4)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
+            .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
+                _ => Style::default().fg(Color::White),
             })
             .highlight_style(if is_focused {
                 Style::default().bg(Color::DarkGray)
@@ -924,7 +922,6 @@ impl Adapter {
         &self,
         frame: &mut Frame,
         new_networks_block: Rect,
-        color_mode: ColorMode,
         render_title: bool,
         is_focused: bool,
     ) {
@@ -976,17 +973,17 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Name").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Security").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Security").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
-                        Cell::from("Signal").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
+                        Cell::from("Signal").style(match self.config.color_mode {
                             ColorMode::Light => Style::default().fg(Color::Black),
+                            _ => Style::default().fg(Color::White),
                         }),
                     ])
                     .style(Style::new().bold())
@@ -1020,9 +1017,9 @@ impl Adapter {
                     }),
             )
             .column_spacing(4)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
+            .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
+                _ => Style::default().fg(Color::White),
             })
             .highlight_style(if is_focused {
                 Style::default().bg(Color::DarkGray)
@@ -1046,7 +1043,6 @@ impl Adapter {
     pub fn render_station_mode(
         &self,
         frame: &mut Frame,
-        color_mode: ColorMode,
         focused_block: FocusedBlock,
     ) {
         if frame.size().height > 30 {
@@ -1066,22 +1062,22 @@ impl Adapter {
             };
 
             // Device
-            self.render_device_table(frame, device_block, color_mode,
+            self.render_device_table(frame, device_block,
                 true /* render title */,
                 focused_block == FocusedBlock::Device);
 
             // Station
-            self.render_station_table(frame, station_block, color_mode,
+            self.render_station_table(frame, station_block,
                 true /* render title */,
                 focused_block == FocusedBlock::Station);
 
             // Known networks
-            self.render_known_networks_table(frame, known_networks_block, color_mode,
+            self.render_known_networks_table(frame, known_networks_block,
                 true /* render title */,
                 focused_block == FocusedBlock::KnownNetworks);
 
             // New networks
-            self.render_new_networks_table(frame, new_networks_block, color_mode,
+            self.render_new_networks_table(frame, new_networks_block,
                 true /* render title */,
                 focused_block == FocusedBlock::NewNetworks);
 
@@ -1108,15 +1104,14 @@ impl Adapter {
                 }
             }
 
-            let unicode = false;
-            let device_tab_title = format_tab_title(unicode, focused_block,
+            let device_tab_title = format_tab_title(self.config.unicode, focused_block,
                 FocusedBlock::Device, "Device");
-            let station_tab_title = format_tab_title(unicode, focused_block,
+            let station_tab_title = format_tab_title(self.config.unicode, focused_block,
                 FocusedBlock::Station, "Station");
-            let known_networks_tab_title = format_tab_title(unicode, focused_block,
+            let known_networks_tab_title = format_tab_title(self.config.unicode, focused_block,
                 FocusedBlock::KnownNetworks,
                 if frame.size().width >= 56 { "Known networks" } else { "Known nets" });
-            let new_networks_tab_title = format_tab_title(unicode, focused_block,
+            let new_networks_tab_title = format_tab_title(self.config.unicode, focused_block,
                 FocusedBlock::NewNetworks,
                 if frame.size().width >= 56 { "New networks" } else { "New nets" });
 
@@ -1128,32 +1123,32 @@ impl Adapter {
 
             if focused_block == FocusedBlock::Device {
                 frame.render_widget(tabs.select(0), tab_bar_block);
-                self.render_device_table(frame, content_block, color_mode,
+                self.render_device_table(frame, content_block,
                     false /* don't render title */,
                     true /* device block focused */ );
 
             } else if focused_block == FocusedBlock::Station {
                 frame.render_widget(tabs.select(1), tab_bar_block);
-                self.render_station_table(frame, content_block, color_mode,
+                self.render_station_table(frame, content_block,
                     false /* don't render title */,
                     true /* station block focused */ );
 
             } else if focused_block == FocusedBlock::KnownNetworks {
                 frame.render_widget(tabs.select(2), tab_bar_block);
-                self.render_known_networks_table(frame, content_block, color_mode,
+                self.render_known_networks_table(frame, content_block,
                     false /* don't render title */,
                     true /* known networks block focused */ );
 
             } else if focused_block == FocusedBlock::NewNetworks {
                 frame.render_widget(tabs.select(3), tab_bar_block);
-                self.render_new_networks_table(frame, content_block, color_mode,
+                self.render_new_networks_table(frame, content_block,
                     false /* don't render title */,
                     true /* new networks block focused */ );
             }
         }
     }
 
-    pub fn render_adapter(&self, frame: &mut Frame, color_mode: ColorMode) {
+    pub fn render_adapter(&self, frame: &mut Frame) {
         let popup_layout = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
             .constraints(
@@ -1221,9 +1216,9 @@ impl Adapter {
                     .border_type(BorderType::Thick),
             )
             .column_spacing(3)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
+            .style(match self.config.color_mode {
                 ColorMode::Light => Style::default().fg(Color::Black),
+                _ => Style::default().fg(Color::White),
             })
             .highlight_style(Style::default().bg(Color::DarkGray));
 

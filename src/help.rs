@@ -10,10 +10,13 @@ use ratatui::{
     Frame,
 };
 
-use crate::{app::ColorMode, config::Config};
+use crate::{
+    config::{Config, ColorMode}
+};
 
 #[derive(Debug, Clone)]
 pub struct Help {
+    config: Arc<Config>,
     block_height: usize,
     state: TableState,
     keys: Vec<(Cell<'static>, &'static str)>,
@@ -25,6 +28,7 @@ impl Help {
         state.select(Some(0));
 
         Self {
+            config: config.clone(),
             block_height: 0,
             state,
             keys: vec![
@@ -132,7 +136,7 @@ impl Help {
         self.state.select(Some(i));
     }
 
-    pub fn render(&mut self, frame: &mut Frame, color_mode: ColorMode) {
+    pub fn render(&mut self, frame: &mut Frame) {
         let block = help_rect(frame.size());
 
         self.block_height = block.height as usize;
@@ -141,9 +145,9 @@ impl Help {
             .keys
             .iter()
             .map(|key| {
-                Row::new(vec![key.0.to_owned(), key.1.into()]).style(match color_mode {
-                    ColorMode::Dark => Style::default().fg(Color::White),
+                Row::new(vec![key.0.to_owned(), key.1.into()]).style(match self.config.color_mode {
                     ColorMode::Light => Style::default().fg(Color::Black),
+                    _ => Style::default().fg(Color::White),
                 })
             })
             .collect();
