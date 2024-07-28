@@ -57,7 +57,7 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 ### Global
 
-`Tab` or `Shift + Tab`: Switch between different sections.
+`Tab`, `Shift + Tab`, `Left`, `Right`, `h`, `l`: Switch between different sections.
 
 `j` or `Down` : Scroll down.
 

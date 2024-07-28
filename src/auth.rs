@@ -82,7 +82,6 @@ impl Auth {
             .block(Block::new().padding(Padding::uniform(1)));
 
         let passkey = Paragraph::new(passkey)
-            .alignment(Alignment::Center)
             .style(Style::default().fg(Color::White))
             .block(Block::new().style(Style::default().bg(Color::DarkGray)));
 

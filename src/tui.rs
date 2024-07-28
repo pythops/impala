@@ -22,6 +22,7 @@ impl<B: Backend> Tui<B> {
     pub fn init(&mut self) -> AppResult<()> {
         terminal::enable_raw_mode()?;
         crossterm::execute!(io::stderr(), EnterAlternateScreen, EnableMouseCapture)?;
+        crossterm::execute!(io::stdout(), EnterAlternateScreen)?;
 
         let panic_hook = panic::take_hook();
         panic::set_hook(Box::new(move |panic| {
