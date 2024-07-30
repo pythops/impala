@@ -27,12 +27,12 @@ You can install `impala` from [crates.io](https://crates.io/crates/impala)
 cargo install impala
 ```
 
-### 🐧AUR
+### 🐧Arch Linux
 
-You can install `impala` from the [AUR](https://aur.archlinux.org/packages/impala) with using an [AUR helper](https://wiki.archlinux.org/title/AUR_helpers).
+You can install `impala` from the [official repositories]() with using [pacman](https://wiki.archlinux.org/title/pacman).
 
 ```bash
-paru -S impala
+pacman -S impala
 ```
 
 ### Nixpkgs
