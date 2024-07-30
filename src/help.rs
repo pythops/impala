@@ -10,9 +10,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::{
-    config::{Config, ColorMode}
-};
+use crate::config::{ColorMode, Config};
 
 #[derive(Debug, Clone)]
 pub struct Help {

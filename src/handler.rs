@@ -159,7 +159,7 @@ pub async fn handle_key_events(
                     };
                 }
 
-                KeyCode::Tab | KeyCode::Char('l') | KeyCode::Right =>
+                KeyCode::Tab | KeyCode::Char('l') | KeyCode::Right => {
                     match app.adapter.device.mode.as_str() {
                         "station" => match app.focused_block {
                             FocusedBlock::Device => {
@@ -185,7 +185,8 @@ pub async fn handle_key_events(
                                     if ap.connected_devices.is_empty() {
                                         app.focused_block = FocusedBlock::Device;
                                     } else {
-                                        app.focused_block = FocusedBlock::AccessPointConnectedDevices;
+                                        app.focused_block =
+                                            FocusedBlock::AccessPointConnectedDevices;
                                     }
                                 }
                             }
@@ -207,9 +208,10 @@ pub async fn handle_key_events(
                             _ => {}
                         },
                         _ => {}
-                    },
+                    }
+                }
 
-                    KeyCode::BackTab | KeyCode::Char('h') | KeyCode::Left =>
+                KeyCode::BackTab | KeyCode::Char('h') | KeyCode::Left => {
                     match app.adapter.device.mode.as_str() {
                         "station" => match app.focused_block {
                             FocusedBlock::Device => {
@@ -232,7 +234,8 @@ pub async fn handle_key_events(
                                     if ap.connected_devices.is_empty() {
                                         app.focused_block = FocusedBlock::AccessPoint;
                                     } else {
-                                        app.focused_block = FocusedBlock::AccessPointConnectedDevices;
+                                        app.focused_block =
+                                            FocusedBlock::AccessPointConnectedDevices;
                                     }
                                 }
                             }
@@ -257,7 +260,8 @@ pub async fn handle_key_events(
                             _ => {}
                         },
                         _ => {}
-                    },
+                    }
+                }
 
                 _ => {
                     match app.focused_block {

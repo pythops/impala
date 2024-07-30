@@ -7,14 +7,16 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
     text::Line,
-    widgets::{Block, BorderType, Borders, Cell, Clear, List, Padding, Row, Table,
-        TableState, Tabs, Paragraph},
+    widgets::{
+        Block, BorderType, Borders, Cell, Clear, List, Padding, Paragraph, Row, Table, TableState,
+        Tabs,
+    },
     Frame,
 };
 
 use crate::{
-    config::{Config, ColorMode},
     app::FocusedBlock,
+    config::{ColorMode, Config},
     device::Device,
 };
 
@@ -79,11 +81,7 @@ impl Adapter {
         }
     }
 
-    pub fn render_other_mode(
-        &self,
-        frame: &mut Frame,
-        focused_block: FocusedBlock,
-    ) {
+    pub fn render_other_mode(&self, frame: &mut Frame, focused_block: FocusedBlock) {
         let device_block = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
@@ -102,7 +100,7 @@ impl Adapter {
             }
         }]);
 
-        let narrow_mode =  frame.size().width < self.config.narrow_cols;
+        let narrow_mode = frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(8),
@@ -180,11 +178,7 @@ impl Adapter {
         frame.render_stateful_widget(device_table, device_block, &mut device_state);
     }
 
-    pub fn render_access_point_mode(
-        &self,
-        frame: &mut Frame,
-        focused_block: FocusedBlock,
-    ) {
+    pub fn render_access_point_mode(&self, frame: &mut Frame, focused_block: FocusedBlock) {
         let any_connected_devices = match self.device.access_point.as_ref() {
             Some(ap) => !ap.connected_devices.is_empty(),
             None => false,
@@ -225,7 +219,7 @@ impl Adapter {
             self.device.address.clone(),
         ]);
 
-        let narrow_mode =  frame.size().width < self.config.narrow_cols;
+        let narrow_mode = frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(8),
@@ -372,7 +366,7 @@ impl Adapter {
             ap_is_scanning,
         ]);
 
-        let narrow_mode =  frame.size().width < self.config.narrow_cols;
+        let narrow_mode = frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(10),
@@ -531,7 +525,7 @@ impl Adapter {
             self.device.address.clone(),
         ]);
 
-        let narrow_mode =  frame.size().width < self.config.narrow_cols;
+        let narrow_mode = frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(8),
@@ -678,7 +672,7 @@ impl Adapter {
 
         let row = Row::new(row);
 
-        let narrow_mode =  frame.size().width < self.config.narrow_cols;
+        let narrow_mode = frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(12),
@@ -769,66 +763,65 @@ impl Adapter {
         render_title: bool,
         is_focused: bool,
     ) {
-
         let rows: Vec<Row> = self
-        .device
-        .station
-        .as_ref()
-        .unwrap()
-        .known_networks
-        .iter()
-        .map(|(net, signal)| {
-            let net = net.known_network.as_ref().unwrap();
-            let signal = format!("{}%", {
-                if *signal / 100 >= -50 {
-                    100
-                } else {
-                    2 * (100 + signal / 100)
-                }
-            });
+            .device
+            .station
+            .as_ref()
+            .unwrap()
+            .known_networks
+            .iter()
+            .map(|(net, signal)| {
+                let net = net.known_network.as_ref().unwrap();
+                let signal = format!("{}%", {
+                    if *signal / 100 >= -50 {
+                        100
+                    } else {
+                        2 * (100 + signal / 100)
+                    }
+                });
 
-            if let Some(connected_net) =
-                &self.device.station.as_ref().unwrap().connected_network
-            {
-                if connected_net.name == net.name {
-                    let row = vec![
-                        Line::from(if self.config.unicode { "󰸞" } else { "*" }),
-                        Line::from(net.name.clone()),
-                        Line::from(net.netowrk_type.clone()).centered(),
-                        Line::from(net.is_hidden.to_string()),
-                        Line::from(net.is_autoconnect.to_string()).centered(),
-                        Line::from(signal).centered(),
-                    ];
+                if let Some(connected_net) =
+                    &self.device.station.as_ref().unwrap().connected_network
+                {
+                    if connected_net.name == net.name {
+                        let row = vec![
+                            Line::from(if self.config.unicode { "󰸞" } else { "*" }),
+                            Line::from(net.name.clone()),
+                            Line::from(net.netowrk_type.clone()).centered(),
+                            Line::from(net.is_hidden.to_string()),
+                            Line::from(net.is_autoconnect.to_string()).centered(),
+                            Line::from(signal).centered(),
+                        ];
 
-                    Row::new(row)
+                        Row::new(row)
+                    } else {
+                        let row = vec![
+                            Line::from(""),
+                            Line::from(net.name.clone()),
+                            Line::from(net.netowrk_type.clone()).centered(),
+                            Line::from(net.is_hidden.to_string()),
+                            Line::from(net.is_autoconnect.to_string()).centered(),
+                            Line::from(signal).centered(),
+                        ];
+
+                        Row::new(row)
+                    }
                 } else {
                     let row = vec![
                         Line::from(""),
                         Line::from(net.name.clone()),
                         Line::from(net.netowrk_type.clone()).centered(),
                         Line::from(net.is_hidden.to_string()),
-                        Line::from(net.is_autoconnect.to_string()).centered(),
+                        Line::from(net.is_autoconnect.to_string()),
                         Line::from(signal).centered(),
                     ];
 
                     Row::new(row)
                 }
-            } else {
-                let row = vec![
-                    Line::from(""),
-                    Line::from(net.name.clone()),
-                    Line::from(net.netowrk_type.clone()).centered(),
-                    Line::from(net.is_hidden.to_string()),
-                    Line::from(net.is_autoconnect.to_string()),
-                    Line::from(signal).centered(),
-                ];
+            })
+            .collect();
 
-                Row::new(row)
-            }
-        })
-        .collect();
-
-        let narrow_mode =  frame.size().width < self.config.narrow_cols;
+        let narrow_mode = frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(1),
@@ -847,8 +840,12 @@ impl Adapter {
                         Cell::from("Name").style(Style::default().fg(Color::Yellow)),
                         Cell::from("Security").style(Style::default().fg(Color::Yellow)),
                         Cell::from("Hidden").style(Style::default().fg(Color::Yellow)),
-                        Cell::from(if narrow_mode { "AutoCon" } else { "Auto Connect" })
-                            .style(Style::default().fg(Color::Yellow)),
+                        Cell::from(if narrow_mode {
+                            "AutoCon"
+                        } else {
+                            "Auto Connect"
+                        })
+                        .style(Style::default().fg(Color::Yellow)),
                         Cell::from("Signal").style(Style::default().fg(Color::Yellow)),
                     ])
                     .style(Style::new().bold())
@@ -939,42 +936,63 @@ impl Adapter {
         is_focused: bool,
     ) {
         let rows: Vec<Row> = self
-        .device
-        .station
-        .as_ref()
-        .unwrap()
-        .new_networks
-        .iter()
-        .map(|(net, signal)| {
-            Row::new(vec![
-                Line::from(net.name.clone()),
-                Line::from(net.netowrk_type.clone()).centered(),
-                Line::from({
-                    let signal = {
-                        if *signal / 100 >= -50 {
-                            100
-                        } else {
-                            2 * (100 + signal / 100)
-                        }
-                    };
+            .device
+            .station
+            .as_ref()
+            .unwrap()
+            .new_networks
+            .iter()
+            .map(|(net, signal)| {
+                Row::new(vec![
+                    Line::from(net.name.clone()),
+                    Line::from(net.netowrk_type.clone()).centered(),
+                    Line::from({
+                        let signal = {
+                            if *signal / 100 >= -50 {
+                                100
+                            } else {
+                                2 * (100 + signal / 100)
+                            }
+                        };
 
-                    let signal_level = match signal {
-                        n if n >= 75
-                            => if self.config.unicode { "󰤨" } else { "(****))" },
-                        n if (50..75).contains(&n)
-                            => if self.config.unicode { "󰤥" } else { "(*** )" },
-                        n if (25..50).contains(&n)
-                            => if self.config.unicode { "󰤢" } else { "(**  )" },
-                        _ => if self.config.unicode { "󰤟" } else { "(*   )" },
-                    };
+                        let signal_level = match signal {
+                            n if n >= 75 => {
+                                if self.config.unicode {
+                                    "󰤨"
+                                } else {
+                                    "(****))"
+                                }
+                            }
+                            n if (50..75).contains(&n) => {
+                                if self.config.unicode {
+                                    "󰤥"
+                                } else {
+                                    "(*** )"
+                                }
+                            }
+                            n if (25..50).contains(&n) => {
+                                if self.config.unicode {
+                                    "󰤢"
+                                } else {
+                                    "(**  )"
+                                }
+                            }
+                            _ => {
+                                if self.config.unicode {
+                                    "󰤟"
+                                } else {
+                                    "(*   )"
+                                }
+                            }
+                        };
 
-                    format!("{:3}% {}", signal, signal_level)
-                }),
-            ])
-        })
-        .collect();
+                        format!("{:3}% {}", signal, signal_level)
+                    }),
+                ])
+            })
+            .collect();
 
-        let narrow_mode =  frame.size().width < self.config.narrow_cols;
+        let narrow_mode = frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(15),
@@ -1062,30 +1080,24 @@ impl Adapter {
     }
 
     pub fn render_status_bar(&self, frame: &mut Frame, status_bar_block: Rect) {
-        let status_bar_content = Paragraph::new(format!(
-            "Q: quit Arrows/HJKL: move Space: connect ?: help"
-        ))
-        .style(Style::default()
-            .fg(match self.config.color_mode {
-                ColorMode::Light => Color::White,
-                _ => Color::Black
-            })
-            .bg(match self.config.color_mode {
-                ColorMode::Light => Color::Black,
-                _ => Color::White
-            })
-        );
+        let status_bar_content = Paragraph::new("Q: quit Arrows/HJKL: move Space: connect ?: help")
+            .style(
+                Style::default()
+                    .fg(match self.config.color_mode {
+                        ColorMode::Light => Color::White,
+                        _ => Color::Black,
+                    })
+                    .bg(match self.config.color_mode {
+                        ColorMode::Light => Color::Black,
+                        _ => Color::White,
+                    }),
+            );
 
         frame.render_widget(status_bar_content, status_bar_block);
     }
 
-    pub fn render_station_mode(
-        &self,
-        frame: &mut Frame,
-        focused_block: FocusedBlock,
-    ) {
+    pub fn render_station_mode(&self, frame: &mut Frame, focused_block: FocusedBlock) {
         if frame.size().height > 30 {
-
             let (device_block, station_block, known_networks_block, new_networks_block) = {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
@@ -1101,42 +1113,61 @@ impl Adapter {
             };
 
             // Device
-            self.render_device_table(frame, device_block,
-                true /* render title */,
-                focused_block == FocusedBlock::Device);
+            self.render_device_table(
+                frame,
+                device_block,
+                true, /* render title */
+                focused_block == FocusedBlock::Device,
+            );
 
             // Station
-            self.render_station_table(frame, station_block,
-                true /* render title */,
-                focused_block == FocusedBlock::Station);
+            self.render_station_table(
+                frame,
+                station_block,
+                true, /* render title */
+                focused_block == FocusedBlock::Station,
+            );
 
             // Known networks
-            self.render_known_networks_table(frame, known_networks_block,
-                true /* render title */,
-                focused_block == FocusedBlock::KnownNetworks);
+            self.render_known_networks_table(
+                frame,
+                known_networks_block,
+                true, /* render title */
+                focused_block == FocusedBlock::KnownNetworks,
+            );
 
             // New networks
-            self.render_new_networks_table(frame, new_networks_block,
-                true /* render title */,
-                focused_block == FocusedBlock::NewNetworks);
+            self.render_new_networks_table(
+                frame,
+                new_networks_block,
+                true, /* render title */
+                focused_block == FocusedBlock::NewNetworks,
+            );
 
         // Render compact tabs view
         } else {
             let (tab_bar_block, content_block, status_bar_block) = {
                 let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Length(1),
-                    Constraint::Min(0),
-                    Constraint::Length(1),
-                ].as_ref())
-                .split(frame.size());
+                    .direction(Direction::Vertical)
+                    .constraints(
+                        [
+                            Constraint::Length(1),
+                            Constraint::Min(0),
+                            Constraint::Length(1),
+                        ]
+                        .as_ref(),
+                    )
+                    .split(frame.size());
                 (chunks[0], chunks[1], chunks[2])
             };
 
             // Differentiate selected tab with ASCII
-            fn format_tab_title(unicode: bool, focused_block: FocusedBlock,
-                title_block: FocusedBlock, title: &str) -> String {
+            fn format_tab_title(
+                unicode: bool,
+                focused_block: FocusedBlock,
+                title_block: FocusedBlock,
+                title: &str,
+            ) -> String {
                 if !unicode && (focused_block == title_block) {
                     format!("[{}]", title.to_uppercase())
                 } else {
@@ -1144,46 +1175,79 @@ impl Adapter {
                 }
             }
 
-            let device_tab_title = format_tab_title(self.config.unicode, focused_block,
-                FocusedBlock::Device, "Device");
-            let station_tab_title = format_tab_title(self.config.unicode, focused_block,
-                FocusedBlock::Station, "Station");
-            let known_networks_tab_title = format_tab_title(self.config.unicode, focused_block,
+            let device_tab_title = format_tab_title(
+                self.config.unicode,
+                focused_block,
+                FocusedBlock::Device,
+                "Device",
+            );
+            let station_tab_title = format_tab_title(
+                self.config.unicode,
+                focused_block,
+                FocusedBlock::Station,
+                "Station",
+            );
+            let known_networks_tab_title = format_tab_title(
+                self.config.unicode,
+                focused_block,
                 FocusedBlock::KnownNetworks,
-                if frame.size().width >= 56 { "Known networks" } else { "Known nets" });
-            let new_networks_tab_title = format_tab_title(self.config.unicode, focused_block,
+                if frame.size().width >= 56 {
+                    "Known networks"
+                } else {
+                    "Known nets"
+                },
+            );
+            let new_networks_tab_title = format_tab_title(
+                self.config.unicode,
+                focused_block,
                 FocusedBlock::NewNetworks,
-                if frame.size().width >= 56 { "New networks" } else { "New nets" });
+                if frame.size().width >= 56 {
+                    "New networks"
+                } else {
+                    "New nets"
+                },
+            );
 
             let tabs = Tabs::new(vec![
-                device_tab_title, station_tab_title, known_networks_tab_title,
-                    new_networks_tab_title]
-            )
+                device_tab_title,
+                station_tab_title,
+                known_networks_tab_title,
+                new_networks_tab_title,
+            ])
             .style(Style::default().fg(Color::White));
 
             if focused_block == FocusedBlock::Device {
                 frame.render_widget(tabs.select(0), tab_bar_block);
-                self.render_device_table(frame, content_block,
-                    false /* don't render title */,
-                    true /* device block focused */ );
-
+                self.render_device_table(
+                    frame,
+                    content_block,
+                    false, /* don't render title */
+                    true,  /* device block focused */
+                );
             } else if focused_block == FocusedBlock::Station {
                 frame.render_widget(tabs.select(1), tab_bar_block);
-                self.render_station_table(frame, content_block,
-                    false /* don't render title */,
-                    true /* station block focused */ );
-
+                self.render_station_table(
+                    frame,
+                    content_block,
+                    false, /* don't render title */
+                    true,  /* station block focused */
+                );
             } else if focused_block == FocusedBlock::KnownNetworks {
                 frame.render_widget(tabs.select(2), tab_bar_block);
-                self.render_known_networks_table(frame, content_block,
-                    false /* don't render title */,
-                    true /* known networks block focused */ );
-
+                self.render_known_networks_table(
+                    frame,
+                    content_block,
+                    false, /* don't render title */
+                    true,  /* known networks block focused */
+                );
             } else if focused_block == FocusedBlock::NewNetworks {
                 frame.render_widget(tabs.select(3), tab_bar_block);
-                self.render_new_networks_table(frame, content_block,
-                    false /* don't render title */,
-                    true /* new networks block focused */ );
+                self.render_new_networks_table(
+                    frame,
+                    content_block,
+                    false, /* don't render title */
+                    true,  /* new networks block focused */
+                );
             }
 
             self.render_status_bar(frame, status_bar_block);

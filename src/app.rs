@@ -169,7 +169,9 @@ impl App {
             }
         };
 
-        let adapter = Adapter::new(Arc::new(Config::default()), session.clone()).await.unwrap();
+        let adapter = Adapter::new(Arc::new(Config::default()), session.clone())
+            .await
+            .unwrap();
         adapter.device.set_mode(mode).await?;
         Ok(())
     }
