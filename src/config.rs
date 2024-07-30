@@ -38,8 +38,11 @@ pub struct Config {
     #[serde(default = "default_color_mode")]
     pub color_mode: ColorMode,
 
-    #[serde(default = "default_narrow_cols")]
-    pub narrow_cols: u16,
+    #[serde(default = "default_small_layout_rows")]
+    pub small_layout_rows: u16,
+
+    #[serde(default = "default_small_layout_cols")]
+    pub small_layout_cols: u16,
 
     #[serde(default)]
     pub device: Device,
@@ -67,7 +70,11 @@ fn default_color_mode() -> ColorMode {
     ColorMode::Auto
 }
 
-fn default_narrow_cols() -> u16 {
+fn default_small_layout_rows() -> u16 {
+    30
+}
+
+fn default_small_layout_cols() -> u16 {
     80
 }
 
