@@ -3,7 +3,7 @@
 ### Added
 
 - Add tabbed interface variant for small screens.
-- Add config file settings for auto-scan, color mode, and Unicode/ASCII.
+- Add config file settings for auto-scan, color mode, narrow mode, and Unicode/ASCII.
 - Fixes high CPU usage, 500us poll was hammering DBus and causing lag on Raspberry Pi.
 - Fixes terminal not resetting properly on exit.
 

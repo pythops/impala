@@ -105,6 +105,7 @@ switch = "r"
 mode = "station"
 color_mode = "auto"
 unicode = true
+narrow_cols = 80
 
 [device]
 infos = "i"

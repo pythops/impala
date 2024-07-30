@@ -98,7 +98,7 @@ impl App {
         };
 
         // Start scanning if enabled
-        if config.station.auto_scan {
+        if (mode == "station") && config.station.auto_scan {
             let iwd_station = session.station().unwrap();
             match iwd_station.scan().await {
                 Ok(_) => (),

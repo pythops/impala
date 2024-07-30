@@ -131,13 +131,6 @@ pub async fn handle_key_events(
                         || app.focused_block == FocusedBlock::AdapterInfos
                     {
                         app.focused_block = FocusedBlock::Device;
-                    } else if app.focused_block == FocusedBlock::Device
-                        || app.focused_block == FocusedBlock::Station
-                        || app.focused_block == FocusedBlock::AccessPoint
-                        || app.focused_block == FocusedBlock::KnownNetworks
-                        || app.focused_block == FocusedBlock::NewNetworks
-                    {
-                        app.quit();
                     }
                 }
 

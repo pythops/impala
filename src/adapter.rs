@@ -102,7 +102,7 @@ impl Adapter {
             }
         }]);
 
-        let narrow_mode =  frame.size().width < 72;
+        let narrow_mode =  frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(8),
@@ -225,7 +225,7 @@ impl Adapter {
             self.device.address.clone(),
         ]);
 
-        let narrow_mode =  frame.size().width < 72;
+        let narrow_mode =  frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(8),
@@ -372,7 +372,7 @@ impl Adapter {
             ap_is_scanning,
         ]);
 
-        let narrow_mode =  frame.size().width < 72;
+        let narrow_mode =  frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(10),
@@ -531,7 +531,7 @@ impl Adapter {
             self.device.address.clone(),
         ]);
 
-        let narrow_mode =  frame.size().width < 72;
+        let narrow_mode =  frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(8),
@@ -678,7 +678,7 @@ impl Adapter {
 
         let row = Row::new(row);
 
-        let narrow_mode =  frame.size().width < 72;
+        let narrow_mode =  frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(12),
@@ -828,7 +828,7 @@ impl Adapter {
         })
         .collect();
 
-        let narrow_mode =  frame.size().width < 72;
+        let narrow_mode =  frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(1),
@@ -974,7 +974,7 @@ impl Adapter {
         })
         .collect();
 
-        let narrow_mode =  frame.size().width < 72;
+        let narrow_mode =  frame.size().width < self.config.narrow_cols;
 
         let widths = [
             Constraint::Length(15),
