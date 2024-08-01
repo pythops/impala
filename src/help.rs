@@ -145,47 +145,52 @@ impl Help {
             _ => Style::default().fg(Color::White),
         };
 
-        let narrow_mode = frame.size().width < self.config.small_layout_cols;
+        let narrow_mode = frame.size().width < self.config.small_layout_width;
         let row_title_width = 20;
         let table_block_padding = if narrow_mode { 0 } else { 2 };
 
         let widths = [Constraint::Length(row_title_width), Constraint::Fill(1)];
-        let max_row_detail_length = (
-            block.width - row_title_width
-            - 3 * table_block_padding // Cell padding
-            - 3
+
+        // Calculate maximum length for the help text detail
+        let max_row_detail_length = (block.width - row_title_width
+            // Cell padding
+            - 3 * table_block_padding
             // Borders
-        ) as usize;
+            - 3) as usize;
 
         let rows: Vec<Row> = self
             .keys
             .iter()
             .flat_map(|key| {
-                // Split row details into new rows to emulate line wrap
+                // Split help text into new lines to emulate line wrap
                 let mut lines = Vec::new();
+
+                // Start with whole text
                 let mut remainder = key.1;
 
-                // Keep splitting
+                // Keep splitting at maximum row length
                 while remainder.len() > max_row_detail_length {
                     let (line, rest) = remainder.split_at(max_row_detail_length);
+
+                    // Add new split line
                     lines.push(line.to_owned());
                     remainder = rest;
                 }
 
-                // Add the last split
+                // Add the rest of the line
                 lines.push(remainder.to_owned());
 
-                // Create a row for each line
+                // Create a table row for each line
                 let mut rows = Vec::new();
 
-                // First row: key.0 and first line of key.1
+                // First row: key.0 and first line of help text
                 if !lines.is_empty() {
                     rows.push(
                         Row::new(vec![key.0.to_owned(), Cell::from(lines[0].clone())]).style(style),
                     );
                 }
 
-                // Rest of rows: only remaining lines of key.1
+                // Rest of rows: only the split lines of help text
                 for line in lines.iter().skip(1) {
                     rows.push(Row::new(vec!["".to_owned(), line.clone()]).style(style));
                 }

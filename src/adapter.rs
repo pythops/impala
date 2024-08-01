@@ -100,7 +100,7 @@ impl Adapter {
             }
         }]);
 
-        let narrow_mode = frame.size().width < self.config.small_layout_cols;
+        let narrow_mode = frame.size().width < self.config.small_layout_width;
 
         let widths = [
             Constraint::Length(8),
@@ -219,7 +219,7 @@ impl Adapter {
             self.device.address.clone(),
         ]);
 
-        let narrow_mode = frame.size().width < self.config.small_layout_cols;
+        let narrow_mode = frame.size().width < self.config.small_layout_width;
 
         let widths = [
             Constraint::Length(8),
@@ -366,7 +366,7 @@ impl Adapter {
             ap_is_scanning,
         ]);
 
-        let narrow_mode = frame.size().width < self.config.small_layout_cols;
+        let narrow_mode = frame.size().width < self.config.small_layout_width;
 
         let widths = [
             Constraint::Length(10),
@@ -525,7 +525,7 @@ impl Adapter {
             self.device.address.clone(),
         ]);
 
-        let narrow_mode = frame.size().width < self.config.small_layout_cols;
+        let narrow_mode = frame.size().width < self.config.small_layout_width;
 
         let widths = [
             Constraint::Length(8),
@@ -672,7 +672,7 @@ impl Adapter {
 
         let row = Row::new(row);
 
-        let narrow_mode = frame.size().width < self.config.small_layout_cols;
+        let narrow_mode = frame.size().width < self.config.small_layout_width;
 
         let widths = [
             Constraint::Length(12),
@@ -821,7 +821,7 @@ impl Adapter {
             })
             .collect();
 
-        let narrow_mode = frame.size().width < self.config.small_layout_cols;
+        let narrow_mode = frame.size().width < self.config.small_layout_width;
 
         let widths = [
             Constraint::Length(1),
@@ -992,7 +992,7 @@ impl Adapter {
             })
             .collect();
 
-        let narrow_mode = frame.size().width < self.config.small_layout_cols;
+        let narrow_mode = frame.size().width < self.config.small_layout_width;
 
         let widths = [
             Constraint::Length(15),
@@ -1097,7 +1097,7 @@ impl Adapter {
     }
 
     pub fn render_station_mode(&self, frame: &mut Frame, focused_block: FocusedBlock) {
-        if frame.size().height > self.config.small_layout_rows {
+        if frame.size().height > self.config.small_layout_height {
             let (device_block, station_block, known_networks_block, new_networks_block) = {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
