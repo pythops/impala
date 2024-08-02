@@ -38,6 +38,9 @@ pub struct Config {
     #[serde(default = "default_color_mode")]
     pub color_mode: ColorMode,
 
+    #[serde(default = "default_monochrome")]
+    pub monochrome: bool,
+
     #[serde(default = "default_small_layout_height")]
     pub small_layout_height: u16,
 
@@ -68,6 +71,10 @@ fn default_unicode() -> bool {
 
 fn default_color_mode() -> ColorMode {
     ColorMode::Auto
+}
+
+fn default_monochrome() -> bool {
+    false
 }
 
 fn default_small_layout_height() -> u16 {

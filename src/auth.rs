@@ -1,14 +1,15 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Style, Stylize},
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
     Frame,
 };
 
+use crate::tui::Palette;
+
 pub struct Auth;
 
 impl Auth {
-    pub fn render(&self, frame: &mut Frame, passkey: &str) {
+    pub fn render(&self, palette: &Palette, frame: &mut Frame, passkey: &str) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
@@ -78,12 +79,12 @@ impl Auth {
 
         let text = Paragraph::new("Enter the password")
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
+            .style(palette.text)
             .block(Block::new().padding(Padding::uniform(1)));
 
         let passkey = Paragraph::new(passkey)
-            .style(Style::default().fg(Color::White))
-            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+            .style(palette.input_text)
+            .block(Block::new().style(palette.input_box));
 
         frame.render_widget(Clear, area);
 
@@ -91,8 +92,8 @@ impl Auth {
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Thick)
-                .style(Style::default().green())
-                .border_style(Style::default().fg(Color::Green)),
+                .style(palette.active_border)
+                .border_style(palette.active_border),
             area,
         );
         frame.render_widget(text, text_area);

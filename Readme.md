@@ -104,6 +104,7 @@ Keybindings can be customized in the config file `$HOME/.config/impala/config.to
 switch = "r"
 mode = "station"
 color_mode = "auto"
+monochrome = false
 unicode = true
 small_layout_rows = 30
 small_layout_cols = 80

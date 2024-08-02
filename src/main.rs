@@ -5,7 +5,7 @@ use impala::event::{Event, EventHandler};
 use impala::handler::handle_key_events;
 use impala::help::Help;
 use impala::tracing::Tracing;
-use impala::tui::Tui;
+use impala::tui::{Tui, generate_palette};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::io;
@@ -32,9 +32,12 @@ async fn main() -> AppResult<()> {
         config
     });
 
+    let palette = generate_palette(config.color_mode == ColorMode::Light,
+        config.monochrome);
+
     let mode = args.get_one::<String>("mode").cloned();
 
-    let help = Help::new(config.clone());
+    let help = Help::new(config.clone(), &palette);
 
     let mode = mode.unwrap_or_else(|| config.mode.clone());
 
@@ -44,7 +47,7 @@ async fn main() -> AppResult<()> {
     let backend = CrosstermBackend::new(io::stderr());
     let terminal = Terminal::new(backend)?;
     let events = EventHandler::new(3000);
-    let mut tui = Tui::new(terminal, events);
+    let mut tui = Tui::new(terminal, events, palette);
     tui.init()?;
 
     while app.running {

@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::Text,
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
     Frame,
@@ -19,7 +19,13 @@ use async_channel::{Receiver, Sender};
 use futures::FutureExt;
 use iwdrs::{agent::Agent, session::Session};
 
-use crate::{adapter::Adapter, config::Config, help::Help, notification::Notification};
+use crate::{
+    adapter::Adapter,
+    config::Config,
+    help::Help,
+    notification::Notification,
+    tui::Palette,
+};
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -176,7 +182,7 @@ impl App {
         Ok(())
     }
 
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn render(&self, palette: &Palette, frame: &mut Frame) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
@@ -284,15 +290,15 @@ impl App {
 
         let message = Paragraph::new("Please select a mode:")
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
+            .style(palette.text)
             .block(Block::new().padding(Padding::uniform(1)));
 
         let station_choice = Paragraph::new(station_text)
-            .style(Style::default().fg(Color::White))
+            .style(palette.text)
             .block(Block::new().padding(Padding::horizontal(10)));
 
         let ap_choice = Paragraph::new(ap_text)
-            .style(Style::default().fg(Color::White))
+            .style(palette.text)
             .block(Block::new().padding(Padding::horizontal(10)));
 
         let help = Paragraph::new(
@@ -300,7 +306,7 @@ impl App {
                 .style(Style::default().blue()),
         )
         .alignment(Alignment::Center)
-        .style(Style::default())
+        .style(palette.text)
         .block(Block::new().padding(Padding::horizontal(1)));
 
         frame.render_widget(Clear, area);
@@ -309,8 +315,8 @@ impl App {
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .style(Style::default().green())
-                .border_style(Style::default().fg(Color::Green)),
+                .style(palette.active_border)
+                .border_style(palette.active_border),
             area,
         );
         frame.render_widget(message, message_area);

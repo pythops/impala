@@ -7,7 +7,6 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Style, Stylize},
     text::Text,
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
     Frame,
@@ -17,6 +16,7 @@ use crate::{
     app::AppResult,
     event::Event,
     notification::{Notification, NotificationLevel},
+    tui::Palette,
 };
 use tui_input::Input;
 
@@ -89,7 +89,7 @@ impl AccessPoint {
         })
     }
 
-    pub fn render_input(&self, frame: &mut Frame) {
+    pub fn render_input(&self, palette: &Palette, frame: &mut Frame) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
@@ -173,23 +173,23 @@ impl AccessPoint {
 
         let ssid_msg = Paragraph::new(ssid_text)
             .alignment(Alignment::Left)
-            .style(Style::default().fg(Color::White))
+            .style(palette.text)
             .block(Block::new().padding(Padding::left(2)));
 
         let ssid_input = Paragraph::new(self.ssid.value())
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
-            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+            .style(palette.input_text)
+            .block(Block::new().style(palette.input_box));
 
         let psk_msg = Paragraph::new(psk_text)
             .alignment(Alignment::Left)
-            .style(Style::default().fg(Color::White))
+            .style(palette.text)
             .block(Block::new().padding(Padding::left(2)));
 
         let psk_input = Paragraph::new(self.psk.value())
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
-            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+            .style(palette.input_text)
+            .block(Block::new().style(palette.input_box));
 
         frame.render_widget(Clear, area);
 
@@ -197,8 +197,8 @@ impl AccessPoint {
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Thick)
-                .style(Style::default().green())
-                .border_style(Style::default().fg(Color::Green)),
+                .style(palette.text)
+                .border_style(palette.active_border),
             area,
         );
         frame.render_widget(ssid_msg, ssid_msg_area);

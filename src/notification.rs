@@ -1,6 +1,6 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Text},
     widgets::{Block, BorderType, Borders, Clear, Paragraph, Wrap},
     Frame,
@@ -8,6 +8,8 @@ use ratatui::{
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{app::AppResult, event::Event};
+
+use crate::tui::Palette;
 
 #[derive(Debug, Clone)]
 pub struct Notification {
@@ -24,15 +26,15 @@ pub enum NotificationLevel {
 }
 
 impl Notification {
-    pub fn render(&self, index: usize, frame: &mut Frame) {
-        let (color, title) = match self.level {
-            NotificationLevel::Info => (Color::Green, "Info"),
-            NotificationLevel::Warning => (Color::Yellow, "Warning"),
-            NotificationLevel::Error => (Color::Red, "Error"),
+    pub fn render(&self, index: usize, palette: &Palette, frame: &mut Frame) {
+        let (style, title) = match self.level {
+            NotificationLevel::Info => (palette.notification_info, "Info"),
+            NotificationLevel::Warning => (palette.notification_warning, "Warning"),
+            NotificationLevel::Error => (palette.notification_error, "Error"),
         };
 
         let mut text = Text::from(vec![
-            Line::from(title).style(Style::new().fg(color).add_modifier(Modifier::BOLD))
+            Line::from(title).style(style.add_modifier(Modifier::BOLD))
         ]);
 
         text.extend(Text::from(self.message.as_str()));
@@ -48,7 +50,7 @@ impl Notification {
                     .borders(Borders::ALL)
                     .style(Style::default())
                     .border_type(BorderType::Thick)
-                    .border_style(Style::default().fg(color)),
+                    .border_style(style),
             );
 
         let area = notification_rect(

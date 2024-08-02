@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
-    style::{Color, Style, Stylize},
+    style::Stylize,
     widgets::{
         Block, BorderType, Borders, Cell, Clear, Padding, Row, Scrollbar, ScrollbarOrientation,
         ScrollbarState, Table, TableState,
@@ -10,28 +10,29 @@ use ratatui::{
     Frame,
 };
 
-use crate::config::{ColorMode, Config};
+use crate::{
+    tui::Palette,
+    config::Config,
+};
 
 #[derive(Debug, Clone)]
 pub struct Help {
-    config: Arc<Config>,
     block_height: usize,
     state: TableState,
     keys: Vec<(Cell<'static>, &'static str)>,
 }
 
 impl Help {
-    pub fn new(config: Arc<Config>) -> Self {
+    pub fn new(config: Arc<Config>, palette: &Palette) -> Self {
         let mut state = TableState::new().with_offset(0);
         state.select(Some(0));
 
         Self {
-            config: config.clone(),
             block_height: 0,
             state,
             keys: vec![
                 (
-                    Cell::from("## Global").style(Style::new().bold().fg(Color::Yellow)),
+                    Cell::from("## Global").style(palette.active_table_header.bold()),
                     "",
                 ),
                 (Cell::from("Esc").bold(), "Dismiss different pop-ups"),
@@ -50,7 +51,7 @@ impl Help {
                 (Cell::from("q or ctrl+c").bold(), "Quit"),
                 (Cell::from(""), ""),
                 (
-                    Cell::from("## Device").style(Style::new().bold().fg(Color::Yellow)),
+                    Cell::from("## Device").style(palette.active_table_header.bold()),
                     "",
                 ),
                 (
@@ -63,7 +64,7 @@ impl Help {
                 ),
                 (Cell::from(""), ""),
                 (
-                    Cell::from("## Station").style(Style::new().bold().fg(Color::Yellow)),
+                    Cell::from("## Station").style(palette.active_table_header.bold()),
                     "",
                 ),
                 (
@@ -82,7 +83,7 @@ impl Help {
                     "Connect/Disconnect the network",
                 ),
                 (
-                    Cell::from("### Known Networks").style(Style::new().bold().fg(Color::Yellow)),
+                    Cell::from("### Known Networks").style(palette.active_table_header.bold()),
                     "",
                 ),
                 (
@@ -91,7 +92,7 @@ impl Help {
                 ),
                 (Cell::from(""), ""),
                 (
-                    Cell::from("## Access Point").style(Style::new().bold().fg(Color::Yellow)),
+                    Cell::from("## Access Point").style(palette.active_table_header.bold()),
                     "",
                 ),
                 (
@@ -135,19 +136,13 @@ impl Help {
         self.state.select(Some(i));
     }
 
-    pub fn render(&mut self, frame: &mut Frame) {
+    pub fn render(&mut self, palette: &Palette, frame: &mut Frame) {
         let block = help_rect(frame.size());
 
         self.block_height = block.height as usize;
 
-        let style = match self.config.color_mode {
-            ColorMode::Light => Style::default().fg(Color::Black),
-            _ => Style::default().fg(Color::White),
-        };
-
-        let narrow_mode = frame.size().width < self.config.small_layout_width;
         let row_title_width = 20;
-        let table_block_padding = if narrow_mode { 0 } else { 2 };
+        let table_block_padding = 1;
 
         let widths = [Constraint::Length(row_title_width), Constraint::Fill(1)];
 
@@ -186,13 +181,13 @@ impl Help {
                 // First row: key.0 and first line of help text
                 if !lines.is_empty() {
                     rows.push(
-                        Row::new(vec![key.0.to_owned(), Cell::from(lines[0].clone())]).style(style),
+                        Row::new(vec![key.0.to_owned(), Cell::from(lines[0].clone())]).style(palette.text),
                     );
                 }
 
                 // Rest of rows: only the split lines of help text
                 for line in lines.iter().skip(1) {
-                    rows.push(Row::new(vec!["".to_owned(), line.clone()]).style(style));
+                    rows.push(Row::new(vec!["".to_owned(), line.clone()]).style(palette.text));
                 }
 
                 rows
@@ -204,12 +199,12 @@ impl Help {
             Block::default()
                 .padding(Padding::uniform(table_block_padding))
                 .title(" Help ")
-                .title_style(Style::default().bold().fg(Color::Green))
+                .title_style(palette.active_border)
                 .title_alignment(Alignment::Center)
                 .borders(Borders::ALL)
-                .style(Style::default())
+                .style(palette.text)
                 .border_type(BorderType::Thick)
-                .border_style(Style::default().fg(Color::Green)),
+                .border_style(palette.active_border),
         );
 
         frame.render_widget(Clear, block);
