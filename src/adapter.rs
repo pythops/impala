@@ -1108,7 +1108,7 @@ impl Adapter {
                 known_networks_tab_title,
                 new_networks_tab_title,
             ])
-            .style(palette.text);
+            .style(palette.text).highlight_style(palette.active_table_row);
 
             if focused_block == FocusedBlock::Device {
                 frame.render_widget(tabs.select(0), tab_bar_block);
