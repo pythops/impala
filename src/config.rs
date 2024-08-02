@@ -1,7 +1,28 @@
 use toml;
 
 use dirs;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ColorMode {
+    Auto,
+    Dark,
+    Light,
+}
+
+impl<'de> Deserialize<'de> for ColorMode {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = Deserialize::deserialize(deserializer)?;
+        match s.to_lowercase().as_str() {
+            "auto" => Ok(ColorMode::Auto),
+            "light" => Ok(ColorMode::Light),
+            _ => Ok(ColorMode::Dark),
+        }
+    }
+}
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -10,6 +31,21 @@ pub struct Config {
 
     #[serde(default = "default_device_mode")]
     pub mode: String,
+
+    #[serde(default = "default_unicode")]
+    pub unicode: bool,
+
+    #[serde(default = "default_color_mode")]
+    pub color_mode: ColorMode,
+
+    #[serde(default = "default_monochrome")]
+    pub monochrome: bool,
+
+    #[serde(default = "default_small_layout_height")]
+    pub small_layout_height: u16,
+
+    #[serde(default = "default_small_layout_width")]
+    pub small_layout_width: u16,
 
     #[serde(default)]
     pub device: Device,
@@ -27,6 +63,26 @@ fn default_switch_mode() -> char {
 
 fn default_device_mode() -> String {
     String::from("station")
+}
+
+fn default_unicode() -> bool {
+    true
+}
+
+fn default_color_mode() -> ColorMode {
+    ColorMode::Auto
+}
+
+fn default_monochrome() -> bool {
+    false
+}
+
+fn default_small_layout_height() -> u16 {
+    30
+}
+
+fn default_small_layout_width() -> u16 {
+    80
 }
 
 // Device
@@ -59,6 +115,9 @@ pub struct Station {
     #[serde(default = "default_station_toggle_connect")]
     pub toggle_connect: char,
 
+    #[serde(default = "default_station_auto_scan")]
+    pub auto_scan: bool,
+
     #[serde(default)]
     pub known_network: KnownNetwork,
 }
@@ -69,6 +128,7 @@ impl Default for Station {
             start_scanning: 's',
             toggle_connect: ' ',
             known_network: KnownNetwork::default(),
+            auto_scan: true,
         }
     }
 }
@@ -99,6 +159,10 @@ impl Default for KnownNetwork {
 
 fn default_station_remove_known_network() -> char {
     'd'
+}
+
+fn default_station_auto_scan() -> bool {
+    true
 }
 
 // Access Point

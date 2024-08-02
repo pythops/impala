@@ -57,7 +57,7 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 ### Global
 
-`Tab` or `Shift + Tab`: Switch between different sections.
+`Tab`, `Shift + Tab`, `Left`, `Right`, `h`, `l`: Switch between different sections.
 
 `j` or `Down` : Scroll down.
 
@@ -103,6 +103,11 @@ Keybindings can be customized in the config file `$HOME/.config/impala/config.to
 
 switch = "r"
 mode = "station"
+color_mode = "auto"
+monochrome = false
+unicode = true
+small_layout_rows = 30
+small_layout_cols = 80
 
 [device]
 infos = "i"
@@ -115,6 +120,7 @@ stop = 'x'
 [station]
 toggle_scanning = "s"
 toggle_connect = " "
+auto_scan = true
 
 [station.known_network]
 toggle_autoconnect = "a"

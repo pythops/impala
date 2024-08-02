@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::Text,
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
     Frame,
@@ -19,7 +19,13 @@ use async_channel::{Receiver, Sender};
 use futures::FutureExt;
 use iwdrs::{agent::Agent, session::Session};
 
-use crate::{adapter::Adapter, help::Help, notification::Notification};
+use crate::{
+    adapter::Adapter,
+    config::Config,
+    help::Help,
+    notification::Notification,
+    tui::Palette,
+};
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -37,18 +43,12 @@ pub enum FocusedBlock {
     AccessPointConnectedDevices,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ColorMode {
-    Dark,
-    Light,
-}
-
 #[derive(Debug)]
 pub struct App {
     pub running: bool,
     pub focused_block: FocusedBlock,
     pub help: Help,
-    pub color_mode: ColorMode,
+    pub config: Arc<Config>,
     pub notifications: Vec<Notification>,
     pub session: Arc<Session>,
     pub adapter: Adapter,
@@ -91,7 +91,7 @@ pub async fn request_confirmation(
 }
 
 impl App {
-    pub async fn new(help: Help, mode: String) -> AppResult<Self> {
+    pub async fn new(help: Help, config: Arc<Config>, mode: String) -> AppResult<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -103,7 +103,19 @@ impl App {
             }
         };
 
-        let adapter = Adapter::new(session.clone()).await.unwrap();
+        // Start scanning if enabled
+        if (mode == "station") && config.station.auto_scan {
+            let iwd_station = session.station().unwrap();
+            match iwd_station.scan().await {
+                Ok(_) => (),
+                Err(e) => {
+                    error!("Failed to start scan");
+                    error!("{}", e.to_string());
+                }
+            }
+        }
+
+        let adapter = Adapter::new(config.clone(), session.clone()).await.unwrap();
 
         let current_mode = adapter.device.mode.clone();
 
@@ -131,17 +143,11 @@ impl App {
 
         let agent_manager = session.register_agent(agent).await?;
 
-        let color_mode = match terminal_light::luma() {
-            Ok(luma) if luma > 0.6 => ColorMode::Light,
-            Ok(_) => ColorMode::Dark,
-            Err(_) => ColorMode::Dark,
-        };
-
         Ok(Self {
             running: true,
             focused_block: FocusedBlock::Device,
             help,
-            color_mode,
+            config: config.clone(),
             notifications: Vec::new(),
             session,
             adapter,
@@ -169,12 +175,21 @@ impl App {
             }
         };
 
-        let adapter = Adapter::new(session.clone()).await.unwrap();
+        let adapter = Adapter::new(Arc::new(Config::default()), session.clone())
+            .await
+            .unwrap();
         adapter.device.set_mode(mode).await?;
         Ok(())
     }
 
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn render(&self, palette: &Palette, frame: &mut Frame) {
+
+        let width = if frame.size().width > 50 {
+            (frame.size().width - 50) / 2
+        } else {
+            frame.size().width
+        };
+
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
@@ -191,9 +206,9 @@ impl App {
             .direction(Direction::Horizontal)
             .constraints(
                 [
-                    Constraint::Length((frame.size().width - 50) / 2),
+                    Constraint::Length(width),
                     Constraint::Min(50),
-                    Constraint::Length((frame.size().width - 50) / 2),
+                    Constraint::Length(width),
                 ]
                 .as_ref(),
             )
@@ -282,15 +297,15 @@ impl App {
 
         let message = Paragraph::new("Please select a mode:")
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
+            .style(palette.text)
             .block(Block::new().padding(Padding::uniform(1)));
 
         let station_choice = Paragraph::new(station_text)
-            .style(Style::default().fg(Color::White))
+            .style(palette.text)
             .block(Block::new().padding(Padding::horizontal(10)));
 
         let ap_choice = Paragraph::new(ap_text)
-            .style(Style::default().fg(Color::White))
+            .style(palette.text)
             .block(Block::new().padding(Padding::horizontal(10)));
 
         let help = Paragraph::new(
@@ -298,7 +313,7 @@ impl App {
                 .style(Style::default().blue()),
         )
         .alignment(Alignment::Center)
-        .style(Style::default())
+        .style(palette.text)
         .block(Block::new().padding(Padding::horizontal(1)));
 
         frame.render_widget(Clear, area);
@@ -307,8 +322,8 @@ impl App {
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .style(Style::default().green())
-                .border_style(Style::default().fg(Color::Green)),
+                .style(palette.active_border)
+                .border_style(palette.active_border),
             area,
         );
         frame.render_widget(message, message_area);
