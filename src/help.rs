@@ -227,6 +227,9 @@ impl Help {
 }
 
 pub fn help_rect(r: Rect) -> Rect {
+
+    let width = if r.width > 80 { (r.width - 80) / 2 } else { r.width };
+
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -243,9 +246,9 @@ pub fn help_rect(r: Rect) -> Rect {
         .direction(Direction::Horizontal)
         .constraints(
             [
-                Constraint::Length((r.width - 80) / 2),
+                Constraint::Length(width),
                 Constraint::Min(80),
-                Constraint::Length((r.width - 80) / 2),
+                Constraint::Length(width),
             ]
             .as_ref(),
         )

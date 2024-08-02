@@ -10,6 +10,13 @@ pub struct Auth;
 
 impl Auth {
     pub fn render(&self, palette: &Palette, frame: &mut Frame, passkey: &str) {
+
+        let width = if frame.size().width > 80 {
+            (frame.size().width - 80) / 2
+        } else {
+            frame.size().width
+        };
+
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
@@ -26,9 +33,9 @@ impl Auth {
             .direction(Direction::Horizontal)
             .constraints(
                 [
-                    Constraint::Length((frame.size().width - 80) / 2),
+                    Constraint::Length(width),
                     Constraint::Min(80),
-                    Constraint::Length((frame.size().width - 80) / 2),
+                    Constraint::Length(width),
                 ]
                 .as_ref(),
             )

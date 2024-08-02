@@ -183,6 +183,13 @@ impl App {
     }
 
     pub fn render(&self, palette: &Palette, frame: &mut Frame) {
+
+        let width = if frame.size().width > 50 {
+            (frame.size().width - 50) / 2
+        } else {
+            frame.size().width
+        };
+
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
@@ -199,9 +206,9 @@ impl App {
             .direction(Direction::Horizontal)
             .constraints(
                 [
-                    Constraint::Length((frame.size().width - 50) / 2),
+                    Constraint::Length(width),
                     Constraint::Min(50),
-                    Constraint::Length((frame.size().width - 50) / 2),
+                    Constraint::Length(width),
                 ]
                 .as_ref(),
             )

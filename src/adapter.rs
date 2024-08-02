@@ -1153,6 +1153,13 @@ impl Adapter {
     }
 
     pub fn render_adapter(&self, palette: &Palette, frame: &mut Frame) {
+
+        let width = if frame.size().width > 80 {
+            (frame.size().width - 80) / 2
+        } else {
+            frame.size().width
+        };
+
         let popup_layout = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
             .constraints(
@@ -1169,9 +1176,9 @@ impl Adapter {
             .direction(Direction::Horizontal)
             .constraints(
                 [
-                    Constraint::Length((frame.size().width - 80) / 2),
+                    Constraint::Length(width),
                     Constraint::Min(80),
-                    Constraint::Length((frame.size().width - 80) / 2),
+                    Constraint::Length(width),
                 ]
                 .as_ref(),
             )
