@@ -11,11 +11,11 @@ repository = "https://github.com/pythops/impala"
 
 [dependencies]
 async-channel = "2"
-crossterm = { version = "0.27", default-features = false, features = [
+crossterm = { version = "0.28", default-features = false, features = [
   "event-stream",
 ] }
-ratatui = "0.27"
-tui-input = "0.8"
+ratatui = "0.28"
+tui-input = "0.10"
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 dirs = "5"

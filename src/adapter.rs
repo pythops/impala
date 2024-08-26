@@ -86,7 +86,7 @@ impl Adapter {
                 .direction(Direction::Vertical)
                 .constraints([Constraint::Fill(1)])
                 .margin(1)
-                .split(frame.size());
+                .split(frame.area());
             chunks[0]
         };
 
@@ -203,7 +203,7 @@ impl Adapter {
                     ]
                 })
                 .margin(1)
-                .split(frame.size());
+                .split(frame.area());
             (chunks[0], chunks[1], chunks[2])
         };
 
@@ -519,7 +519,7 @@ impl Adapter {
                     Constraint::Percentage(34),
                 ])
                 .margin(1)
-                .split(frame.size());
+                .split(frame.area());
             (chunks[0], chunks[1], chunks[2], chunks[3])
         };
 
@@ -1044,15 +1044,15 @@ impl Adapter {
                 ]
                 .as_ref(),
             )
-            .split(frame.size());
+            .split(frame.area());
 
         let area = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(
                 [
-                    Constraint::Length((frame.size().width - 80) / 2),
+                    Constraint::Length((frame.area().width - 80) / 2),
                     Constraint::Min(80),
-                    Constraint::Length((frame.size().width - 80) / 2),
+                    Constraint::Length((frame.area().width - 80) / 2),
                 ]
                 .as_ref(),
             )

@@ -28,7 +28,7 @@ async fn main() -> AppResult<()> {
     App::reset(mode.clone()).await?;
     let mut app = App::new(help.clone(), mode).await?;
 
-    let backend = CrosstermBackend::new(io::stderr());
+    let backend = CrosstermBackend::new(io::stdout());
     let terminal = Terminal::new(backend)?;
     let events = EventHandler::new(500);
     let mut tui = Tui::new(terminal, events);
