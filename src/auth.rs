@@ -11,66 +11,51 @@ impl Auth {
     pub fn render(&self, frame: &mut Frame, passkey: &str) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(
-                [
-                    Constraint::Percentage(45),
-                    Constraint::Min(8),
-                    Constraint::Percentage(45),
-                ]
-                .as_ref(),
-            )
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(8),
+                Constraint::Fill(1),
+            ])
+            .flex(ratatui::layout::Flex::SpaceBetween)
             .split(frame.area());
 
         let area = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(
-                [
-                    Constraint::Length((frame.area().width - 80) / 2),
-                    Constraint::Min(80),
-                    Constraint::Length((frame.area().width - 80) / 2),
-                ]
-                .as_ref(),
-            )
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(80),
+                Constraint::Fill(1),
+            ])
+            .flex(ratatui::layout::Flex::SpaceBetween)
             .split(popup_layout[1])[1];
 
         let (text_area, passkey_area) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints(
-                    [
-                        Constraint::Length(1),
-                        Constraint::Length(3),
-                        Constraint::Length(1),
-                        Constraint::Length(1),
-                    ]
-                    .as_ref(),
-                )
+                .constraints([
+                    Constraint::Length(1),
+                    Constraint::Length(3),
+                    Constraint::Length(1),
+                    Constraint::Length(1),
+                ])
                 .split(area);
-
-            // (chunks[1], chunks[2])
 
             let area1 = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints(
-                    [
-                        Constraint::Length(1),
-                        Constraint::Fill(1),
-                        Constraint::Length(1),
-                    ]
-                    .as_ref(),
-                )
+                .constraints([
+                    Constraint::Length(1),
+                    Constraint::Fill(1),
+                    Constraint::Length(1),
+                ])
                 .split(chunks[1]);
 
             let area2 = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints(
-                    [
-                        Constraint::Percentage(20),
-                        Constraint::Fill(1),
-                        Constraint::Percentage(20),
-                    ]
-                    .as_ref(),
-                )
+                .constraints([
+                    Constraint::Percentage(20),
+                    Constraint::Fill(1),
+                    Constraint::Percentage(20),
+                ])
                 .split(chunks[2]);
 
             (area1[1], area2[1])
