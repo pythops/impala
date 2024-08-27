@@ -16,7 +16,7 @@ use tui_input::Input;
 
 use async_channel::{Receiver, Sender};
 use futures::FutureExt;
-use iwdrs::{agent::Agent, session::Session};
+use iwdrs::{agent::Agent, modes::Mode, session::Session};
 
 use crate::{adapter::Adapter, event::Event, help::Help, notification::Notification};
 
@@ -56,9 +56,9 @@ pub struct App {
     pub passkey_sender: Sender<String>,
     pub cancel_signal_sender: Sender<()>,
     pub passkey_input: Input,
-    pub mode: String,
-    pub selected_mode: String,
-    pub current_mode: String,
+    pub mode: Mode,
+    pub selected_mode: Mode,
+    pub current_mode: Mode,
     pub reset_mode: bool,
 }
 
@@ -90,7 +90,7 @@ pub async fn request_confirmation(
 }
 
 impl App {
-    pub async fn new(help: Help, mode: String, sender: UnboundedSender<Event>) -> AppResult<Self> {
+    pub async fn new(help: Help, mode: Mode, sender: UnboundedSender<Event>) -> AppResult<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -104,8 +104,6 @@ impl App {
         let adapter = Adapter::new(session.clone(), sender).await.unwrap();
 
         let current_mode = adapter.device.mode.clone();
-
-        let selected_mode = String::from("station");
 
         let (passkey_sender, passkey_receiver) = async_channel::unbounded();
         let (cancel_signal_sender, cancel_signal_receiver) = async_channel::unbounded();
@@ -149,13 +147,13 @@ impl App {
             cancel_signal_sender,
             passkey_input: Input::default(),
             mode,
-            selected_mode,
+            selected_mode: Mode::Station,
             current_mode,
             reset_mode: false,
         })
     }
 
-    pub async fn reset(mode: String, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn reset(mode: Mode, sender: UnboundedSender<Event>) -> AppResult<()> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -174,26 +172,22 @@ impl App {
     pub fn render(&self, frame: &mut Frame) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(
-                [
-                    Constraint::Percentage(45),
-                    Constraint::Min(10),
-                    Constraint::Percentage(45),
-                ]
-                .as_ref(),
-            )
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(10),
+                Constraint::Fill(1),
+            ])
+            .flex(ratatui::layout::Flex::SpaceBetween)
             .split(frame.area());
 
         let area = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(
-                [
-                    Constraint::Length((frame.area().width - 50) / 2),
-                    Constraint::Min(50),
-                    Constraint::Length((frame.area().width - 50) / 2),
-                ]
-                .as_ref(),
-            )
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(50),
+                Constraint::Fill(1),
+            ])
+            .flex(ratatui::layout::Flex::SpaceBetween)
             .split(popup_layout[1])[1];
 
         let chunks = Layout::default()
@@ -217,26 +211,20 @@ impl App {
 
         let station_choice_area = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(
-                [
-                    Constraint::Length(2),
-                    Constraint::Fill(1),
-                    Constraint::Length(2),
-                ]
-                .as_ref(),
-            )
+            .constraints([
+                Constraint::Length(2),
+                Constraint::Fill(1),
+                Constraint::Length(2),
+            ])
             .split(station_choice_area)[1];
 
         let ap_choice_area = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(
-                [
-                    Constraint::Length(2),
-                    Constraint::Fill(1),
-                    Constraint::Length(2),
-                ]
-                .as_ref(),
-            )
+            .constraints([
+                Constraint::Length(2),
+                Constraint::Fill(1),
+                Constraint::Length(2),
+            ])
             .split(ap_choice_area)[1];
 
         let message_area = Layout::default()
@@ -251,24 +239,24 @@ impl App {
             )
             .split(message_area)[1];
 
-        let (ap_text, station_text) = match self.selected_mode.as_str() {
-            "ap" => match self.current_mode.as_str() {
-                "ap" => (
+        let (ap_text, station_text) = match self.selected_mode {
+            Mode::Ap => match self.current_mode {
+                Mode::Ap => (
                     Text::from("  Access Point (current)"),
                     Text::from("   Station"),
                 ),
-                "station" => (
+                Mode::Station => (
                     Text::from("  Access Point"),
                     Text::from("   Station (current)"),
                 ),
                 _ => (Text::from("  Access Point"), Text::from("   Station")),
             },
-            "station" => match self.current_mode.as_str() {
-                "ap" => (
+            Mode::Station => match self.current_mode {
+                Mode::Ap => (
                     Text::from("   Access Point (current)"),
                     Text::from("  Station"),
                 ),
-                "station" => (
+                Mode::Station => (
                     Text::from("   Access Point"),
                     Text::from("  Station (current)"),
                 ),
@@ -277,7 +265,7 @@ impl App {
             _ => panic!("unknwon mode"),
         };
 
-        let message = Paragraph::new("Please select a mode:")
+        let message = Paragraph::new("Select the desired mode:")
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::White))
             .block(Block::new().padding(Padding::uniform(1)));

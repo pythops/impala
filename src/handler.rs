@@ -7,6 +7,7 @@ use crate::event::Event;
 use crate::notification::Notification;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use iwdrs::modes::Mode;
 use tokio::sync::mpsc::UnboundedSender;
 use tui_input::backend::crossterm::EventHandler;
 
@@ -28,14 +29,14 @@ pub async fn handle_key_events(
             }
 
             KeyCode::Char('j') => {
-                if app.selected_mode == "station" {
-                    app.selected_mode = "ap".to_string();
+                if app.selected_mode == Mode::Station {
+                    app.selected_mode = Mode::Ap;
                 }
             }
 
             KeyCode::Char('k') => {
-                if app.selected_mode == "ap" {
-                    app.selected_mode = "station".to_string();
+                if app.selected_mode == Mode::Ap {
+                    app.selected_mode = Mode::Station;
                 }
             }
 
@@ -136,8 +137,8 @@ pub async fn handle_key_events(
 
                 // Start Scan
                 KeyCode::Char(c) if c == config.station.start_scanning => {
-                    match app.adapter.device.mode.as_str() {
-                        "station" => {
+                    match app.adapter.device.mode {
+                        Mode::Station => {
                             app.adapter
                                 .device
                                 .station
@@ -146,7 +147,7 @@ pub async fn handle_key_events(
                                 .scan(sender)
                                 .await?
                         }
-                        "access_point" => {
+                        Mode::Ap => {
                             app.adapter
                                 .device
                                 .access_point
@@ -159,8 +160,8 @@ pub async fn handle_key_events(
                     };
                 }
 
-                KeyCode::Tab => match app.adapter.device.mode.as_str() {
-                    "station" => match app.focused_block {
+                KeyCode::Tab => match app.adapter.device.mode {
+                    Mode::Station => match app.focused_block {
                         FocusedBlock::Device => {
                             app.focused_block = FocusedBlock::Station;
                         }
@@ -175,7 +176,7 @@ pub async fn handle_key_events(
                         }
                         _ => {}
                     },
-                    "ap" => match app.focused_block {
+                    Mode::Ap => match app.focused_block {
                         FocusedBlock::Device => {
                             app.focused_block = FocusedBlock::AccessPoint;
                         }
@@ -208,8 +209,8 @@ pub async fn handle_key_events(
                     _ => {}
                 },
 
-                KeyCode::BackTab => match app.adapter.device.mode.as_str() {
-                    "station" => match app.focused_block {
+                KeyCode::BackTab => match app.adapter.device.mode {
+                    Mode::Station => match app.focused_block {
                         FocusedBlock::Device => {
                             app.focused_block = FocusedBlock::NewNetworks;
                         }
@@ -224,7 +225,7 @@ pub async fn handle_key_events(
                         }
                         _ => {}
                     },
-                    "ap" => match app.focused_block {
+                    Mode::Ap => match app.focused_block {
                         FocusedBlock::Device => {
                             if let Some(ap) = app.adapter.device.access_point.as_ref() {
                                 if ap.connected_devices.is_empty() {
@@ -308,8 +309,8 @@ pub async fn handle_key_events(
                         },
 
                         _ => {
-                            match app.adapter.device.mode.as_str() {
-                                "station" => {
+                            match app.adapter.device.mode {
+                                Mode::Station => {
                                     match key_event.code {
                                         // Remove a known network
                                         KeyCode::Char(c)
@@ -734,7 +735,7 @@ pub async fn handle_key_events(
                                         _ => {}
                                     }
                                 }
-                                "ap" => match key_event.code {
+                                Mode::Ap => match key_event.code {
                                     KeyCode::Char(c) if c == config.ap.start => {
                                         if let Some(ap) = &app.adapter.device.access_point {
                                             // Start AP

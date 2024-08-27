@@ -26,7 +26,7 @@ fn default_switch_mode() -> char {
 }
 
 fn default_device_mode() -> String {
-    String::from("station")
+    "station".to_string()
 }
 
 // Device

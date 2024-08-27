@@ -5,6 +5,7 @@ use impala::event::{Event, EventHandler};
 use impala::handler::handle_key_events;
 use impala::help::Help;
 use impala::tui::Tui;
+use iwdrs::modes::Mode;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::io;
@@ -21,17 +22,18 @@ async fn main() -> AppResult<()> {
 
     let config = Arc::new(Config::new());
 
-    let mode = args.get_one::<String>("mode").cloned();
-
     let help = Help::new(config.clone());
-
-    let mode = mode.unwrap_or_else(|| config.mode.clone());
 
     let backend = CrosstermBackend::new(io::stdout());
     let terminal = Terminal::new(backend)?;
-    let events = EventHandler::new(500);
+    let events = EventHandler::new(2_000);
     let mut tui = Tui::new(terminal, events);
     tui.init()?;
+
+    let mode = args.get_one::<String>("mode").cloned();
+    let mode = mode.unwrap_or_else(|| config.mode.clone());
+
+    let mode = Mode::try_from(mode.as_str())?;
 
     App::reset(mode.clone(), tui.events.sender.clone()).await?;
     let mut app = App::new(help.clone(), mode, tui.events.sender.clone()).await?;

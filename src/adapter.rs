@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use anyhow::Context;
 
-use iwdrs::{adapter::Adapter as iwdAdapter, session::Session};
+use iwdrs::{adapter::Adapter as iwdAdapter, modes::Mode, session::Session};
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Flex, Layout},
     style::{Color, Style, Stylize},
     text::Line,
     widgets::{Block, BorderType, Borders, Cell, Clear, List, Padding, Row, Table, TableState},
@@ -58,123 +58,19 @@ impl Adapter {
     }
 
     pub fn render(&self, frame: &mut Frame, color_mode: ColorMode, focused_block: FocusedBlock) {
-        match self.device.mode.as_str() {
-            "station" => {
+        match self.device.mode {
+            Mode::Station => {
                 if self.device.station.is_some() {
                     self.render_station_mode(frame, color_mode, focused_block);
-                } else {
-                    self.render_other_mode(frame, color_mode, focused_block);
                 }
             }
-            "ap" => {
+            Mode::Ap => {
                 if self.device.access_point.is_some() {
                     self.render_access_point_mode(frame, color_mode, focused_block);
-                } else {
-                    self.render_other_mode(frame, color_mode, focused_block);
                 }
             }
-            _ => self.render_other_mode(frame, color_mode, focused_block),
+            _ => {}
         }
-    }
-
-    pub fn render_other_mode(
-        &self,
-        frame: &mut Frame,
-        color_mode: ColorMode,
-        focused_block: FocusedBlock,
-    ) {
-        let device_block = {
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Fill(1)])
-                .margin(1)
-                .split(frame.area());
-            chunks[0]
-        };
-
-        // Device
-        let row = Row::new(vec![self.device.name.clone(), self.device.mode.clone(), {
-            if self.device.is_powered {
-                "On".to_string()
-            } else {
-                "Off".to_string()
-            }
-        }]);
-
-        let widths = [
-            Constraint::Length(8),
-            Constraint::Length(8),
-            Constraint::Length(10),
-        ];
-
-        let device_table = Table::new(vec![row], widths)
-            .header({
-                if focused_block == FocusedBlock::Device {
-                    Row::new(vec![
-                        Cell::from("Name").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Mode").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Powered").style(Style::default().fg(Color::Yellow)),
-                    ])
-                    .style(Style::new().bold())
-                    .bottom_margin(1)
-                } else {
-                    Row::new(vec![
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Mode").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Powered").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                    ])
-                    .style(Style::new().bold())
-                    .bottom_margin(1)
-                }
-            })
-            .block(
-                Block::default()
-                    .title(" Device ")
-                    .title_style({
-                        if focused_block == FocusedBlock::Device {
-                            Style::default().bold()
-                        } else {
-                            Style::default()
-                        }
-                    })
-                    .borders(Borders::ALL)
-                    .border_style({
-                        if focused_block == FocusedBlock::Device {
-                            Style::default().fg(Color::Green)
-                        } else {
-                            Style::default()
-                        }
-                    })
-                    .border_type({
-                        if focused_block == FocusedBlock::Device {
-                            BorderType::Thick
-                        } else {
-                            BorderType::default()
-                        }
-                    }),
-            )
-            .column_spacing(3)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
-                ColorMode::Light => Style::default().fg(Color::Black),
-            })
-            .highlight_style(if focused_block == FocusedBlock::Device {
-                Style::default().bg(Color::DarkGray)
-            } else {
-                Style::default()
-            });
-
-        let mut device_state = TableState::default().with_selected(0);
-        frame.render_stateful_widget(device_table, device_block, &mut device_state);
     }
 
     pub fn render_access_point_mode(
@@ -211,54 +107,62 @@ impl Adapter {
 
         // Device
         let row = Row::new(vec![
-            self.device.name.clone(),
-            "Access Point".to_string(),
+            Line::from(self.device.name.clone()).centered(),
+            Line::from("Access Point").centered(),
             {
                 if self.device.is_powered {
-                    "On".to_string()
+                    Line::from("On").centered()
                 } else {
-                    "Off".to_string()
+                    Line::from("Off").centered()
                 }
             },
-            self.device.address.clone(),
+            Line::from(self.device.address.clone()).centered(),
         ]);
 
         let widths = [
-            Constraint::Length(8),
+            Constraint::Length(15),
             Constraint::Length(12),
-            Constraint::Length(10),
-            Constraint::Fill(1),
+            Constraint::Length(7),
+            Constraint::Length(17),
         ];
 
         let device_table = Table::new(vec![row], widths)
             .header({
                 if focused_block == FocusedBlock::Device {
                     Row::new(vec![
-                        Cell::from("Name").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Mode").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Powered").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Address").style(Style::default().fg(Color::Yellow)),
+                        Line::from("Name").yellow().centered(),
+                        Line::from("Mode").yellow().centered(),
+                        Line::from("Powered").yellow().centered(),
+                        Line::from("Address").yellow().centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Mode").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Powered").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Address").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
+                        Line::from("Name")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Mode")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Powered")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Address")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -275,6 +179,7 @@ impl Adapter {
                         }
                     })
                     .borders(Borders::ALL)
+                    .padding(Padding::horizontal(1))
                     .border_style({
                         if focused_block == FocusedBlock::Device {
                             Style::default().fg(Color::Green)
@@ -290,7 +195,8 @@ impl Adapter {
                         }
                     }),
             )
-            .column_spacing(3)
+            .column_spacing(2)
+            .flex(Flex::SpaceBetween)
             .style(match color_mode {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
@@ -355,22 +261,25 @@ impl Adapter {
         };
 
         let row = Row::new(vec![
-            self.device
-                .access_point
-                .as_ref()
-                .unwrap()
-                .has_started
-                .clone()
-                .to_string(),
-            ap_name,
-            ap_frequency,
-            ap_used_cipher,
-            ap_is_scanning,
+            Line::from(
+                self.device
+                    .access_point
+                    .as_ref()
+                    .unwrap()
+                    .has_started
+                    .clone()
+                    .to_string(),
+            )
+            .centered(),
+            Line::from(ap_name).centered(),
+            Line::from(ap_frequency).centered(),
+            Line::from(ap_used_cipher).centered(),
+            Line::from(ap_is_scanning).centered(),
         ]);
 
         let widths = [
             Constraint::Length(10),
-            Constraint::Length(15),
+            Constraint::Length(20),
             Constraint::Length(10),
             Constraint::Length(10),
             Constraint::Length(10),
@@ -380,36 +289,46 @@ impl Adapter {
             .header({
                 if focused_block == FocusedBlock::AccessPoint {
                     Row::new(vec![
-                        Cell::from("Started").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("SSID").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Frequency").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Cipher").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Scanning").style(Style::default().fg(Color::Yellow)),
+                        Line::from("Started").yellow().centered(),
+                        Line::from("SSID").yellow().centered(),
+                        Line::from("Frequency").yellow().centered(),
+                        Line::from("Cipher").yellow().centered(),
+                        Line::from("Scanning").yellow().centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Started").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("SSID").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Frequency").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Cipher").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Scanning").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
+                        Line::from("Started")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("SSID")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Frequency")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Cipher")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Scanning")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -439,9 +358,11 @@ impl Adapter {
                         } else {
                             BorderType::default()
                         }
-                    }),
+                    })
+                    .padding(Padding::horizontal(1)),
             )
-            .column_spacing(3)
+            .column_spacing(2)
+            .flex(Flex::SpaceBetween)
             .style(match color_mode {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
@@ -494,7 +415,8 @@ impl Adapter {
                             } else {
                                 BorderType::default()
                             }
-                        }),
+                        })
+                        .padding(Padding::uniform(1)),
                 )
                 .style(match color_mode {
                     ColorMode::Dark => Style::default().fg(Color::White),
@@ -527,54 +449,62 @@ impl Adapter {
 
         // Device
         let row = Row::new(vec![
-            self.device.name.clone(),
-            "station".to_string(),
+            Line::from(self.device.name.clone()).centered(),
+            Line::from("station").centered(),
             {
                 if self.device.is_powered {
-                    "On".to_string()
+                    Line::from("On").centered()
                 } else {
-                    "Off".to_string()
+                    Line::from("Off").centered()
                 }
             },
-            self.device.address.clone(),
+            Line::from(self.device.address.clone()).centered(),
         ]);
 
         let widths = [
-            Constraint::Length(8),
+            Constraint::Length(15),
             Constraint::Length(8),
             Constraint::Length(10),
-            Constraint::Fill(1),
+            Constraint::Length(17),
         ];
 
         let device_table = Table::new(vec![row], widths)
             .header({
                 if focused_block == FocusedBlock::Device {
                     Row::new(vec![
-                        Cell::from("Name").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Mode").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Powered").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Address").style(Style::default().fg(Color::Yellow)),
+                        Line::from("Name").yellow().centered(),
+                        Line::from("Mode").yellow().centered(),
+                        Line::from("Powered").yellow().centered(),
+                        Line::from("Address").yellow().centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Mode").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Powered").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Address").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
+                        Line::from("Name")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Mode")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Powered")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Address")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -604,9 +534,11 @@ impl Adapter {
                         } else {
                             BorderType::default()
                         }
-                    }),
+                    })
+                    .padding(Padding::horizontal(1)),
             )
-            .column_spacing(3)
+            .column_spacing(2)
+            .flex(Flex::SpaceBetween)
             .style(match color_mode {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
@@ -658,22 +590,19 @@ impl Adapter {
         };
 
         let row = vec![
-            self.device
-                .station
-                .as_ref()
-                .unwrap()
-                .state
-                .clone()
-                .to_string(),
-            self.device
-                .station
-                .as_ref()
-                .unwrap()
-                .is_scanning
-                .clone()
-                .to_string(),
-            station_frequency,
-            station_security,
+            Line::from(self.device.station.as_ref().unwrap().state.clone()).centered(),
+            Line::from(
+                self.device
+                    .station
+                    .as_ref()
+                    .unwrap()
+                    .is_scanning
+                    .clone()
+                    .to_string(),
+            )
+            .centered(),
+            Line::from(station_frequency).centered(),
+            Line::from(station_security).centered(),
         ];
 
         let row = Row::new(row);
@@ -682,38 +611,46 @@ impl Adapter {
             Constraint::Length(12),
             Constraint::Length(10),
             Constraint::Length(10),
-            Constraint::Fill(1),
+            Constraint::Length(15),
         ];
 
         let station_table = Table::new(vec![row], widths)
             .header({
                 if focused_block == FocusedBlock::Station {
                     Row::new(vec![
-                        Cell::from("State").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Scanning").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Frequency").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Security").style(Style::default().fg(Color::Yellow)),
+                        Line::from("State").yellow().centered(),
+                        Line::from("Scanning").yellow().centered(),
+                        Line::from("Frequency").yellow().centered(),
+                        Line::from("Security").yellow().centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("State").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Scanning").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Frequency").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Security").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
+                        Line::from("State")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Scanning")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Frequency")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Security")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -743,9 +680,11 @@ impl Adapter {
                         } else {
                             BorderType::default()
                         }
-                    }),
+                    })
+                    .padding(Padding::horizontal(1)),
             )
-            .column_spacing(3)
+            .column_spacing(2)
+            .flex(Flex::SpaceBetween)
             .style(match color_mode {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
@@ -783,10 +722,10 @@ impl Adapter {
                 {
                     if connected_net.name == net.name {
                         let row = vec![
-                            Line::from("󰸞"),
-                            Line::from(net.name.clone()),
+                            Line::from("󰸞").centered(),
+                            Line::from(net.name.clone()).centered(),
                             Line::from(net.netowrk_type.clone()).centered(),
-                            Line::from(net.is_hidden.to_string()),
+                            Line::from(net.is_hidden.to_string()).centered(),
                             Line::from(net.is_autoconnect.to_string()).centered(),
                             Line::from(signal).centered(),
                         ];
@@ -795,9 +734,9 @@ impl Adapter {
                     } else {
                         let row = vec![
                             Line::from(""),
-                            Line::from(net.name.clone()),
+                            Line::from(net.name.clone()).centered(),
                             Line::from(net.netowrk_type.clone()).centered(),
-                            Line::from(net.is_hidden.to_string()),
+                            Line::from(net.is_hidden.to_string()).centered(),
                             Line::from(net.is_autoconnect.to_string()).centered(),
                             Line::from(signal).centered(),
                         ];
@@ -806,11 +745,11 @@ impl Adapter {
                     }
                 } else {
                     let row = vec![
-                        Line::from(""),
-                        Line::from(net.name.clone()),
+                        Line::from("").centered(),
+                        Line::from(net.name.clone()).centered(),
                         Line::from(net.netowrk_type.clone()).centered(),
-                        Line::from(net.is_hidden.to_string()),
-                        Line::from(net.is_autoconnect.to_string()),
+                        Line::from(net.is_hidden.to_string()).centered(),
+                        Line::from(net.is_autoconnect.to_string()).centered(),
                         Line::from(signal).centered(),
                     ];
 
@@ -832,38 +771,48 @@ impl Adapter {
             .header({
                 if focused_block == FocusedBlock::KnownNetworks {
                     Row::new(vec![
-                        Cell::from(""),
-                        Cell::from("Name").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Security").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Hidden").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Auto Connect").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Signal").style(Style::default().fg(Color::Yellow)),
+                        Line::from(""),
+                        Line::from("Name").yellow().centered(),
+                        Line::from("Security").yellow().centered(),
+                        Line::from("Hidden").yellow().centered(),
+                        Line::from("Auto Connect").yellow().centered(),
+                        Line::from("Signal").yellow().centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from(""),
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Security").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Hidden").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Auto Connect").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Signal").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
+                        Line::from(""),
+                        Line::from("Name")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Security")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Hidden")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Auto Connect")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Signal")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -893,9 +842,11 @@ impl Adapter {
                         } else {
                             BorderType::default()
                         }
-                    }),
+                    })
+                    .padding(Padding::horizontal(1)),
             )
-            .column_spacing(4)
+            .column_spacing(2)
+            .flex(Flex::SpaceBetween)
             .style(match color_mode {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
@@ -929,7 +880,7 @@ impl Adapter {
             .iter()
             .map(|(net, signal)| {
                 Row::new(vec![
-                    Line::from(net.name.clone()),
+                    Line::from(net.name.clone()).centered(),
                     Line::from(net.netowrk_type.clone()).centered(),
                     Line::from({
                         let signal = {
@@ -945,14 +896,15 @@ impl Adapter {
                             n if (25..50).contains(&n) => format!("{:3}% 󰤢", signal),
                             _ => format!("{:3}% 󰤟", signal),
                         }
-                    }),
+                    })
+                    .centered(),
                 ])
             })
             .collect();
 
         let widths = [
+            Constraint::Length(20),
             Constraint::Length(15),
-            Constraint::Length(8),
             Constraint::Length(6),
         ];
 
@@ -960,26 +912,32 @@ impl Adapter {
             .header({
                 if focused_block == FocusedBlock::NewNetworks {
                     Row::new(vec![
-                        Cell::from("Name").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Security").style(Style::default().fg(Color::Yellow)),
-                        Cell::from("Signal").style(Style::default().fg(Color::Yellow)),
+                        Line::from("Name").yellow().centered(),
+                        Line::from("Security").yellow().centered(),
+                        Line::from("Signal").yellow().centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Cell::from("Name").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Security").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
-                        Cell::from("Signal").style(match color_mode {
-                            ColorMode::Dark => Style::default().fg(Color::White),
-                            ColorMode::Light => Style::default().fg(Color::Black),
-                        }),
+                        Line::from("Name")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Security")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Signal")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -1009,9 +967,11 @@ impl Adapter {
                         } else {
                             BorderType::default()
                         }
-                    }),
+                    })
+                    .padding(Padding::horizontal(1)),
             )
-            .column_spacing(4)
+            .column_spacing(2)
+            .flex(Flex::SpaceBetween)
             .style(match color_mode {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
@@ -1038,26 +998,21 @@ impl Adapter {
     pub fn render_adapter(&self, frame: &mut Frame, color_mode: ColorMode) {
         let popup_layout = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
-            .constraints(
-                [
-                    Constraint::Length(10),
-                    Constraint::Length(9),
-                    Constraint::Fill(1),
-                ]
-                .as_ref(),
-            )
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(9),
+                Constraint::Fill(5),
+            ])
+            .flex(Flex::Start)
             .split(frame.area());
 
         let area = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(
-                [
-                    Constraint::Length((frame.area().width - 80) / 2),
-                    Constraint::Min(80),
-                    Constraint::Length((frame.area().width - 80) / 2),
-                ]
-                .as_ref(),
-            )
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Min(80),
+                Constraint::Fill(1),
+            ])
             .split(popup_layout[1])[1];
 
         let mut rows = vec![

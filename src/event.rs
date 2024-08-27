@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use crossterm::event::{Event as CrosstermEvent, KeyEvent, MouseEvent};
 use futures::{FutureExt, StreamExt};
+use iwdrs::modes::Mode;
 use tokio::sync::mpsc;
 
 use crate::{app::AppResult, notification::Notification};
@@ -13,7 +14,7 @@ pub enum Event {
     Mouse(MouseEvent),
     Resize(u16, u16),
     Notification(Notification),
-    Reset(String),
+    Reset(Mode),
 }
 
 #[allow(dead_code)]
