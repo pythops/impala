@@ -1,6 +1,5 @@
 use std::{collections::HashMap, sync::Arc};
 
-use anyhow::Result;
 use futures::future::join_all;
 use iwdrs::session::Session;
 use ratatui::widgets::TableState;
@@ -27,7 +26,7 @@ pub struct Station {
 }
 
 impl Station {
-    pub async fn new(session: Arc<Session>) -> Result<Self> {
+    pub async fn new(session: Arc<Session>) -> AppResult<Self> {
         let iwd_station = session.station().unwrap();
         let iwd_station_diagnostic = session.station_diagnostic();
 
@@ -107,7 +106,7 @@ impl Station {
         })
     }
 
-    pub async fn refresh(&mut self) -> Result<()> {
+    pub async fn refresh(&mut self) -> AppResult<()> {
         let iwd_station = self.session.station().unwrap();
         let iwd_station_diagnostic = self.session.station_diagnostic();
 

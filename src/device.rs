@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use anyhow::Context;
 use iwdrs::{device::Device as iwdDevice, session::Session};
+use tokio::sync::mpsc::UnboundedSender;
 
-use tracing::error;
-
-use crate::{access_point::AccessPoint, station::Station};
+use crate::{
+    access_point::AccessPoint, app::AppResult, event::Event, notification::Notification,
+    station::Station,
+};
 
 #[derive(Debug, Clone)]
 pub struct Device {
@@ -20,7 +22,7 @@ pub struct Device {
 }
 
 impl Device {
-    pub async fn new(session: Arc<Session>) -> Result<Self> {
+    pub async fn new(session: Arc<Session>, sender: UnboundedSender<Event>) -> AppResult<Self> {
         let device = session.device().context("No device found")?;
 
         let name = device.name().await?;
@@ -32,7 +34,11 @@ impl Device {
             Some(_) => match Station::new(session.clone()).await {
                 Ok(v) => Some(v),
                 Err(e) => {
-                    error!("{}", e.to_string());
+                    Notification::send(
+                        e.to_string(),
+                        crate::notification::NotificationLevel::Error,
+                        sender.clone(),
+                    )?;
                     None
                 }
             },
@@ -43,7 +49,11 @@ impl Device {
             Some(_) => match AccessPoint::new(session.clone()).await {
                 Ok(v) => Some(v),
                 Err(e) => {
-                    error!("{}", e.to_string());
+                    Notification::send(
+                        e.to_string(),
+                        crate::notification::NotificationLevel::Error,
+                        sender,
+                    )?;
                     None
                 }
             },
@@ -62,22 +72,22 @@ impl Device {
         })
     }
 
-    pub async fn set_mode(&self, mode: String) -> Result<()> {
+    pub async fn set_mode(&self, mode: String) -> AppResult<()> {
         self.device.set_mode(mode).await?;
         Ok(())
     }
 
-    pub async fn power_off(&self) -> Result<()> {
+    pub async fn power_off(&self) -> AppResult<()> {
         self.device.set_power(false).await?;
         Ok(())
     }
 
-    pub async fn power_on(&self) -> Result<()> {
+    pub async fn power_on(&self) -> AppResult<()> {
         self.device.set_power(true).await?;
         Ok(())
     }
 
-    pub async fn refresh(&mut self) -> Result<()> {
+    pub async fn refresh(&mut self, sender: UnboundedSender<Event>) -> AppResult<()> {
         self.is_powered = self.device.is_powered().await?;
         let current_mode = self.device.get_mode().await?;
 
@@ -97,7 +107,11 @@ impl Device {
                             Some(_) => match Station::new(self.session.clone()).await {
                                 Ok(v) => Some(v),
                                 Err(e) => {
-                                    error!("{}", e.to_string());
+                                    Notification::send(
+                                        e.to_string(),
+                                        crate::notification::NotificationLevel::Error,
+                                        sender,
+                                    )?;
                                     None
                                 }
                             },
@@ -115,7 +129,11 @@ impl Device {
                             Some(_) => match AccessPoint::new(self.session.clone()).await {
                                 Ok(v) => Some(v),
                                 Err(e) => {
-                                    error!("{}", e.to_string());
+                                    Notification::send(
+                                        e.to_string(),
+                                        crate::notification::NotificationLevel::Error,
+                                        sender,
+                                    )?;
                                     None
                                 }
                             },

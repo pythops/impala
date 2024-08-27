@@ -1,8 +1,6 @@
 use iwdrs::netowrk::Network as iwdNetwork;
 use tokio::sync::mpsc::UnboundedSender;
 
-use anyhow::Result;
-
 use crate::{
     app::AppResult,
     event::Event,
@@ -20,7 +18,7 @@ pub struct Network {
 }
 
 impl Network {
-    pub async fn new(n: iwdNetwork) -> Result<Self> {
+    pub async fn new(n: iwdNetwork) -> AppResult<Self> {
         let name = n.name().await?;
         let netowrk_type = n.network_type().await?;
         let is_connected = n.connected().await?;

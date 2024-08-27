@@ -1,7 +1,5 @@
 use std::sync::{atomic::AtomicBool, Arc};
 
-use anyhow::Result;
-
 use iwdrs::session::Session;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -43,7 +41,7 @@ pub struct AccessPoint {
 }
 
 impl AccessPoint {
-    pub async fn new(session: Arc<Session>) -> Result<Self> {
+    pub async fn new(session: Arc<Session>) -> AppResult<Self> {
         let iwd_access_point = session.access_point().unwrap();
         let iwd_access_point_diagnotic = session.access_point_diagnostic();
 
@@ -208,7 +206,7 @@ impl AccessPoint {
         frame.render_widget(psk_input, psk_input_area);
     }
 
-    pub async fn refresh(&mut self) -> Result<()> {
+    pub async fn refresh(&mut self) -> AppResult<()> {
         let iwd_access_point = self.session.access_point().unwrap();
         let iwd_access_point_diagnotic = self.session.access_point_diagnostic();
 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use anyhow::Context;
 
 use iwdrs::{adapter::Adapter as iwdAdapter, session::Session};
 use ratatui::{
@@ -10,10 +10,12 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, Cell, Clear, List, Padding, Row, Table, TableState},
     Frame,
 };
+use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    app::{ColorMode, FocusedBlock},
+    app::{AppResult, ColorMode, FocusedBlock},
     device::Device,
+    event::Event,
 };
 
 #[derive(Debug, Clone)]
@@ -28,7 +30,7 @@ pub struct Adapter {
 }
 
 impl Adapter {
-    pub async fn new(session: Arc<Session>) -> Result<Self> {
+    pub async fn new(session: Arc<Session>, sender: UnboundedSender<Event>) -> AppResult<Self> {
         let adapter = session.adapter().context("No adapter found")?;
 
         let is_powered = adapter.is_powered().await?;
@@ -36,7 +38,7 @@ impl Adapter {
         let model = adapter.model().await.ok();
         let vendor = adapter.vendor().await.ok();
         let supported_modes = adapter.supported_modes().await?;
-        let device = Device::new(session.clone()).await?;
+        let device = Device::new(session.clone(), sender).await?;
 
         Ok(Self {
             adapter,
@@ -49,9 +51,9 @@ impl Adapter {
         })
     }
 
-    pub async fn refresh(&mut self) -> Result<()> {
+    pub async fn refresh(&mut self, sender: UnboundedSender<Event>) -> AppResult<()> {
         self.is_powered = self.adapter.is_powered().await?;
-        self.device.refresh().await?;
+        self.device.refresh(sender).await?;
         Ok(())
     }
 

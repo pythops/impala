@@ -11,15 +11,14 @@ use std::{
     process::exit,
     sync::{atomic::AtomicBool, Arc},
 };
+use tokio::sync::mpsc::UnboundedSender;
 use tui_input::Input;
-
-use tracing::error;
 
 use async_channel::{Receiver, Sender};
 use futures::FutureExt;
 use iwdrs::{agent::Agent, session::Session};
 
-use crate::{adapter::Adapter, help::Help, notification::Notification};
+use crate::{adapter::Adapter, event::Event, help::Help, notification::Notification};
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -91,19 +90,18 @@ pub async fn request_confirmation(
 }
 
 impl App {
-    pub async fn new(help: Help, mode: String) -> AppResult<Self> {
+    pub async fn new(help: Help, mode: String, sender: UnboundedSender<Event>) -> AppResult<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
                 Err(e) => {
-                    error!("Can not access the iwd service");
-                    error!("{}", e.to_string());
+                    eprintln!("Can not access the iwd service {}", e);
                     exit(1);
                 }
             }
         };
 
-        let adapter = Adapter::new(session.clone()).await.unwrap();
+        let adapter = Adapter::new(session.clone(), sender).await.unwrap();
 
         let current_mode = adapter.device.mode.clone();
 
@@ -157,19 +155,18 @@ impl App {
         })
     }
 
-    pub async fn reset(mode: String) -> AppResult<()> {
+    pub async fn reset(mode: String, sender: UnboundedSender<Event>) -> AppResult<()> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
                 Err(e) => {
-                    error!("Can not access the iwd service");
-                    error!("{}", e.to_string());
+                    eprintln!("Can not access the iwd service: {}", e);
                     exit(1);
                 }
             }
         };
 
-        let adapter = Adapter::new(session.clone()).await.unwrap();
+        let adapter = Adapter::new(session.clone(), sender).await.unwrap();
         adapter.device.set_mode(mode).await?;
         Ok(())
     }
@@ -334,11 +331,11 @@ impl App {
         Ok(())
     }
 
-    pub async fn tick(&mut self) -> AppResult<()> {
+    pub async fn tick(&mut self, sender: UnboundedSender<Event>) -> AppResult<()> {
         self.notifications.retain(|n| n.ttl > 0);
         self.notifications.iter_mut().for_each(|n| n.ttl -= 1);
 
-        self.adapter.refresh().await?;
+        self.adapter.refresh(sender).await?;
 
         Ok(())
     }
