@@ -903,9 +903,9 @@ impl Adapter {
             .collect();
 
         let widths = [
-            Constraint::Length(20),
             Constraint::Length(15),
-            Constraint::Length(6),
+            Constraint::Length(15),
+            Constraint::Length(8),
         ];
 
         let new_networks_table = Table::new(rows, widths)
