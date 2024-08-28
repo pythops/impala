@@ -1,3 +1,14 @@
+## v0.2.2 - 2024-08-28
+
+### Update
+
+- Responsive layout
+
+### Changed
+
+- using stdout instead of stderr for the terminal handler
+- set tick rate to 2sec
+
 ## v0.2.1 - 2024-06-27
 
 ### Added
