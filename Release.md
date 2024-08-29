@@ -1,3 +1,9 @@
+## v0.2.3 - 2024-08-29
+
+### Changed
+
+- Remove uid check before starting the app.
+
 ## v0.2.2 - 2024-08-28
 
 ### Update
