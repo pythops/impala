@@ -13,11 +13,6 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-    if unsafe { libc::geteuid() } != 0 {
-        eprintln!("This program must be run as root");
-        std::process::exit(1);
-    }
-
     let args = cli::cli().get_matches();
 
     let config = Arc::new(Config::new());
@@ -35,7 +30,13 @@ async fn main() -> AppResult<()> {
 
     let mode = Mode::try_from(mode.as_str())?;
 
-    App::reset(mode.clone(), tui.events.sender.clone()).await?;
+    if App::reset(mode.clone(), tui.events.sender.clone())
+        .await
+        .is_err()
+    {
+        tui.exit()?;
+    }
+
     let mut app = App::new(help.clone(), mode, tui.events.sender.clone()).await?;
 
     while app.running {
@@ -55,7 +56,12 @@ async fn main() -> AppResult<()> {
                 app.notifications.push(notification);
             }
             Event::Reset(mode) => {
-                App::reset(mode.clone(), tui.events.sender.clone()).await?;
+                if App::reset(mode.clone(), tui.events.sender.clone())
+                    .await
+                    .is_err()
+                {
+                    tui.exit()?;
+                }
                 app = App::new(help.clone(), mode, tui.events.sender.clone()).await?;
             }
             _ => {}

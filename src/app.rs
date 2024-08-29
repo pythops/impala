@@ -157,10 +157,7 @@ impl App {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
-                Err(e) => {
-                    eprintln!("Can not access the iwd service: {}", e);
-                    exit(1);
-                }
+                Err(e) => return Err(anyhow!("Can not access the iwd service: {}", e).into()),
             }
         };
 

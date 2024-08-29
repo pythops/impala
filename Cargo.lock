@@ -809,7 +809,6 @@ dependencies = [
  "dirs",
  "futures",
  "iwdrs",
- "libc",
  "ratatui",
  "serde",
  "terminal-light",
