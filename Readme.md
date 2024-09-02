@@ -29,7 +29,7 @@ cargo install impala
 
 ### 🐧Arch Linux
 
-You can install `impala` from the [official repositories]() with using [pacman](https://wiki.archlinux.org/title/pacman).
+You can install `impala` from the [official repositories](https://archlinux.org/packages/extra/x86_64/impala/) with using [pacman](https://wiki.archlinux.org/title/pacman).
 
 ```bash
 pacman -S impala
