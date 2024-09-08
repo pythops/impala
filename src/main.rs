@@ -1,10 +1,10 @@
 use impala::app::{App, AppResult};
-use impala::cli;
 use impala::config::Config;
 use impala::event::{Event, EventHandler};
 use impala::handler::handle_key_events;
 use impala::help::Help;
 use impala::tui::Tui;
+use impala::{cli, rfkill};
 use iwdrs::modes::Mode;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
@@ -14,6 +14,8 @@ use std::sync::Arc;
 #[tokio::main]
 async fn main() -> AppResult<()> {
     let args = cli::cli().get_matches();
+
+    rfkill::check()?;
 
     let config = Arc::new(Config::new());
 

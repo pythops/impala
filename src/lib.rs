@@ -29,3 +29,5 @@ pub mod adapter;
 pub mod access_point;
 
 pub mod cli;
+
+pub mod rfkill;
