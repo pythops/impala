@@ -201,7 +201,7 @@ impl Adapter {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
-            .highlight_style(if focused_block == FocusedBlock::Device {
+            .row_highlight_style(if focused_block == FocusedBlock::Device {
                 Style::default().bg(Color::DarkGray)
             } else {
                 Style::default()
@@ -367,7 +367,7 @@ impl Adapter {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
-            .highlight_style(if focused_block == FocusedBlock::AccessPoint {
+            .row_highlight_style(if focused_block == FocusedBlock::AccessPoint {
                 Style::default().bg(Color::DarkGray)
             } else {
                 Style::default()
@@ -543,7 +543,7 @@ impl Adapter {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
-            .highlight_style(if focused_block == FocusedBlock::Device {
+            .row_highlight_style(if focused_block == FocusedBlock::Device {
                 Style::default().bg(Color::DarkGray)
             } else {
                 Style::default()
@@ -689,7 +689,7 @@ impl Adapter {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
-            .highlight_style(if focused_block == FocusedBlock::Station {
+            .row_highlight_style(if focused_block == FocusedBlock::Station {
                 Style::default().bg(Color::DarkGray)
             } else {
                 Style::default()
@@ -851,7 +851,7 @@ impl Adapter {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
-            .highlight_style(if focused_block == FocusedBlock::KnownNetworks {
+            .row_highlight_style(if focused_block == FocusedBlock::KnownNetworks {
                 Style::default().bg(Color::DarkGray)
             } else {
                 Style::default()
@@ -976,7 +976,7 @@ impl Adapter {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
-            .highlight_style(if focused_block == FocusedBlock::NewNetworks {
+            .row_highlight_style(if focused_block == FocusedBlock::NewNetworks {
                 Style::default().bg(Color::DarkGray)
             } else {
                 Style::default()
@@ -1062,7 +1062,7 @@ impl Adapter {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
-            .highlight_style(Style::default().bg(Color::DarkGray));
+            .row_highlight_style(Style::default().bg(Color::DarkGray));
 
         frame.render_widget(Clear, area);
         frame.render_widget(device_infos_table, area);

@@ -7,8 +7,8 @@ use ratatui::{
     Frame,
 };
 use std::{
-    error,
-    process::exit,
+    error::Error,
+    process::{self, exit},
     sync::{atomic::AtomicBool, Arc},
 };
 use tokio::sync::mpsc::UnboundedSender;
@@ -20,7 +20,7 @@ use iwdrs::{agent::Agent, modes::Mode, session::Session};
 
 use crate::{adapter::Adapter, event::Event, help::Help, notification::Notification};
 
-pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
+pub type AppResult<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FocusedBlock {
@@ -101,7 +101,14 @@ impl App {
             }
         };
 
-        let adapter = Adapter::new(session.clone(), sender).await.unwrap();
+        let adapter = match Adapter::new(session.clone(), sender).await {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("{}", e);
+                eprintln!("Make sure iwd daemon is up and running");
+                process::exit(1);
+            }
+        };
 
         let current_mode = adapter.device.mode.clone();
 
@@ -161,7 +168,15 @@ impl App {
             }
         };
 
-        let adapter = Adapter::new(session.clone(), sender).await.unwrap();
+        let adapter = match Adapter::new(session.clone(), sender).await {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("{}", e);
+                eprintln!("Make sure iwd daemon is up and running");
+                process::exit(1);
+            }
+        };
+
         adapter.device.set_mode(mode).await?;
         Ok(())
     }

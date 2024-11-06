@@ -14,8 +14,8 @@ async-channel = "2"
 crossterm = { version = "0.28", default-features = false, features = [
   "event-stream",
 ] }
-ratatui = "0.28"
-tui-input = "0.10"
+ratatui = "0.29"
+tui-input = "0.11"
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 dirs = "5"
@@ -26,7 +26,10 @@ terminal-light = "1"
 anyhow = "1"
 iwdrs = "0.1"
 chrono = "0.4"
+log = "0.4"
+env_logger = "0.11"
 
 [profile.release]
 strip = true
 lto = "fat"
+codegen-units = 1
