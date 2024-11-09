@@ -202,7 +202,7 @@ impl Adapter {
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
             .row_highlight_style(if focused_block == FocusedBlock::Device {
-                Style::default().bg(Color::DarkGray)
+                Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
                 Style::default()
             });
@@ -368,7 +368,7 @@ impl Adapter {
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
             .row_highlight_style(if focused_block == FocusedBlock::AccessPoint {
-                Style::default().bg(Color::DarkGray)
+                Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
                 Style::default()
             });
@@ -437,10 +437,10 @@ impl Adapter {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
-                    Constraint::Percentage(16),
-                    Constraint::Percentage(16),
-                    Constraint::Percentage(33),
-                    Constraint::Percentage(34),
+                    Constraint::Length(5),
+                    Constraint::Length(5),
+                    Constraint::Min(10),
+                    Constraint::Fill(1),
                 ])
                 .margin(1)
                 .split(frame.area());
@@ -544,7 +544,7 @@ impl Adapter {
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
             .row_highlight_style(if focused_block == FocusedBlock::Device {
-                Style::default().bg(Color::DarkGray)
+                Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
                 Style::default()
             });
@@ -690,7 +690,7 @@ impl Adapter {
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
             .row_highlight_style(if focused_block == FocusedBlock::Station {
-                Style::default().bg(Color::DarkGray)
+                Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
                 Style::default()
             });
@@ -852,7 +852,7 @@ impl Adapter {
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
             .row_highlight_style(if focused_block == FocusedBlock::KnownNetworks {
-                Style::default().bg(Color::DarkGray)
+                Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
                 Style::default()
             });
@@ -977,7 +977,7 @@ impl Adapter {
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
             .row_highlight_style(if focused_block == FocusedBlock::NewNetworks {
-                Style::default().bg(Color::DarkGray)
+                Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
                 Style::default()
             });
@@ -1062,7 +1062,7 @@ impl Adapter {
                 ColorMode::Dark => Style::default().fg(Color::White),
                 ColorMode::Light => Style::default().fg(Color::Black),
             })
-            .row_highlight_style(Style::default().bg(Color::DarkGray));
+            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
 
         frame.render_widget(Clear, area);
         frame.render_widget(device_infos_table, area);
