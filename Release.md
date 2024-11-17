@@ -1,3 +1,13 @@
+## v0.2.4 - 2024-11-17
+
+### Added
+
+- Detect when the device is soft/hard blocked
+
+### Fix
+
+- fg color for light mode background
+
 ## v0.2.3 - 2024-08-29
 
 ### Changed
