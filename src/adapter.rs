@@ -760,7 +760,7 @@ impl Adapter {
 
         let widths = [
             Constraint::Length(2),
-            Constraint::Length(15),
+            Constraint::Length(25),
             Constraint::Length(8),
             Constraint::Length(6),
             Constraint::Length(12),
@@ -903,7 +903,7 @@ impl Adapter {
             .collect();
 
         let widths = [
-            Constraint::Length(15),
+            Constraint::Length(25),
             Constraint::Length(15),
             Constraint::Length(8),
         ];
