@@ -56,6 +56,7 @@ pub struct App {
     pub passkey_sender: Sender<String>,
     pub cancel_signal_sender: Sender<()>,
     pub passkey_input: Input,
+    pub show_password: bool,
     pub mode: Mode,
     pub selected_mode: Mode,
     pub current_mode: Mode,
@@ -113,6 +114,7 @@ impl App {
         let current_mode = adapter.device.mode.clone();
 
         let (passkey_sender, passkey_receiver) = async_channel::unbounded();
+        let show_password = false;
         let (cancel_signal_sender, cancel_signal_receiver) = async_channel::unbounded();
 
         let authentication_required = Arc::new(AtomicBool::new(false));
@@ -153,6 +155,7 @@ impl App {
             passkey_sender,
             cancel_signal_sender,
             passkey_input: Input::default(),
+            show_password,
             mode,
             selected_mode: Mode::Station,
             current_mode,
