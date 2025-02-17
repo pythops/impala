@@ -60,6 +60,11 @@ pub async fn handle_key_events(
                 app.cancel_auth().await?;
                 app.focused_block = FocusedBlock::Device;
             }
+
+            KeyCode::Tab => {
+                app.show_password = !app.show_password;
+            }
+
             _ => {
                 app.passkey_input
                     .handle_event(&crossterm::event::Event::Key(key_event));
