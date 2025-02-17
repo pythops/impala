@@ -21,7 +21,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         // Auth Popup
         if app.authentication_required.load(Ordering::Relaxed) {
             app.focused_block = FocusedBlock::AuthKey;
-            Auth.render(frame, app.passkey_input.value());
+            let censored_passkey = "*".repeat(app.passkey_input.value().len());
+            Auth.render(frame, &censored_passkey);
         }
 
         // Access Point Popup
