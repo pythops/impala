@@ -43,7 +43,7 @@ pub struct AccessPoint {
 impl AccessPoint {
     pub async fn new(session: Arc<Session>) -> AppResult<Self> {
         let iwd_access_point = session.access_point().unwrap();
-        let iwd_access_point_diagnotic = session.access_point_diagnostic();
+        let iwd_access_point_diagnostic = session.access_point_diagnostic();
 
         let has_started = iwd_access_point.has_started().await?;
         let name = iwd_access_point.name().await?;
@@ -58,7 +58,7 @@ impl AccessPoint {
         let focused_section = APFocusedSection::SSID;
 
         let connected_devices = {
-            if let Some(d) = iwd_access_point_diagnotic {
+            if let Some(d) = iwd_access_point_diagnostic {
                 match d.get().await {
                     Ok(diagnostic) => diagnostic
                         .iter()
@@ -208,7 +208,7 @@ impl AccessPoint {
 
     pub async fn refresh(&mut self) -> AppResult<()> {
         let iwd_access_point = self.session.access_point().unwrap();
-        let iwd_access_point_diagnotic = self.session.access_point_diagnostic();
+        let iwd_access_point_diagnostic = self.session.access_point_diagnostic();
 
         self.has_started = iwd_access_point.has_started().await?;
         self.name = iwd_access_point.name().await?;
@@ -217,7 +217,7 @@ impl AccessPoint {
         self.supported_ciphers = iwd_access_point.pairwise_ciphers().await?;
         self.used_cipher = iwd_access_point.group_cipher().await?;
 
-        if let Some(d) = iwd_access_point_diagnotic {
+        if let Some(d) = iwd_access_point_diagnostic {
             if let Ok(diagnostic) = d.get().await {
                 self.connected_devices = diagnostic
                     .iter()

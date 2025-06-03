@@ -13,7 +13,7 @@ use crate::{
 pub struct KnownNetwork {
     pub n: iwdKnownNetwork,
     pub name: String,
-    pub netowrk_type: String,
+    pub network_type: String,
     pub is_autoconnect: bool,
     pub is_hidden: bool,
     pub last_connected: Option<DateTime<FixedOffset>>,
@@ -22,7 +22,7 @@ pub struct KnownNetwork {
 impl KnownNetwork {
     pub async fn new(n: iwdKnownNetwork) -> AppResult<Self> {
         let name = n.name().await?;
-        let netowrk_type = n.network_type().await?;
+        let network_type = n.network_type().await?;
         let is_autoconnect = n.get_autoconnect().await?;
         let is_hidden = n.hidden().await?;
         let last_connected = match n.last_connected_time().await {
@@ -33,7 +33,7 @@ impl KnownNetwork {
         Ok(Self {
             n,
             name,
-            netowrk_type,
+            network_type,
             is_autoconnect,
             is_hidden,
             last_connected,

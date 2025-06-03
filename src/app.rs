@@ -277,7 +277,7 @@ impl App {
                 ),
                 _ => (Text::from("  Access Point"), Text::from("   Station")),
             },
-            _ => panic!("unknwon mode"),
+            _ => panic!("unknown mode"),
         };
 
         let message = Paragraph::new("Select the desired mode:")

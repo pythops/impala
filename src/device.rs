@@ -95,7 +95,7 @@ impl Device {
             Mode::Station => {
                 match self.mode {
                     Mode::Station => {
-                        // refresh exisiting station
+                        // refresh existing station
                         if let Some(station) = &mut self.station {
                             station.refresh().await?;
                         }
