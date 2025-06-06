@@ -119,13 +119,7 @@ impl Help {
     }
     pub fn scroll_up(&mut self) {
         let i = match self.state.selected() {
-            Some(i) => {
-                if i > 1 {
-                    i - 1
-                } else {
-                    0
-                }
-            }
+            Some(i) => i.saturating_sub(1),
             None => 1,
         };
         *self.state.offset_mut() = i;

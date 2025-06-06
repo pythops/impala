@@ -724,7 +724,7 @@ impl Adapter {
                         let row = vec![
                             Line::from("󰸞").centered(),
                             Line::from(net.name.clone()).centered(),
-                            Line::from(net.netowrk_type.clone()).centered(),
+                            Line::from(net.network_type.clone()).centered(),
                             Line::from(net.is_hidden.to_string()).centered(),
                             Line::from(net.is_autoconnect.to_string()).centered(),
                             Line::from(signal).centered(),
@@ -735,7 +735,7 @@ impl Adapter {
                         let row = vec![
                             Line::from(""),
                             Line::from(net.name.clone()).centered(),
-                            Line::from(net.netowrk_type.clone()).centered(),
+                            Line::from(net.network_type.clone()).centered(),
                             Line::from(net.is_hidden.to_string()).centered(),
                             Line::from(net.is_autoconnect.to_string()).centered(),
                             Line::from(signal).centered(),
@@ -747,7 +747,7 @@ impl Adapter {
                     let row = vec![
                         Line::from("").centered(),
                         Line::from(net.name.clone()).centered(),
-                        Line::from(net.netowrk_type.clone()).centered(),
+                        Line::from(net.network_type.clone()).centered(),
                         Line::from(net.is_hidden.to_string()).centered(),
                         Line::from(net.is_autoconnect.to_string()).centered(),
                         Line::from(signal).centered(),
@@ -881,7 +881,7 @@ impl Adapter {
             .map(|(net, signal)| {
                 Row::new(vec![
                     Line::from(net.name.clone()).centered(),
-                    Line::from(net.netowrk_type.clone()).centered(),
+                    Line::from(net.network_type.clone()).centered(),
                     Line::from({
                         let signal = {
                             if *signal / 100 >= -50 {
@@ -891,10 +891,10 @@ impl Adapter {
                             }
                         };
                         match signal {
-                            n if n >= 75 => format!("{:3}% 󰤨", signal),
-                            n if (50..75).contains(&n) => format!("{:3}% 󰤥", signal),
-                            n if (25..50).contains(&n) => format!("{:3}% 󰤢", signal),
-                            _ => format!("{:3}% 󰤟", signal),
+                            n if n >= 75 => format!("{signal:3}% 󰤨"),
+                            n if (50..75).contains(&n) => format!("{signal:3}% 󰤥"),
+                            n if (25..50).contains(&n) => format!("{signal:3}% 󰤢"),
+                            _ => format!("{signal:3}% 󰤟"),
                         }
                     })
                     .centered(),
