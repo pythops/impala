@@ -465,16 +465,15 @@ pub async fn handle_key_events(
                                                                                 == selected_net.name
                                                                         });
 
-                                                                    if net_index.is_some() {
+                                                                    if let Some(index) = net_index {
                                                                         let (net, _) = app
                                                                             .adapter
                                                                             .device
                                                                             .station
                                                                             .as_ref()
                                                                             .unwrap()
-                                                                            .known_networks
-                                                                            [net_index.unwrap()]
-                                                                        .clone();
+                                                                            .known_networks[index]
+                                                                            .clone();
                                                                         app.adapter
                                                                             .device
                                                                             .station
@@ -525,16 +524,15 @@ pub async fn handle_key_events(
                                                                         n.name == selected_net.name
                                                                     });
 
-                                                                if net_index.is_some() {
+                                                                if let Some(index) = net_index {
                                                                     let (net, _) = app
                                                                         .adapter
                                                                         .device
                                                                         .station
                                                                         .as_ref()
                                                                         .unwrap()
-                                                                        .known_networks
-                                                                        [net_index.unwrap()]
-                                                                    .clone();
+                                                                        .known_networks[index]
+                                                                        .clone();
                                                                     tokio::spawn(async move {
                                                                         net.connect(sender.clone())
                                                                             .await
@@ -675,13 +673,7 @@ pub async fn handle_key_events(
                                                         .known_networks_state
                                                         .selected()
                                                     {
-                                                        Some(i) => {
-                                                            if i > 1 {
-                                                                i - 1
-                                                            } else {
-                                                                0
-                                                            }
-                                                        }
+                                                        Some(i) => i.saturating_sub(1),
                                                         None => 0,
                                                     };
 
@@ -713,13 +705,7 @@ pub async fn handle_key_events(
                                                         .new_networks_state
                                                         .selected()
                                                     {
-                                                        Some(i) => {
-                                                            if i > 1 {
-                                                                i - 1
-                                                            } else {
-                                                                0
-                                                            }
-                                                        }
+                                                        Some(i) => i.saturating_sub(1),
                                                         None => 0,
                                                     };
 

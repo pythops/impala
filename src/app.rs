@@ -96,7 +96,7 @@ impl App {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
                 Err(e) => {
-                    eprintln!("Can not access the iwd service {}", e);
+                    eprintln!("Can not access the iwd service {e}");
                     exit(1);
                 }
             }
@@ -105,7 +105,7 @@ impl App {
         let adapter = match Adapter::new(session.clone(), sender).await {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("{}", e);
+                eprintln!("{e}");
                 eprintln!("Make sure iwd daemon is up and running");
                 process::exit(1);
             }
@@ -174,7 +174,7 @@ impl App {
         let adapter = match Adapter::new(session.clone(), sender).await {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("{}", e);
+                eprintln!("{e}");
                 eprintln!("Make sure iwd daemon is up and running");
                 process::exit(1);
             }
