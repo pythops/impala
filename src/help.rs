@@ -78,13 +78,18 @@ impl Help {
                     .bold(),
                     "Connect/Disconnect the network",
                 ),
+                (Cell::from(""), ""),
                 (
-                    Cell::from("### Known Networks").style(Style::new().bold().fg(Color::Yellow)),
+                    Cell::from("## Known Networks").style(Style::new().bold().fg(Color::Yellow)),
                     "",
                 ),
                 (
                     Cell::from(config.station.known_network.remove.to_string()).bold(),
                     "Remove the network from the known networks list",
+                ),
+                (
+                    Cell::from(config.station.known_network.toggle_autoconnect.to_string()).bold(),
+                    "Toggle Autoconnect for selected network",
                 ),
                 (Cell::from(""), ""),
                 (
