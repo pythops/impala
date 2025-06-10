@@ -20,11 +20,11 @@ pub fn check() -> AppResult<()> {
                 match state {
                     0 => {
                         eprintln!(
-                            r#"
+                            r"
 The wifi device is soft blocked
 Run the following command to unblock it
 $ sudo rfkill unblock wlan
-                    "#
+                    "
                         );
                         std::process::exit(1);
                     }

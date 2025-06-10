@@ -20,7 +20,7 @@ pub struct Help {
 }
 
 impl Help {
-    pub fn new(config: Arc<Config>) -> Self {
+    pub fn new(config: &Arc<Config>) -> Self {
         let mut state = TableState::new().with_offset(0);
         state.select(Some(0));
 
@@ -159,7 +159,7 @@ impl Help {
             .keys
             .iter()
             .map(|key| {
-                Row::new(vec![key.0.to_owned(), key.1.into()]).style(match color_mode {
+                Row::new(vec![key.0.clone(), key.1.into()]).style(match color_mode {
                     ColorMode::Dark => Style::default().fg(Color::White),
                     ColorMode::Light => Style::default().fg(Color::Black),
                 })

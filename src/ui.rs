@@ -22,10 +22,10 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         if app.authentication_required.load(Ordering::Relaxed) {
             app.focused_block = FocusedBlock::AuthKey;
             let censored_password = "*".repeat(app.passkey_input.value().len());
-            if !app.show_password {
-                Auth.render(frame, &censored_password);
-            } else {
+            if app.show_password {
                 Auth.render(frame, app.passkey_input.value());
+            } else {
+                Auth.render(frame, &censored_password);
             }
         }
 

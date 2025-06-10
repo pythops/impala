@@ -80,7 +80,7 @@ pub async fn request_confirmation(
 
     r = rx_cancel.recv() => {
             match r {
-                Ok(_) => {
+                Ok(()) => {
                         Err(anyhow!("Operation Canceled").into())},
                 Err(_) => Err(anyhow!("Failed to receive cancel signal").into()),
             }
@@ -138,8 +138,7 @@ impl App {
 
         let color_mode = match terminal_light::luma() {
             Ok(luma) if luma > 0.6 => ColorMode::Light,
-            Ok(_) => ColorMode::Dark,
-            Err(_) => ColorMode::Dark,
+            Ok(_) | Err(_) => ColorMode::Dark,
         };
 
         Ok(Self {

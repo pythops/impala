@@ -222,7 +222,7 @@ impl AccessPoint {
                 self.connected_devices = diagnostic
                     .iter()
                     .map(|v| v["Address"].clone().trim_matches('"').to_string())
-                    .collect()
+                    .collect();
             }
         }
 
@@ -232,12 +232,12 @@ impl AccessPoint {
     pub async fn scan(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
         let iwd_access_point = self.session.access_point().unwrap();
         match iwd_access_point.scan().await {
-            Ok(_) => Notification::send(
+            Ok(()) => Notification::send(
                 "Start Scanning".to_string(),
                 NotificationLevel::Info,
-                sender,
+                &sender,
             )?,
-            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?,
+            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?,
         }
 
         Ok(())
@@ -249,12 +249,12 @@ impl AccessPoint {
             .start(self.ssid.value(), self.psk.value())
             .await
         {
-            Ok(_) => Notification::send(
+            Ok(()) => Notification::send(
                 format!("AP Started\nSSID: {}", self.ssid.value()),
                 NotificationLevel::Info,
-                sender,
+                &sender,
             )?,
-            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?,
+            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?,
         }
         self.ap_start
             .store(false, std::sync::atomic::Ordering::Relaxed);
@@ -265,8 +265,10 @@ impl AccessPoint {
     pub async fn stop(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
         let iwd_access_point = self.session.access_point().unwrap();
         match iwd_access_point.stop().await {
-            Ok(_) => Notification::send("AP Stopped".to_string(), NotificationLevel::Info, sender)?,
-            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?,
+            Ok(()) => {
+                Notification::send("AP Stopped".to_string(), NotificationLevel::Info, &sender)?
+            }
+            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?,
         }
 
         Ok(())

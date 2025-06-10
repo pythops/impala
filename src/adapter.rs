@@ -226,7 +226,7 @@ impl Adapter {
         let ap_frequency = match self.device.access_point.as_ref() {
             Some(ap) => {
                 if ap.has_started {
-                    format!("{:.2} GHz", (ap.frequency.unwrap() as f32 / 1000.0))
+                    format!("{:.2} GHz", (ap.frequency.unwrap() / 1000))
                 } else {
                     "-".to_string()
                 }
@@ -1034,14 +1034,14 @@ impl Adapter {
             rows.push(Row::new(vec![
                 Cell::from("model").style(Style::default().bold().yellow()),
                 Cell::from(model.clone()),
-            ]))
+            ]));
         }
 
         if let Some(vendor) = &self.vendor {
             rows.push(Row::new(vec![
                 Cell::from("vendor").style(Style::default().bold().yellow()),
                 Cell::from(vendor.clone()),
-            ]))
+            ]));
         }
 
         let widths = [Constraint::Length(20), Constraint::Fill(1)];

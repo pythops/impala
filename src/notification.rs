@@ -37,8 +37,8 @@ impl Notification {
 
         text.extend(Text::from(self.message.as_str()));
 
-        let notification_height = text.height() as u16 + 2;
-        let notification_width = text.width() as u16 + 4;
+        let notification_height = u16::try_from(text.height()).expect("Could not cast tu u16") + 2;
+        let notification_width = u16::try_from(text.width()).expect("Could not cast tu u16") + 4;
 
         let block = Paragraph::new(text)
             .alignment(Alignment::Center)
@@ -52,7 +52,7 @@ impl Notification {
             );
 
         let area = notification_rect(
-            index as u16,
+            u16::try_from(index).expect("Could not cast tu u16"),
             notification_height,
             notification_width,
             frame.area(),
@@ -64,7 +64,7 @@ impl Notification {
     pub fn send(
         message: String,
         level: NotificationLevel,
-        sender: UnboundedSender<Event>,
+        sender: &UnboundedSender<Event>,
     ) -> AppResult<()> {
         let notif = Notification {
             message,

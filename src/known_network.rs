@@ -42,14 +42,14 @@ impl KnownNetwork {
 
     pub async fn forget(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
         if let Err(e) = self.n.forget().await {
-            Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?;
+            Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?;
             return Ok(());
         }
 
         Notification::send(
             "Network Removed".to_string(),
             NotificationLevel::Info,
-            sender,
+            &sender,
         )?;
         Ok(())
     }
@@ -57,28 +57,28 @@ impl KnownNetwork {
     pub async fn toggle_autoconnect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
         if self.is_autoconnect {
             match self.n.set_autoconnect(false).await {
-                Ok(_) => {
+                Ok(()) => {
                     Notification::send(
                         format!("Disable Autoconnect for: {}", self.name),
                         NotificationLevel::Info,
-                        sender.clone(),
+                        &sender.clone(),
                     )?;
                 }
                 Err(e) => {
-                    Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?;
+                    Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?;
                 }
             }
         } else {
             match self.n.set_autoconnect(true).await {
-                Ok(_) => {
+                Ok(()) => {
                     Notification::send(
                         format!("Enable Autoconnect for: {}", self.name),
                         NotificationLevel::Info,
-                        sender.clone(),
+                        &sender.clone(),
                     )?;
                 }
                 Err(e) => {
-                    Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?;
+                    Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?;
                 }
             }
         }

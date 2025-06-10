@@ -19,7 +19,7 @@ async fn main() -> AppResult<()> {
 
     let config = Arc::new(Config::new());
 
-    let help = Help::new(config.clone());
+    let help = Help::new(&config.clone());
 
     let backend = CrosstermBackend::new(io::stdout());
     let terminal = Terminal::new(backend)?;
@@ -52,7 +52,7 @@ async fn main() -> AppResult<()> {
                     tui.events.sender.clone(),
                     config.clone(),
                 )
-                .await?
+                .await?;
             }
             Event::Notification(notification) => {
                 app.notifications.push(notification);
