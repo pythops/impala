@@ -43,20 +43,20 @@ impl Network {
 
     pub async fn connect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
         match self.n.connect().await {
-            Ok(_) => Notification::send(
+            Ok(()) => Notification::send(
                 format!("Connected to {}", self.name),
                 NotificationLevel::Info,
-                sender,
+                &sender,
             )?,
             Err(e) => {
                 if e.to_string().contains("net.connman.iwd.Aborted") {
                     Notification::send(
                         "Connection canceled".to_string(),
                         NotificationLevel::Info,
-                        sender,
-                    )?
+                        &sender,
+                    )?;
                 } else {
-                    Notification::send(e.to_string(), NotificationLevel::Error, sender)?
+                    Notification::send(e.to_string(), NotificationLevel::Error, &sender)?;
                 }
             }
         }

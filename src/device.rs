@@ -37,7 +37,7 @@ impl Device {
                     Notification::send(
                         e.to_string(),
                         crate::notification::NotificationLevel::Error,
-                        sender.clone(),
+                        &sender.clone(),
                     )?;
                     None
                 }
@@ -52,7 +52,7 @@ impl Device {
                     Notification::send(
                         e.to_string(),
                         crate::notification::NotificationLevel::Error,
-                        sender,
+                        &sender,
                     )?;
                     None
                 }
@@ -110,7 +110,7 @@ impl Device {
                                     Notification::send(
                                         e.to_string(),
                                         crate::notification::NotificationLevel::Error,
-                                        sender,
+                                        &sender,
                                     )?;
                                     None
                                 }
@@ -132,7 +132,7 @@ impl Device {
                                     Notification::send(
                                         e.to_string(),
                                         crate::notification::NotificationLevel::Error,
-                                        sender,
+                                        &sender,
                                     )?;
                                     None
                                 }
