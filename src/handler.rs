@@ -22,7 +22,7 @@ pub async fn handle_key_events(
             KeyCode::Char('q') => {
                 app.quit();
             }
-            KeyCode::Char('c') | KeyCode::Char('C') => {
+            KeyCode::Char('c' | 'C') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
                     app.quit();
                 }
@@ -113,7 +113,7 @@ pub async fn handle_key_events(
                 KeyCode::Char('q') => {
                     app.quit();
                 }
-                KeyCode::Char('c') | KeyCode::Char('C') => {
+                KeyCode::Char('c' | 'C') => {
                     if key_event.modifiers == KeyModifiers::CONTROL {
                         app.quit();
                     }
@@ -150,7 +150,7 @@ pub async fn handle_key_events(
                                 .as_mut()
                                 .unwrap()
                                 .scan(sender)
-                                .await?
+                                .await?;
                         }
                         Mode::Ap => {
                             app.adapter
@@ -159,10 +159,10 @@ pub async fn handle_key_events(
                                 .as_mut()
                                 .unwrap()
                                 .scan(sender)
-                                .await?
+                                .await?;
                         }
                         _ => {}
-                    };
+                    }
                 }
 
                 KeyCode::Tab => match app.adapter.device.mode {
@@ -201,12 +201,12 @@ pub async fn handle_key_events(
                             if let Some(ap) = &mut app.adapter.device.access_point {
                                 match ap.focused_section {
                                     APFocusedSection::SSID => {
-                                        ap.focused_section = APFocusedSection::PSK
+                                        ap.focused_section = APFocusedSection::PSK;
                                     }
                                     APFocusedSection::PSK => {
-                                        ap.focused_section = APFocusedSection::SSID
+                                        ap.focused_section = APFocusedSection::SSID;
                                     }
-                                };
+                                }
                             }
                         }
                         _ => {}
@@ -250,12 +250,12 @@ pub async fn handle_key_events(
                             if let Some(ap) = &mut app.adapter.device.access_point {
                                 match ap.focused_section {
                                     APFocusedSection::SSID => {
-                                        ap.focused_section = APFocusedSection::PSK
+                                        ap.focused_section = APFocusedSection::PSK;
                                     }
                                     APFocusedSection::PSK => {
-                                        ap.focused_section = APFocusedSection::SSID
+                                        ap.focused_section = APFocusedSection::SSID;
                                     }
-                                };
+                                }
                             }
                         }
                         _ => {}
@@ -278,14 +278,14 @@ pub async fn handle_key_events(
                                             Notification::send(
                                                 "Device Powered Off".to_string(),
                                                 crate::notification::NotificationLevel::Info,
-                                                sender.clone(),
+                                                &sender.clone(),
                                             )?;
                                         }
                                         Err(e) => {
                                             Notification::send(
                                                 e.to_string(),
                                                 crate::notification::NotificationLevel::Error,
-                                                sender.clone(),
+                                                &sender.clone(),
                                             )?;
                                         }
                                     }
@@ -296,14 +296,14 @@ pub async fn handle_key_events(
                                             Notification::send(
                                                 "Device Powered On".to_string(),
                                                 crate::notification::NotificationLevel::Info,
-                                                sender.clone(),
+                                                &sender.clone(),
                                             )?;
                                         }
                                         Err(e) => {
                                             Notification::send(
                                                 e.to_string(),
                                                 crate::notification::NotificationLevel::Error,
-                                                sender.clone(),
+                                                &sender.clone(),
                                             )?;
                                         }
                                     }
