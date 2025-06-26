@@ -60,9 +60,7 @@ impl Adapter {
     pub fn render(&self, frame: &mut Frame, color_mode: ColorMode, focused_block: FocusedBlock) {
         match self.device.mode {
             Mode::Station => {
-                if self.device.station.is_some() {
-                    self.render_station_mode(frame, color_mode, focused_block);
-                }
+                self.render_station_mode(frame, color_mode, focused_block);
             }
             Mode::Ap => {
                 if self.device.access_point.is_some() {
@@ -589,18 +587,15 @@ impl Adapter {
             }
         };
 
+        let mut station_state = "".to_string();
+        let mut station_is_scanning = "".to_string();
+        if let Some(station) = self.device.station.as_ref() {
+            station_state = station.state.clone();
+            station_is_scanning = station.is_scanning.clone().to_string();
+        }
         let row = vec![
-            Line::from(self.device.station.as_ref().unwrap().state.clone()).centered(),
-            Line::from(
-                self.device
-                    .station
-                    .as_ref()
-                    .unwrap()
-                    .is_scanning
-                    .clone()
-                    .to_string(),
-            )
-            .centered(),
+            Line::from(station_state).centered(),
+            Line::from(station_is_scanning).centered(),
             Line::from(station_frequency).centered(),
             Line::from(station_security).centered(),
         ];
@@ -699,13 +694,12 @@ impl Adapter {
         frame.render_stateful_widget(station_table, station_block, &mut station_state);
 
         // Known networks
-
-        let rows: Vec<Row> = self
-            .device
-            .station
-            .as_ref()
-            .unwrap()
-            .known_networks
+        let known_networks = if let Some(station) = self.device.station.as_ref() {
+            &station.known_networks
+        } else {
+            &vec![]
+        };
+        let rows: Vec<Row> = known_networks
             .iter()
             .map(|(net, signal)| {
                 let net = net.known_network.as_ref().unwrap();
@@ -857,26 +851,24 @@ impl Adapter {
                 Style::default()
             });
 
+        let mut known_networks_state = if let Some(station) = self.device.station.as_ref() {
+            station.known_networks_state.clone()
+        } else {
+            TableState::default()
+        };
         frame.render_stateful_widget(
             known_networks_table,
             known_networks_block,
-            &mut self
-                .device
-                .station
-                .as_ref()
-                .unwrap()
-                .known_networks_state
-                .clone(),
+            &mut known_networks_state,
         );
 
         // New networks
-
-        let rows: Vec<Row> = self
-            .device
-            .station
-            .as_ref()
-            .unwrap()
-            .new_networks
+        let new_networks = if let Some(station) = self.device.station.as_ref() {
+            &station.new_networks
+        } else {
+            &vec![]
+        };
+        let rows: Vec<Row> = new_networks
             .iter()
             .map(|(net, signal)| {
                 Row::new(vec![
@@ -982,16 +974,15 @@ impl Adapter {
                 Style::default()
             });
 
+        let mut new_networks_state = if let Some(station) = self.device.station.as_ref() {
+            station.new_networks_state.clone()
+        } else {
+            TableState::default()
+        };
         frame.render_stateful_widget(
             new_networks_table,
             new_networks_block,
-            &mut self
-                .device
-                .station
-                .as_ref()
-                .unwrap()
-                .new_networks_state
-                .clone(),
+            &mut new_networks_state,
         );
     }
 
