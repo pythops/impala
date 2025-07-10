@@ -1,3 +1,9 @@
+## v0.3.0 - 2025-07-10
+
+- Added an option to sensor password, thanks to [OneRandom1509](https://github.com/OneRandom1509)
+- Bump dependencies
+- Minor fixes
+
 ## v0.2.4 - 2024-11-17
 
 ### Added

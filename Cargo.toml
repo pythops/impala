@@ -1,6 +1,6 @@
 [package]
 name = "impala"
-version = "0.2.4"
+version = "0.3.0"
 authors = ["Badr Badri <contact@pythops.com>"]
 license = "GPL-3.0"
 edition = "2021"
@@ -20,7 +20,7 @@ tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 dirs = "6"
 serde = { version = "1", features = ["derive"] }
-toml = { version = "0.8" }
+toml = { version = "0.9" }
 clap = { version = "4", features = ["derive", "cargo"] }
 terminal-light = "1"
 anyhow = "1"
