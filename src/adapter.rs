@@ -437,8 +437,8 @@ impl Adapter {
                 .constraints([
                     Constraint::Length(5),
                     Constraint::Length(5),
-                    Constraint::Min(10),
-                    Constraint::Fill(1),
+                    Constraint::Min(5),
+                    Constraint::Min(5),
                 ])
                 .margin(1)
                 .split(frame.area());
