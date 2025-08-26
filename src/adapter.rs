@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{fmt::format, sync::Arc};
 
 use anyhow::Context;
 
@@ -7,13 +7,14 @@ use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Flex, Layout},
     style::{Color, Style, Stylize},
-    text::Line,
+    text::{Line, Text},
     widgets::{Block, BorderType, Borders, Cell, Clear, List, Padding, Row, Table, TableState},
 };
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
     app::{AppResult, ColorMode, FocusedBlock},
+    config::Config,
     device::Device,
     event::Event,
 };
@@ -27,10 +28,15 @@ pub struct Adapter {
     pub vendor: Option<String>,
     pub supported_modes: Vec<String>,
     pub device: Device,
+    pub config: Arc<Config>,
 }
 
 impl Adapter {
-    pub async fn new(session: Arc<Session>, sender: UnboundedSender<Event>) -> AppResult<Self> {
+    pub async fn new(
+        session: Arc<Session>,
+        sender: UnboundedSender<Event>,
+        config: Arc<Config>,
+    ) -> AppResult<Self> {
         let adapter = session.adapter().context("No adapter found")?;
 
         let is_powered = adapter.is_powered().await?;
@@ -48,6 +54,7 @@ impl Adapter {
             vendor,
             supported_modes,
             device,
+            config,
         })
     }
 
@@ -431,7 +438,7 @@ impl Adapter {
         color_mode: ColorMode,
         focused_block: FocusedBlock,
     ) {
-        let (device_block, station_block, known_networks_block, new_networks_block) = {
+        let (device_block, station_block, known_networks_block, new_networks_block, help_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
@@ -439,10 +446,11 @@ impl Adapter {
                     Constraint::Length(5),
                     Constraint::Min(5),
                     Constraint::Min(5),
+                    Constraint::Length(3),
                 ])
                 .margin(1)
                 .split(frame.area());
-            (chunks[0], chunks[1], chunks[2], chunks[3])
+            (chunks[0], chunks[1], chunks[2], chunks[3], chunks[4])
         };
 
         // Device
@@ -984,6 +992,39 @@ impl Adapter {
             new_networks_block,
             &mut new_networks_state,
         );
+
+        let help_message = match focused_block {
+            FocusedBlock::Device => {
+                format!(
+                    "⇄: Nav | {}: Scan | {}: Show information | {}: Toggle power",
+                    self.config.station.start_scanning,
+                    self.config.device.infos,
+                    self.config.device.toggle_power
+                )
+            }
+            FocusedBlock::Station => format!(
+                "⇄: Nav | {}: Start Scanning",
+                self.config.station.start_scanning
+            ),
+            FocusedBlock::KnownNetworks => format!(
+                "k,↑: Up | j,↓: Down | ⇄: Nav | {}: Connect/Disconnect | {}: Remove | {}: Toggle autoconnect",
+                if self.config.station.toggle_connect == ' ' {
+                    "Space"
+                } else {
+                    &self.config.station.toggle_connect.to_string()
+                },
+                self.config.station.known_network.remove,
+                self.config.station.known_network.toggle_autoconnect
+            ),
+            FocusedBlock::NewNetworks => {
+                "k,↑: Up | j,↓: Down | ⇄: Nav | Space: Connect".to_string()
+            }
+            _ => "".to_string(),
+        };
+
+        let help_message = Text::from(help_message).centered().bold().blue();
+
+        frame.render_widget(help_message, help_block);
     }
 
     pub fn render_adapter(&self, frame: &mut Frame, color_mode: ColorMode) {

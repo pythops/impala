@@ -18,7 +18,7 @@ use async_channel::{Receiver, Sender};
 use futures::FutureExt;
 use iwdrs::{agent::Agent, modes::Mode, session::Session};
 
-use crate::{adapter::Adapter, event::Event, notification::Notification};
+use crate::{adapter::Adapter, config::Config, event::Event, notification::Notification};
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -89,7 +89,11 @@ pub async fn request_confirmation(
 }
 
 impl App {
-    pub async fn new(mode: Mode, sender: UnboundedSender<Event>) -> AppResult<Self> {
+    pub async fn new(
+        config: Arc<Config>,
+        mode: Mode,
+        sender: UnboundedSender<Event>,
+    ) -> AppResult<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -100,7 +104,7 @@ impl App {
             }
         };
 
-        let adapter = match Adapter::new(session.clone(), sender).await {
+        let adapter = match Adapter::new(session.clone(), sender, config).await {
             Ok(v) => v,
             Err(e) => {
                 eprintln!("{e}");
@@ -159,7 +163,11 @@ impl App {
         })
     }
 
-    pub async fn reset(mode: Mode, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn reset(
+        mode: Mode,
+        sender: UnboundedSender<Event>,
+        config: Arc<Config>,
+    ) -> AppResult<()> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -167,7 +175,7 @@ impl App {
             }
         };
 
-        let adapter = match Adapter::new(session.clone(), sender).await {
+        let adapter = match Adapter::new(session.clone(), sender, config).await {
             Ok(v) => v,
             Err(e) => {
                 eprintln!("{e}");
