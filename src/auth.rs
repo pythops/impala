@@ -1,8 +1,8 @@
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style, Stylize},
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
-    Frame,
 };
 
 pub struct Auth;

@@ -1,15 +1,15 @@
 use anyhow::anyhow;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style, Stylize},
     text::Text,
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
-    Frame,
 };
 use std::{
     error::Error,
     process::{self, exit},
-    sync::{atomic::AtomicBool, Arc},
+    sync::{Arc, atomic::AtomicBool},
 };
 use tokio::sync::mpsc::UnboundedSender;
 use tui_input::Input;

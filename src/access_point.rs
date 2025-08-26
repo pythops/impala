@@ -1,14 +1,14 @@
-use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::{Arc, atomic::AtomicBool};
 
 use iwdrs::session::Session;
 use tokio::sync::mpsc::UnboundedSender;
 
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style, Stylize},
     text::Text,
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
-    Frame,
 };
 
 use crate::{
@@ -217,13 +217,13 @@ impl AccessPoint {
         self.supported_ciphers = iwd_access_point.pairwise_ciphers().await?;
         self.used_cipher = iwd_access_point.group_cipher().await?;
 
-        if let Some(d) = iwd_access_point_diagnostic {
-            if let Ok(diagnostic) = d.get().await {
-                self.connected_devices = diagnostic
-                    .iter()
-                    .map(|v| v["Address"].clone().trim_matches('"').to_string())
-                    .collect();
-            }
+        if let Some(d) = iwd_access_point_diagnostic
+            && let Ok(diagnostic) = d.get().await
+        {
+            self.connected_devices = diagnostic
+                .iter()
+                .map(|v| v["Address"].clone().trim_matches('"').to_string())
+                .collect();
         }
 
         Ok(())

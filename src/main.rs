@@ -6,8 +6,8 @@ use impala::help::Help;
 use impala::tui::Tui;
 use impala::{cli, rfkill};
 use iwdrs::modes::Mode;
-use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
+use ratatui::backend::CrosstermBackend;
 use std::io;
 use std::sync::Arc;
 

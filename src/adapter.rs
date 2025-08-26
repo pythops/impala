@@ -4,11 +4,11 @@ use anyhow::Context;
 
 use iwdrs::{adapter::Adapter as iwdAdapter, modes::Mode, session::Session};
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Flex, Layout},
     style::{Color, Style, Stylize},
     text::Line,
     widgets::{Block, BorderType, Borders, Cell, Clear, List, Padding, Row, Table, TableState},
-    Frame,
 };
 use tokio::sync::mpsc::UnboundedSender;
 

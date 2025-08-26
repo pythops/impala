@@ -30,11 +30,11 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         }
 
         // Access Point Popup
-        if let Some(ap) = &app.adapter.device.access_point {
-            if ap.ap_start.load(Ordering::Relaxed) {
-                app.focused_block = FocusedBlock::AccessPointInput;
-                ap.render_input(frame);
-            }
+        if let Some(ap) = &app.adapter.device.access_point
+            && ap.ap_start.load(Ordering::Relaxed)
+        {
+            app.focused_block = FocusedBlock::AccessPointInput;
+            ap.render_input(frame);
         }
 
         // Help

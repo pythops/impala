@@ -87,10 +87,10 @@ impl Station {
 
         let mut diagnostic: HashMap<String, String> = HashMap::new();
 
-        if let Some(station_diagnostic) = iwd_station_diagnostic {
-            if let Ok(d) = station_diagnostic.get().await {
-                diagnostic = d;
-            }
+        if let Some(station_diagnostic) = iwd_station_diagnostic
+            && let Ok(d) = station_diagnostic.get().await
+        {
+            diagnostic = d;
         }
 
         Ok(Self {
@@ -199,10 +199,10 @@ impl Station {
 
         self.connected_network = connected_network;
 
-        if let Some(station_diagnostic) = iwd_station_diagnostic {
-            if let Ok(d) = station_diagnostic.get().await {
-                self.diagnostic = d;
-            }
+        if let Some(station_diagnostic) = iwd_station_diagnostic
+            && let Ok(d) = station_diagnostic.get().await
+        {
+            self.diagnostic = d;
         }
 
         Ok(())

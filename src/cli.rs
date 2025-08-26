@@ -1,4 +1,4 @@
-use clap::{arg, crate_version, Command};
+use clap::{Command, arg, crate_version};
 
 pub fn cli() -> Command {
     Command::new("impala")
