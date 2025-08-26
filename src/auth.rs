@@ -4,11 +4,12 @@ use ratatui::{
     style::{Color, Style, Stylize},
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
 };
+use tui_input::Input;
 
 pub struct Auth;
 
 impl Auth {
-    pub fn render(&self, frame: &mut Frame, passkey: &str) {
+    pub fn render(&self, frame: &mut Frame, input: &Input, show_password: bool) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -66,10 +67,16 @@ impl Auth {
             .style(Style::default().fg(Color::White))
             .block(Block::new().padding(Padding::uniform(1)));
 
-        let passkey = Paragraph::new(passkey)
-            .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
-            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+        let passkey = Paragraph::new({
+            if show_password {
+                input.value().to_string()
+            } else {
+                "*".repeat(input.value().len())
+            }
+        })
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::White))
+        .block(Block::new().style(Style::default().bg(Color::DarkGray)));
 
         frame.render_widget(Clear, area);
 
