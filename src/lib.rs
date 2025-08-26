@@ -12,8 +12,6 @@ pub mod config;
 
 pub mod notification;
 
-pub mod help;
-
 pub mod device;
 
 pub mod station;
@@ -26,7 +24,7 @@ pub mod auth;
 
 pub mod adapter;
 
-pub mod access_point;
+pub mod ap;
 
 pub mod cli;
 

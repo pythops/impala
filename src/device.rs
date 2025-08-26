@@ -5,8 +5,7 @@ use iwdrs::{device::Device as iwdDevice, modes::Mode, session::Session};
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    access_point::AccessPoint, app::AppResult, event::Event, notification::Notification,
-    station::Station,
+    ap::AccessPoint, app::AppResult, event::Event, notification::Notification, station::Station,
 };
 
 #[derive(Debug, Clone)]

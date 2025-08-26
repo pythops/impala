@@ -2,7 +2,6 @@ use impala::app::{App, AppResult};
 use impala::config::Config;
 use impala::event::{Event, EventHandler};
 use impala::handler::handle_key_events;
-use impala::help::Help;
 use impala::tui::Tui;
 use impala::{cli, rfkill};
 use iwdrs::modes::Mode;
@@ -18,8 +17,6 @@ async fn main() -> AppResult<()> {
     rfkill::check()?;
 
     let config = Arc::new(Config::new());
-
-    let help = Help::new(&config.clone());
 
     let backend = CrosstermBackend::new(io::stdout());
     let terminal = Terminal::new(backend)?;
@@ -39,7 +36,7 @@ async fn main() -> AppResult<()> {
         tui.exit()?;
     }
 
-    let mut app = App::new(help.clone(), mode, tui.events.sender.clone()).await?;
+    let mut app = App::new(mode, tui.events.sender.clone()).await?;
 
     while app.running {
         tui.draw(&mut app)?;
@@ -64,7 +61,7 @@ async fn main() -> AppResult<()> {
                 {
                     tui.exit()?;
                 }
-                app = App::new(help.clone(), mode, tui.events.sender.clone()).await?;
+                app = App::new(mode, tui.events.sender.clone()).await?;
             }
             _ => {}
         }

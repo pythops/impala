@@ -18,7 +18,7 @@ use async_channel::{Receiver, Sender};
 use futures::FutureExt;
 use iwdrs::{agent::Agent, modes::Mode, session::Session};
 
-use crate::{adapter::Adapter, event::Event, help::Help, notification::Notification};
+use crate::{adapter::Adapter, event::Event, notification::Notification};
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -29,7 +29,6 @@ pub enum FocusedBlock {
     AccessPoint,
     KnownNetworks,
     NewNetworks,
-    Help,
     AuthKey,
     AdapterInfos,
     AccessPointInput,
@@ -46,7 +45,6 @@ pub enum ColorMode {
 pub struct App {
     pub running: bool,
     pub focused_block: FocusedBlock,
-    pub help: Help,
     pub color_mode: ColorMode,
     pub notifications: Vec<Notification>,
     pub session: Arc<Session>,
@@ -91,7 +89,7 @@ pub async fn request_confirmation(
 }
 
 impl App {
-    pub async fn new(help: Help, mode: Mode, sender: UnboundedSender<Event>) -> AppResult<Self> {
+    pub async fn new(mode: Mode, sender: UnboundedSender<Event>) -> AppResult<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -144,7 +142,6 @@ impl App {
         Ok(Self {
             running: true,
             focused_block: FocusedBlock::Device,
-            help,
             color_mode,
             notifications: Vec::new(),
             session,
