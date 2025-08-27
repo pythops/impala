@@ -1009,16 +1009,15 @@ impl Adapter {
             FocusedBlock::KnownNetworks => format!(
                 "k,↑: Up | j,↓: Down | ⇄: Nav | {}: Connect/Disconnect | {}: Remove | {}: Toggle autoconnect",
                 if self.config.station.toggle_connect == ' ' {
-                    "Space"
+                    "󱁐 "
                 } else {
                     &self.config.station.toggle_connect.to_string()
                 },
                 self.config.station.known_network.remove,
                 self.config.station.known_network.toggle_autoconnect
             ),
-            FocusedBlock::NewNetworks => {
-                "k,↑: Up | j,↓: Down | ⇄: Nav | Space: Connect".to_string()
-            }
+            FocusedBlock::NewNetworks => "k,↑: Up | j,↓: Down | ⇄: Nav | 󱁐 : Connect".to_string(),
+            FocusedBlock::AdapterInfos | FocusedBlock::AuthKey => "󱊷 : Discard".to_string(),
             _ => "".to_string(),
         };
 
