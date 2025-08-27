@@ -1,4 +1,4 @@
-use std::{fmt::format, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Context;
 
@@ -89,7 +89,7 @@ impl Adapter {
             None => false,
         };
 
-        let (device_block, access_point_block, connected_devices_block) = {
+        let (device_block, access_point_block, connected_devices_block, help_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints(if any_connected_devices {
@@ -97,17 +97,19 @@ impl Adapter {
                         Constraint::Percentage(33),
                         Constraint::Percentage(33),
                         Constraint::Percentage(33),
+                        Constraint::Length(1),
                     ]
                 } else {
                     &[
                         Constraint::Percentage(50),
                         Constraint::Percentage(50),
                         Constraint::Fill(1),
+                        Constraint::Length(1),
                     ]
                 })
                 .margin(1)
                 .split(frame.area());
-            (chunks[0], chunks[1], chunks[2])
+            (chunks[0], chunks[1], chunks[2], chunks[3])
         };
 
         // Device
@@ -430,6 +432,29 @@ impl Adapter {
 
             frame.render_widget(connected_devices_list, connected_devices_block);
         }
+
+        let help_message = match focused_block {
+            FocusedBlock::Device => {
+                format!(
+                    "⇄: Nav | {}: Show information | {}: Toggle power",
+                    self.config.device.infos, self.config.device.toggle_power
+                )
+            }
+            FocusedBlock::AdapterInfos | FocusedBlock::AccessPointInput => {
+                "⇄: Nav | 󱊷 : Discard".to_string()
+            }
+            FocusedBlock::AccessPoint => {
+                format!(
+                    "⇄: Nav | {}: New AP | {}: Stop AP",
+                    self.config.ap.start, self.config.ap.stop
+                )
+            }
+            _ => "".to_string(),
+        };
+
+        let help_message = Text::from(help_message).centered().bold().blue();
+
+        frame.render_widget(help_message, help_block);
     }
 
     pub fn render_station_mode(
@@ -446,7 +471,7 @@ impl Adapter {
                     Constraint::Length(5),
                     Constraint::Min(5),
                     Constraint::Min(5),
-                    Constraint::Length(3),
+                    Constraint::Length(1),
                 ])
                 .margin(1)
                 .split(frame.area());
