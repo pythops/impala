@@ -7,7 +7,7 @@ use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Flex, Layout},
     style::{Color, Style, Stylize},
-    text::{Line, Text},
+    text::{Line, Span},
     widgets::{Block, BorderType, Borders, Cell, Clear, List, Padding, Row, Table, TableState},
 };
 use tokio::sync::mpsc::UnboundedSender;
@@ -434,26 +434,43 @@ impl Adapter {
         }
 
         let help_message = match focused_block {
-            FocusedBlock::Device => {
-                format!(
-                    "⇄: Nav | {}: Show information | {}: Toggle power",
-                    self.config.device.infos, self.config.device.toggle_power
-                )
-            }
-            FocusedBlock::AdapterInfos | FocusedBlock::AccessPointInput => {
-                "⇄: Nav | 󱊷 : Discard".to_string()
-            }
-            FocusedBlock::AccessPoint => {
-                format!(
-                    "⇄: Nav | {}: New AP | {}: Stop AP",
-                    self.config.ap.start, self.config.ap.stop
-                )
-            }
-            _ => "".to_string(),
+            FocusedBlock::Device => Line::from(vec![
+                Span::from(self.config.device.infos.to_string()).bold(),
+                Span::from(" Infos"),
+                Span::from(" | "),
+                Span::from(self.config.device.toggle_power.to_string()).bold(),
+                Span::from(" Toggle Power"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::AdapterInfos | FocusedBlock::AccessPointInput => Line::from(vec![
+                Span::from("󱊷 ").bold(),
+                Span::from(" Discard"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::AccessPoint => Line::from(vec![
+                Span::from(self.config.ap.start.to_string()).bold(),
+                Span::from(" New AP"),
+                Span::from(" | "),
+                Span::from(self.config.ap.stop.to_string()).bold(),
+                Span::from(" Stop AP"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            _ => Line::from(""),
         };
 
-        let help_message = Text::from(help_message).centered().bold().blue();
-
+        let help_message = help_message.centered().blue();
         frame.render_widget(help_message, help_block);
     }
 
@@ -1019,34 +1036,95 @@ impl Adapter {
         );
 
         let help_message = match focused_block {
-            FocusedBlock::Device => {
-                format!(
-                    "⇄: Nav | {}: Scan | {}: Show information | {}: Toggle power",
-                    self.config.station.start_scanning,
-                    self.config.device.infos,
-                    self.config.device.toggle_power
-                )
-            }
-            FocusedBlock::Station => format!(
-                "⇄: Nav | {}: Start Scanning",
-                self.config.station.start_scanning
-            ),
-            FocusedBlock::KnownNetworks => format!(
-                "k,↑: Up | j,↓: Down | ⇄: Nav | {}: Connect/Disconnect | {}: Remove | {}: Toggle autoconnect",
-                if self.config.station.toggle_connect == ' ' {
-                    "󱁐 "
+            FocusedBlock::Device => Line::from(vec![
+                Span::from(self.config.station.start_scanning.to_string()).bold(),
+                Span::from(" Scan"),
+                Span::from(" | "),
+                Span::from(self.config.device.infos.to_string()).bold(),
+                Span::from(" Infos"),
+                Span::from(" | "),
+                Span::from(self.config.device.toggle_power.to_string()).bold(),
+                Span::from(" Toggle Power"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::Station => Line::from(vec![
+                Span::from(self.config.station.start_scanning.to_string()).bold(),
+                Span::from(" Scan"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::KnownNetworks => Line::from(vec![
+                Span::from("k,").bold(),
+                Span::from("  Up"),
+                Span::from(" | "),
+                Span::from("j,").bold(),
+                Span::from("  Down"),
+                Span::from(" | "),
+                Span::from(if self.config.station.toggle_connect == ' ' {
+                    "󱁐 ".to_string()
                 } else {
-                    &self.config.station.toggle_connect.to_string()
-                },
-                self.config.station.known_network.remove,
-                self.config.station.known_network.toggle_autoconnect
-            ),
-            FocusedBlock::NewNetworks => "k,↑: Up | j,↓: Down | ⇄: Nav | 󱁐 : Connect".to_string(),
-            FocusedBlock::AdapterInfos | FocusedBlock::AuthKey => "󱊷 : Discard".to_string(),
-            _ => "".to_string(),
+                    self.config.station.toggle_connect.to_string()
+                })
+                .bold(),
+                Span::from(" Connect/Disconnect"),
+                Span::from(" | "),
+                Span::from(self.config.station.known_network.remove.to_string()).bold(),
+                Span::from(" Remove"),
+                Span::from(" | "),
+                Span::from(
+                    self.config
+                        .station
+                        .known_network
+                        .toggle_autoconnect
+                        .to_string(),
+                )
+                .bold(),
+                Span::from(" Toggle Autoconnect"),
+                Span::from(" | "),
+                Span::from("󱊷 ").bold(),
+                Span::from(" Discard"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::NewNetworks => Line::from(vec![
+                Span::from("k,").bold(),
+                Span::from("  Up"),
+                Span::from(" | "),
+                Span::from("j,").bold(),
+                Span::from("  Down"),
+                Span::from(" | "),
+                Span::from("󱁐 ").bold(),
+                Span::from(" Connect"),
+                Span::from(" | "),
+                Span::from("󱊷 ").bold(),
+                Span::from(" Discard"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::AdapterInfos | FocusedBlock::AuthKey => {
+                Line::from(vec![Span::from("󱊷 ").bold(), Span::from(" Discard")])
+            }
+            _ => Line::from(""),
         };
 
-        let help_message = Text::from(help_message).centered().bold().blue();
+        let help_message = help_message.centered().blue();
 
         frame.render_widget(help_message, help_block);
     }
