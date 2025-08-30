@@ -7,13 +7,14 @@ use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Flex, Layout},
     style::{Color, Style, Stylize},
-    text::Line,
+    text::{Line, Span},
     widgets::{Block, BorderType, Borders, Cell, Clear, List, Padding, Row, Table, TableState},
 };
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
     app::{AppResult, ColorMode, FocusedBlock},
+    config::Config,
     device::Device,
     event::Event,
 };
@@ -27,10 +28,15 @@ pub struct Adapter {
     pub vendor: Option<String>,
     pub supported_modes: Vec<String>,
     pub device: Device,
+    pub config: Arc<Config>,
 }
 
 impl Adapter {
-    pub async fn new(session: Arc<Session>, sender: UnboundedSender<Event>) -> AppResult<Self> {
+    pub async fn new(
+        session: Arc<Session>,
+        sender: UnboundedSender<Event>,
+        config: Arc<Config>,
+    ) -> AppResult<Self> {
         let adapter = session.adapter().context("No adapter found")?;
 
         let is_powered = adapter.is_powered().await?;
@@ -48,6 +54,7 @@ impl Adapter {
             vendor,
             supported_modes,
             device,
+            config,
         })
     }
 
@@ -82,7 +89,7 @@ impl Adapter {
             None => false,
         };
 
-        let (device_block, access_point_block, connected_devices_block) = {
+        let (device_block, access_point_block, connected_devices_block, help_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints(if any_connected_devices {
@@ -90,17 +97,19 @@ impl Adapter {
                         Constraint::Percentage(33),
                         Constraint::Percentage(33),
                         Constraint::Percentage(33),
+                        Constraint::Length(1),
                     ]
                 } else {
                     &[
                         Constraint::Percentage(50),
                         Constraint::Percentage(50),
                         Constraint::Fill(1),
+                        Constraint::Length(1),
                     ]
                 })
                 .margin(1)
                 .split(frame.area());
-            (chunks[0], chunks[1], chunks[2])
+            (chunks[0], chunks[1], chunks[2], chunks[3])
         };
 
         // Device
@@ -423,6 +432,46 @@ impl Adapter {
 
             frame.render_widget(connected_devices_list, connected_devices_block);
         }
+
+        let help_message = match focused_block {
+            FocusedBlock::Device => Line::from(vec![
+                Span::from(self.config.device.infos.to_string()).bold(),
+                Span::from(" Infos"),
+                Span::from(" | "),
+                Span::from(self.config.device.toggle_power.to_string()).bold(),
+                Span::from(" Toggle Power"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::AdapterInfos | FocusedBlock::AccessPointInput => Line::from(vec![
+                Span::from("󱊷 ").bold(),
+                Span::from(" Discard"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::AccessPoint => Line::from(vec![
+                Span::from(self.config.ap.start.to_string()).bold(),
+                Span::from(" New AP"),
+                Span::from(" | "),
+                Span::from(self.config.ap.stop.to_string()).bold(),
+                Span::from(" Stop AP"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            _ => Line::from(""),
+        };
+
+        let help_message = help_message.centered().blue();
+        frame.render_widget(help_message, help_block);
     }
 
     pub fn render_station_mode(
@@ -431,7 +480,7 @@ impl Adapter {
         color_mode: ColorMode,
         focused_block: FocusedBlock,
     ) {
-        let (device_block, station_block, known_networks_block, new_networks_block) = {
+        let (device_block, station_block, known_networks_block, new_networks_block, help_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
@@ -439,10 +488,11 @@ impl Adapter {
                     Constraint::Length(5),
                     Constraint::Min(5),
                     Constraint::Min(5),
+                    Constraint::Length(1),
                 ])
                 .margin(1)
                 .split(frame.area());
-            (chunks[0], chunks[1], chunks[2], chunks[3])
+            (chunks[0], chunks[1], chunks[2], chunks[3], chunks[4])
         };
 
         // Device
@@ -984,6 +1034,99 @@ impl Adapter {
             new_networks_block,
             &mut new_networks_state,
         );
+
+        let help_message = match focused_block {
+            FocusedBlock::Device => Line::from(vec![
+                Span::from(self.config.station.start_scanning.to_string()).bold(),
+                Span::from(" Scan"),
+                Span::from(" | "),
+                Span::from(self.config.device.infos.to_string()).bold(),
+                Span::from(" Infos"),
+                Span::from(" | "),
+                Span::from(self.config.device.toggle_power.to_string()).bold(),
+                Span::from(" Toggle Power"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::Station => Line::from(vec![
+                Span::from(self.config.station.start_scanning.to_string()).bold(),
+                Span::from(" Scan"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::KnownNetworks => Line::from(vec![
+                Span::from("k,").bold(),
+                Span::from("  Up"),
+                Span::from(" | "),
+                Span::from("j,").bold(),
+                Span::from("  Down"),
+                Span::from(" | "),
+                Span::from(if self.config.station.toggle_connect == ' ' {
+                    "󱁐 ".to_string()
+                } else {
+                    self.config.station.toggle_connect.to_string()
+                })
+                .bold(),
+                Span::from(" Connect/Disconnect"),
+                Span::from(" | "),
+                Span::from(self.config.station.known_network.remove.to_string()).bold(),
+                Span::from(" Remove"),
+                Span::from(" | "),
+                Span::from(
+                    self.config
+                        .station
+                        .known_network
+                        .toggle_autoconnect
+                        .to_string(),
+                )
+                .bold(),
+                Span::from(" Toggle Autoconnect"),
+                Span::from(" | "),
+                Span::from("󱊷 ").bold(),
+                Span::from(" Discard"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::NewNetworks => Line::from(vec![
+                Span::from("k,").bold(),
+                Span::from("  Up"),
+                Span::from(" | "),
+                Span::from("j,").bold(),
+                Span::from("  Down"),
+                Span::from(" | "),
+                Span::from("󱁐 ").bold(),
+                Span::from(" Connect"),
+                Span::from(" | "),
+                Span::from("󱊷 ").bold(),
+                Span::from(" Discard"),
+                Span::from(" | "),
+                Span::from("ctrl+r").bold(),
+                Span::from(" Switch Mode"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ]),
+            FocusedBlock::AdapterInfos | FocusedBlock::AuthKey => {
+                Line::from(vec![Span::from("󱊷 ").bold(), Span::from(" Discard")])
+            }
+            _ => Line::from(""),
+        };
+
+        let help_message = help_message.centered().blue();
+
+        frame.render_widget(help_message, help_block);
     }
 
     pub fn render_adapter(&self, frame: &mut Frame, color_mode: ColorMode) {

@@ -2,7 +2,6 @@ use impala::app::{App, AppResult};
 use impala::config::Config;
 use impala::event::{Event, EventHandler};
 use impala::handler::handle_key_events;
-use impala::help::Help;
 use impala::tui::Tui;
 use impala::{cli, rfkill};
 use iwdrs::modes::Mode;
@@ -19,8 +18,6 @@ async fn main() -> AppResult<()> {
 
     let config = Arc::new(Config::new());
 
-    let help = Help::new(&config.clone());
-
     let backend = CrosstermBackend::new(io::stdout());
     let terminal = Terminal::new(backend)?;
     let events = EventHandler::new(2_000);
@@ -32,14 +29,14 @@ async fn main() -> AppResult<()> {
 
     let mode = Mode::try_from(mode.as_str())?;
 
-    if App::reset(mode.clone(), tui.events.sender.clone())
+    if App::reset(mode.clone(), tui.events.sender.clone(), config.clone())
         .await
         .is_err()
     {
         tui.exit()?;
     }
 
-    let mut app = App::new(help.clone(), mode, tui.events.sender.clone()).await?;
+    let mut app = App::new(config.clone(), mode, tui.events.sender.clone()).await?;
 
     while app.running {
         tui.draw(&mut app)?;
@@ -58,13 +55,13 @@ async fn main() -> AppResult<()> {
                 app.notifications.push(notification);
             }
             Event::Reset(mode) => {
-                if App::reset(mode.clone(), tui.events.sender.clone())
+                if App::reset(mode.clone(), tui.events.sender.clone(), config.clone())
                     .await
                     .is_err()
                 {
                     tui.exit()?;
                 }
-                app = App::new(help.clone(), mode, tui.events.sender.clone()).await?;
+                app = App::new(config.clone(), mode, tui.events.sender.clone()).await?;
             }
             _ => {}
         }

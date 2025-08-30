@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::access_point::APFocusedSection;
+use crate::ap::APFocusedSection;
 use crate::app::{App, AppResult, FocusedBlock};
 use crate::config::Config;
 use crate::event::Event;
@@ -119,11 +119,6 @@ pub async fn handle_key_events(
                     }
                 }
 
-                // Show help
-                KeyCode::Char('?') => {
-                    app.focused_block = FocusedBlock::Help;
-                }
-
                 // Switch mode
                 KeyCode::Char(c)
                     if c == config.switch && key_event.modifiers == KeyModifiers::CONTROL =>
@@ -131,11 +126,9 @@ pub async fn handle_key_events(
                     app.reset_mode = true;
                 }
 
-                // Discard help popup
+                // Discard  popup
                 KeyCode::Esc => {
-                    if app.focused_block == FocusedBlock::Help
-                        || app.focused_block == FocusedBlock::AdapterInfos
-                    {
+                    if app.focused_block == FocusedBlock::AdapterInfos {
                         app.focused_block = FocusedBlock::Device;
                     }
                 }
@@ -645,9 +638,6 @@ pub async fn handle_key_events(
                                                     }
                                                 }
 
-                                                FocusedBlock::Help => {
-                                                    app.help.scroll_down();
-                                                }
                                                 _ => {}
                                             }
                                         }
@@ -718,9 +708,6 @@ pub async fn handle_key_events(
                                                         .select(Some(i));
                                                 }
                                             }
-                                            FocusedBlock::Help => {
-                                                app.help.scroll_up();
-                                            }
                                             _ => {}
                                         },
                                         _ => {}
@@ -738,19 +725,6 @@ pub async fn handle_key_events(
                                         if let Some(ap) = &mut app.adapter.device.access_point {
                                             ap.stop(sender).await?;
                                             ap.connected_devices = Vec::new();
-                                        }
-                                    }
-
-                                    // Scroll down
-                                    KeyCode::Char('j') | KeyCode::Down => {
-                                        if app.focused_block == FocusedBlock::Help {
-                                            app.help.scroll_down();
-                                        }
-                                    }
-
-                                    KeyCode::Char('k') | KeyCode::Up => {
-                                        if app.focused_block == FocusedBlock::Help {
-                                            app.help.scroll_up();
                                         }
                                     }
 
