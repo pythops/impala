@@ -109,7 +109,7 @@ impl App {
             Err(e) => {
                 eprintln!("{e}");
                 eprintln!("Make sure iwd daemon is up and running");
-                process::exit(1);
+                Err(e)?
             }
         };
 
@@ -180,7 +180,7 @@ impl App {
             Err(e) => {
                 eprintln!("{e}");
                 eprintln!("Make sure iwd daemon is up and running");
-                process::exit(1);
+                Err(e)?
             }
         };
 
