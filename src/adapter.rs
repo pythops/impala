@@ -14,7 +14,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
     app::{AppResult, ColorMode, FocusedBlock},
-    config::Config,
+    config::{Config, KeyBind},
     device::Device,
     event::Event,
 };
@@ -1069,11 +1069,15 @@ impl Adapter {
                 Span::from("j,").bold(),
                 Span::from("  Down"),
                 Span::from(" | "),
-                Span::from(if self.config.station.toggle_connect == ' ' {
-                    "󱁐 ".to_string()
-                } else {
-                    self.config.station.toggle_connect.to_string()
-                })
+                Span::from(
+                    if let KeyBind::SingleChar(ch) = self.config.station.toggle_connect
+                        && ch == ' '
+                    {
+                        "󱁐 ".to_string()
+                    } else {
+                        self.config.station.toggle_connect.to_string()
+                    },
+                )
                 .bold(),
                 Span::from(" Connect/Disconnect"),
                 Span::from(" | "),

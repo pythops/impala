@@ -13,6 +13,7 @@ repository = "https://github.com/pythops/impala"
 async-channel = "2"
 crossterm = { version = "0.29", default-features = false, features = [
     "event-stream",
+  "serde"
 ] }
 ratatui = "0.29"
 tui-input = "0.12"

@@ -120,9 +120,7 @@ pub async fn handle_key_events(
                 }
 
                 // Switch mode
-                KeyCode::Char(c)
-                    if c == config.switch && key_event.modifiers == KeyModifiers::CONTROL =>
-                {
+                KeyCode::Char(c) if config.switch == key_event => {
                     app.reset_mode = true;
                 }
 
@@ -134,7 +132,7 @@ pub async fn handle_key_events(
                 }
 
                 // Start Scan
-                KeyCode::Char(c) if c == config.station.start_scanning => {
+                KeyCode::Char(c) if config.station.start_scanning == key_event => {
                     match app.adapter.device.mode {
                         Mode::Station => {
                             app.adapter
@@ -259,11 +257,11 @@ pub async fn handle_key_events(
                 _ => {
                     match app.focused_block {
                         FocusedBlock::Device => match key_event.code {
-                            KeyCode::Char(c) if c == config.device.infos => {
+                            KeyCode::Char(c) if config.device.infos == key_event => {
                                 app.focused_block = FocusedBlock::AdapterInfos;
                             }
 
-                            KeyCode::Char(c) if c == config.device.toggle_power => {
+                            KeyCode::Char(c) if config.device.toggle_power == key_event => {
                                 if app.adapter.device.is_powered {
                                     match app.adapter.device.power_off().await {
                                         Ok(()) => {
@@ -312,7 +310,7 @@ pub async fn handle_key_events(
                                     match key_event.code {
                                         // Remove a known network
                                         KeyCode::Char(c)
-                                            if c == config.station.known_network.remove
+                                            if config.station.known_network.remove == key_event
                                                 && app.focused_block
                                                     == FocusedBlock::KnownNetworks =>
                                         {
@@ -340,10 +338,8 @@ pub async fn handle_key_events(
 
                                         // Toggle autoconnect
                                         KeyCode::Char(c)
-                                            if c == config
-                                                .station
-                                                .known_network
-                                                .toggle_autoconnect
+                                            if config.station.known_network.toggle_autoconnect
+                                                == key_event
                                                 && app.focused_block
                                                     == FocusedBlock::KnownNetworks =>
                                         {
@@ -372,7 +368,9 @@ pub async fn handle_key_events(
                                         }
 
                                         // Connect/Disconnect
-                                        KeyCode::Char(c) if c == config.station.toggle_connect => {
+                                        KeyCode::Char(c)
+                                            if config.station.toggle_connect == key_event =>
+                                        {
                                             match app.focused_block {
                                                 FocusedBlock::NewNetworks => {
                                                     if let Some(net_index) = app
@@ -714,14 +712,14 @@ pub async fn handle_key_events(
                                     }
                                 }
                                 Mode::Ap => match key_event.code {
-                                    KeyCode::Char(c) if c == config.ap.start => {
+                                    KeyCode::Char(c) if config.ap.start == key_event => {
                                         if let Some(ap) = &app.adapter.device.access_point {
                                             // Start AP
                                             ap.ap_start
                                                 .store(true, std::sync::atomic::Ordering::Relaxed);
                                         }
                                     }
-                                    KeyCode::Char(c) if c == config.ap.stop => {
+                                    KeyCode::Char(c) if config.ap.stop == key_event => {
                                         if let Some(ap) = &mut app.adapter.device.access_point {
                                             ap.stop(sender).await?;
                                             ap.connected_devices = Vec::new();

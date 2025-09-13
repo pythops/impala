@@ -99,9 +99,12 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 Keybindings can be customized in the config file `$HOME/.config/impala/config.toml`
 
+Keybindings can be a single char or have modifier keys.
 ```toml
 
+# switch = ["CTRL", "r"]
 switch = "r"
+
 mode = "station"
 
 [device]
