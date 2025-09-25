@@ -89,21 +89,21 @@ impl Adapter {
             None => false,
         };
 
-        let (device_block, access_point_block, connected_devices_block, help_block) = {
+        let (access_point_block, connected_devices_block, device_block, help_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints(if any_connected_devices {
                     &[
-                        Constraint::Percentage(33),
-                        Constraint::Percentage(33),
-                        Constraint::Percentage(33),
+                        Constraint::Length(5),
+                        Constraint::Fill(1),
+                        Constraint::Length(5),
                         Constraint::Length(1),
                     ]
                 } else {
                     &[
-                        Constraint::Percentage(50),
-                        Constraint::Percentage(50),
                         Constraint::Fill(1),
+                        Constraint::Length(0),
+                        Constraint::Length(5),
                         Constraint::Length(1),
                     ]
                 })

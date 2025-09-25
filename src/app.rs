@@ -144,7 +144,7 @@ impl App {
 
         let focused_block = match current_mode {
             Mode::Station => FocusedBlock::KnownNetworks,
-            _ => FocusedBlock::Device,
+            _ => FocusedBlock::AccessPoint,
         };
 
         Ok(Self {
