@@ -548,7 +548,6 @@ impl Adapter {
                     Line::from("Off").centered()
                 }
             },
-            Line::from(self.device.address.clone()).centered(),
             Line::from(station_state).centered(),
             Line::from(station_is_scanning).centered(),
             Line::from(station_frequency).centered(),
@@ -556,10 +555,9 @@ impl Adapter {
         ]);
 
         let widths = [
-            Constraint::Length(15),
+            Constraint::Length(10),
             Constraint::Length(8),
             Constraint::Length(10),
-            Constraint::Length(17),
             Constraint::Length(12),
             Constraint::Length(10),
             Constraint::Length(10),
@@ -573,7 +571,6 @@ impl Adapter {
                         Line::from("Name").yellow().centered(),
                         Line::from("Mode").yellow().centered(),
                         Line::from("Powered").yellow().centered(),
-                        Line::from("Address").yellow().centered(),
                         Line::from("State").yellow().centered(),
                         Line::from("Scanning").yellow().centered(),
                         Line::from("Frequency").yellow().centered(),
@@ -601,7 +598,25 @@ impl Adapter {
                                 ColorMode::Light => Style::default().fg(Color::Black),
                             })
                             .centered(),
-                        Line::from("Address")
+                        Line::from("State")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Scanning")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Frequency")
+                            .style(match color_mode {
+                                ColorMode::Dark => Style::default().fg(Color::White),
+                                ColorMode::Light => Style::default().fg(Color::Black),
+                            })
+                            .centered(),
+                        Line::from("Security")
                             .style(match color_mode {
                                 ColorMode::Dark => Style::default().fg(Color::White),
                                 ColorMode::Light => Style::default().fg(Color::Black),
@@ -639,7 +654,7 @@ impl Adapter {
                     })
                     .padding(Padding::horizontal(1)),
             )
-            .column_spacing(2)
+            .column_spacing(1)
             .flex(Flex::SpaceBetween)
             .style(match color_mode {
                 ColorMode::Dark => Style::default().fg(Color::White),
