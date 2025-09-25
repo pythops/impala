@@ -991,7 +991,7 @@ impl Adapter {
                     self.config.station.toggle_connect.to_string()
                 })
                 .bold(),
-                Span::from(" Connect/Disconnect"),
+                Span::from(" Dis/connect"),
                 Span::from(" | "),
                 Span::from(self.config.station.known_network.remove.to_string()).bold(),
                 Span::from(" Remove"),
@@ -1004,7 +1004,7 @@ impl Adapter {
                         .to_string(),
                 )
                 .bold(),
-                Span::from(" Toggle Autoconnect"),
+                Span::from(" Autoconnect"),
                 Span::from(" | "),
                 Span::from(self.config.station.start_scanning.to_string()).bold(),
                 Span::from(" Scan"),
