@@ -1057,7 +1057,7 @@ impl Adapter {
             .constraints([
                 Constraint::Fill(1),
                 Constraint::Length(9),
-                Constraint::Fill(5),
+                Constraint::Fill(1),
             ])
             .flex(Flex::Start)
             .split(frame.area());
