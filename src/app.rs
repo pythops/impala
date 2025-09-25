@@ -8,7 +8,7 @@ use ratatui::{
 };
 use std::{
     error::Error,
-    process::{self, exit},
+    process::exit,
     sync::{Arc, atomic::AtomicBool},
 };
 use tokio::sync::mpsc::UnboundedSender;
