@@ -480,22 +480,64 @@ impl Adapter {
         color_mode: ColorMode,
         focused_block: FocusedBlock,
     ) {
-        let (device_block, station_block, known_networks_block, new_networks_block, help_block) = {
+        let (known_networks_block, new_networks_block, device_block, help_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
-                    Constraint::Length(5),
-                    Constraint::Length(5),
                     Constraint::Min(5),
                     Constraint::Min(5),
+                    Constraint::Length(5),
                     Constraint::Length(1),
                 ])
                 .margin(1)
                 .split(frame.area());
-            (chunks[0], chunks[1], chunks[2], chunks[3], chunks[4])
+            (chunks[0], chunks[1], chunks[2], chunks[3])
         };
 
         // Device
+
+        let station_frequency = {
+            match self.device.station.as_ref() {
+                Some(station) => {
+                    if station.state == "connected" {
+                        match station.diagnostic.get("Frequency") {
+                            Some(f) => {
+                                let f: f32 = f.parse().unwrap();
+                                format!("{:.2} GHz", f / 1000.0)
+                            }
+                            None => String::from("-"),
+                        }
+                    } else {
+                        String::from("-")
+                    }
+                }
+                None => String::from("-"),
+            }
+        };
+
+        let station_security = {
+            match self.device.station.as_ref() {
+                Some(station) => {
+                    if station.state == "connected" {
+                        match station.diagnostic.get("Security") {
+                            Some(f) => f.trim_matches('"').to_string(),
+                            None => String::from("-"),
+                        }
+                    } else {
+                        String::from("-")
+                    }
+                }
+                None => String::from("-"),
+            }
+        };
+
+        let mut station_state = "".to_string();
+        let mut station_is_scanning = "".to_string();
+        if let Some(station) = self.device.station.as_ref() {
+            station_state = station.state.clone();
+            station_is_scanning = station.is_scanning.clone().to_string();
+        }
+
         let row = Row::new(vec![
             Line::from(self.device.name.clone()).centered(),
             Line::from("station").centered(),
@@ -507,6 +549,10 @@ impl Adapter {
                 }
             },
             Line::from(self.device.address.clone()).centered(),
+            Line::from(station_state).centered(),
+            Line::from(station_is_scanning).centered(),
+            Line::from(station_frequency).centered(),
+            Line::from(station_security).centered(),
         ]);
 
         let widths = [
@@ -514,6 +560,10 @@ impl Adapter {
             Constraint::Length(8),
             Constraint::Length(10),
             Constraint::Length(17),
+            Constraint::Length(12),
+            Constraint::Length(10),
+            Constraint::Length(10),
+            Constraint::Length(15),
         ];
 
         let device_table = Table::new(vec![row], widths)
@@ -524,6 +574,10 @@ impl Adapter {
                         Line::from("Mode").yellow().centered(),
                         Line::from("Powered").yellow().centered(),
                         Line::from("Address").yellow().centered(),
+                        Line::from("State").yellow().centered(),
+                        Line::from("Scanning").yellow().centered(),
+                        Line::from("Frequency").yellow().centered(),
+                        Line::from("Security").yellow().centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -599,149 +653,6 @@ impl Adapter {
 
         let mut device_state = TableState::default().with_selected(0);
         frame.render_stateful_widget(device_table, device_block, &mut device_state);
-
-        // Station
-
-        let station_frequency = {
-            match self.device.station.as_ref() {
-                Some(station) => {
-                    if station.state == "connected" {
-                        match station.diagnostic.get("Frequency") {
-                            Some(f) => {
-                                let f: f32 = f.parse().unwrap();
-                                format!("{:.2} GHz", f / 1000.0)
-                            }
-                            None => String::from("-"),
-                        }
-                    } else {
-                        String::from("-")
-                    }
-                }
-                None => String::from("-"),
-            }
-        };
-
-        let station_security = {
-            match self.device.station.as_ref() {
-                Some(station) => {
-                    if station.state == "connected" {
-                        match station.diagnostic.get("Security") {
-                            Some(f) => f.trim_matches('"').to_string(),
-                            None => String::from("-"),
-                        }
-                    } else {
-                        String::from("-")
-                    }
-                }
-                None => String::from("-"),
-            }
-        };
-
-        let mut station_state = "".to_string();
-        let mut station_is_scanning = "".to_string();
-        if let Some(station) = self.device.station.as_ref() {
-            station_state = station.state.clone();
-            station_is_scanning = station.is_scanning.clone().to_string();
-        }
-        let row = vec![
-            Line::from(station_state).centered(),
-            Line::from(station_is_scanning).centered(),
-            Line::from(station_frequency).centered(),
-            Line::from(station_security).centered(),
-        ];
-
-        let row = Row::new(row);
-
-        let widths = [
-            Constraint::Length(12),
-            Constraint::Length(10),
-            Constraint::Length(10),
-            Constraint::Length(15),
-        ];
-
-        let station_table = Table::new(vec![row], widths)
-            .header({
-                if focused_block == FocusedBlock::Station {
-                    Row::new(vec![
-                        Line::from("State").yellow().centered(),
-                        Line::from("Scanning").yellow().centered(),
-                        Line::from("Frequency").yellow().centered(),
-                        Line::from("Security").yellow().centered(),
-                    ])
-                    .style(Style::new().bold())
-                    .bottom_margin(1)
-                } else {
-                    Row::new(vec![
-                        Line::from("State")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Scanning")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Frequency")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Security")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                    ])
-                    .style(Style::new().bold())
-                    .bottom_margin(1)
-                }
-            })
-            .block(
-                Block::default()
-                    .title(" Station ")
-                    .title_style({
-                        if focused_block == FocusedBlock::Station {
-                            Style::default().bold()
-                        } else {
-                            Style::default()
-                        }
-                    })
-                    .borders(Borders::ALL)
-                    .border_style({
-                        if focused_block == FocusedBlock::Station {
-                            Style::default().fg(Color::Green)
-                        } else {
-                            Style::default()
-                        }
-                    })
-                    .border_type({
-                        if focused_block == FocusedBlock::Station {
-                            BorderType::Thick
-                        } else {
-                            BorderType::default()
-                        }
-                    })
-                    .padding(Padding::horizontal(1)),
-            )
-            .column_spacing(2)
-            .flex(Flex::SpaceBetween)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
-                ColorMode::Light => Style::default().fg(Color::Black),
-            })
-            .row_highlight_style(if focused_block == FocusedBlock::Station {
-                Style::default().bg(Color::DarkGray).fg(Color::White)
-            } else {
-                Style::default()
-            });
-
-        let mut station_state = TableState::default().with_selected(0);
-        frame.render_stateful_widget(station_table, station_block, &mut station_state);
 
         // Known networks
         let known_networks = if let Some(station) = self.device.station.as_ref() {
@@ -1052,16 +963,6 @@ impl Adapter {
                 Span::from("⇄").bold(),
                 Span::from(" Nav"),
             ]),
-            FocusedBlock::Station => Line::from(vec![
-                Span::from(self.config.station.start_scanning.to_string()).bold(),
-                Span::from(" Scan"),
-                Span::from(" | "),
-                Span::from("ctrl+r").bold(),
-                Span::from(" Switch Mode"),
-                Span::from(" | "),
-                Span::from("⇄").bold(),
-                Span::from(" Nav"),
-            ]),
             FocusedBlock::KnownNetworks => Line::from(vec![
                 Span::from("k,").bold(),
                 Span::from("  Up"),
@@ -1090,6 +991,9 @@ impl Adapter {
                 .bold(),
                 Span::from(" Toggle Autoconnect"),
                 Span::from(" | "),
+                Span::from(self.config.station.start_scanning.to_string()).bold(),
+                Span::from(" Scan"),
+                Span::from(" | "),
                 Span::from("󱊷 ").bold(),
                 Span::from(" Discard"),
                 Span::from(" | "),
@@ -1108,6 +1012,9 @@ impl Adapter {
                 Span::from(" | "),
                 Span::from("󱁐 ").bold(),
                 Span::from(" Connect"),
+                Span::from(" | "),
+                Span::from(self.config.station.start_scanning.to_string()).bold(),
+                Span::from(" Scan"),
                 Span::from(" | "),
                 Span::from("󱊷 ").bold(),
                 Span::from(" Discard"),
