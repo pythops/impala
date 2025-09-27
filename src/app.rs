@@ -25,7 +25,6 @@ pub type AppResult<T> = std::result::Result<T, Box<dyn Error>>;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FocusedBlock {
     Device,
-    Station,
     AccessPoint,
     KnownNetworks,
     NewNetworks,
@@ -143,9 +142,14 @@ impl App {
             Ok(_) | Err(_) => ColorMode::Dark,
         };
 
+        let focused_block = match current_mode {
+            Mode::Station => FocusedBlock::KnownNetworks,
+            _ => FocusedBlock::AccessPoint,
+        };
+
         Ok(Self {
             running: true,
-            focused_block: FocusedBlock::Device,
+            focused_block,
             color_mode,
             notifications: Vec::new(),
             session,

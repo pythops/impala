@@ -1,3 +1,7 @@
+pub mod auth;
+pub mod known_network;
+pub mod network;
+
 use std::{collections::HashMap, sync::Arc};
 
 use futures::future::join_all;
@@ -8,9 +12,10 @@ use tokio::sync::mpsc::UnboundedSender;
 use crate::{
     app::AppResult,
     event::Event,
-    network::Network,
     notification::{Notification, NotificationLevel},
 };
+
+use network::Network;
 
 #[derive(Debug, Clone)]
 pub struct Station {

@@ -4,7 +4,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use crate::{
     app::AppResult,
     event::Event,
-    known_network::KnownNetwork,
+    mode::station::known_network::KnownNetwork,
     notification::{Notification, NotificationLevel},
 };
 

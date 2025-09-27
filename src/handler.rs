@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use crate::ap::APFocusedSection;
 use crate::app::{App, AppResult, FocusedBlock};
 use crate::config::Config;
 use crate::event::Event;
+use crate::mode::ap::APFocusedSection;
 use crate::notification::Notification;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -161,9 +161,6 @@ pub async fn handle_key_events(
                 KeyCode::Tab => match app.adapter.device.mode {
                     Mode::Station => match app.focused_block {
                         FocusedBlock::Device => {
-                            app.focused_block = FocusedBlock::Station;
-                        }
-                        FocusedBlock::Station => {
                             app.focused_block = FocusedBlock::KnownNetworks;
                         }
                         FocusedBlock::KnownNetworks => {
@@ -212,11 +209,8 @@ pub async fn handle_key_events(
                         FocusedBlock::Device => {
                             app.focused_block = FocusedBlock::NewNetworks;
                         }
-                        FocusedBlock::Station => {
-                            app.focused_block = FocusedBlock::Device;
-                        }
                         FocusedBlock::KnownNetworks => {
-                            app.focused_block = FocusedBlock::Station;
+                            app.focused_block = FocusedBlock::Device;
                         }
                         FocusedBlock::NewNetworks => {
                             app.focused_block = FocusedBlock::KnownNetworks;
