@@ -11,6 +11,130 @@ use iwdrs::modes::Mode;
 use tokio::sync::mpsc::UnboundedSender;
 use tui_input::backend::crossterm::EventHandler;
 
+async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> AppResult<()> {
+    match app.focused_block {
+        FocusedBlock::NewNetworks => {
+            if let Some(net_index) = app
+                .adapter
+                .device
+                .station
+                .as_ref()
+                .unwrap()
+                .new_networks_state
+                .selected()
+            {
+                let (net, _) =
+                    app.adapter.device.station.as_ref().unwrap().new_networks[net_index].clone();
+
+                let mode = app.current_mode.clone();
+                tokio::spawn(async move {
+                    net.connect(sender.clone()).await.unwrap();
+
+                    sender.clone().send(Event::Reset(mode)).unwrap();
+                });
+            }
+        }
+        FocusedBlock::KnownNetworks => {
+            match &app
+                .adapter
+                .device
+                .station
+                .as_ref()
+                .unwrap()
+                .connected_network
+            {
+                Some(connected_net) => {
+                    if let Some(selected_net_index) = app
+                        .adapter
+                        .device
+                        .station
+                        .as_ref()
+                        .unwrap()
+                        .known_networks_state
+                        .selected()
+                    {
+                        let (selected_net, _signal) =
+                            &app.adapter.device.station.as_ref().unwrap().known_networks
+                                [selected_net_index];
+
+                        if selected_net.name == connected_net.name {
+                            app.adapter
+                                .device
+                                .station
+                                .as_ref()
+                                .unwrap()
+                                .disconnect(sender.clone())
+                                .await?;
+                        } else {
+                            let net_index = app
+                                .adapter
+                                .device
+                                .station
+                                .as_ref()
+                                .unwrap()
+                                .known_networks
+                                .iter()
+                                .position(|(n, _s)| n.name == selected_net.name);
+
+                            if let Some(index) = net_index {
+                                let (net, _) =
+                                    app.adapter.device.station.as_ref().unwrap().known_networks
+                                        [index]
+                                        .clone();
+                                app.adapter
+                                    .device
+                                    .station
+                                    .as_ref()
+                                    .unwrap()
+                                    .disconnect(sender.clone())
+                                    .await?;
+                                tokio::spawn(async move {
+                                    net.connect(sender.clone()).await.unwrap();
+                                });
+                            }
+                        }
+                    }
+                }
+                None => {
+                    if let Some(selected_net_index) = app
+                        .adapter
+                        .device
+                        .station
+                        .as_ref()
+                        .unwrap()
+                        .known_networks_state
+                        .selected()
+                    {
+                        let (selected_net, _signal) =
+                            &app.adapter.device.station.as_ref().unwrap().known_networks
+                                [selected_net_index];
+                        let net_index = app
+                            .adapter
+                            .device
+                            .station
+                            .as_ref()
+                            .unwrap()
+                            .known_networks
+                            .iter()
+                            .position(|(n, _s)| n.name == selected_net.name);
+
+                        if let Some(index) = net_index {
+                            let (net, _) =
+                                app.adapter.device.station.as_ref().unwrap().known_networks[index]
+                                    .clone();
+                            tokio::spawn(async move {
+                                net.connect(sender.clone()).await.unwrap();
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
 pub async fn handle_key_events(
     key_event: KeyEvent,
     app: &mut App,
@@ -366,172 +490,9 @@ pub async fn handle_key_events(
                                         }
 
                                         // Connect/Disconnect
+                                        KeyCode::Enter => toggle_connect(app, sender).await?,
                                         KeyCode::Char(c) if c == config.station.toggle_connect => {
-                                            match app.focused_block {
-                                                FocusedBlock::NewNetworks => {
-                                                    if let Some(net_index) = app
-                                                        .adapter
-                                                        .device
-                                                        .station
-                                                        .as_ref()
-                                                        .unwrap()
-                                                        .new_networks_state
-                                                        .selected()
-                                                    {
-                                                        let (net, _) = app
-                                                            .adapter
-                                                            .device
-                                                            .station
-                                                            .as_ref()
-                                                            .unwrap()
-                                                            .new_networks[net_index]
-                                                            .clone();
-
-                                                        let mode = app.current_mode.clone();
-                                                        tokio::spawn(async move {
-                                                            net.connect(sender.clone())
-                                                                .await
-                                                                .unwrap();
-
-                                                            sender
-                                                                .clone()
-                                                                .send(Event::Reset(mode))
-                                                                .unwrap();
-                                                        });
-                                                    }
-                                                }
-                                                FocusedBlock::KnownNetworks => {
-                                                    match &app
-                                                        .adapter
-                                                        .device
-                                                        .station
-                                                        .as_ref()
-                                                        .unwrap()
-                                                        .connected_network
-                                                    {
-                                                        Some(connected_net) => {
-                                                            if let Some(selected_net_index) = app
-                                                                .adapter
-                                                                .device
-                                                                .station
-                                                                .as_ref()
-                                                                .unwrap()
-                                                                .known_networks_state
-                                                                .selected()
-                                                            {
-                                                                let (selected_net, _signal) = &app
-                                                                    .adapter
-                                                                    .device
-                                                                    .station
-                                                                    .as_ref()
-                                                                    .unwrap()
-                                                                    .known_networks
-                                                                    [selected_net_index];
-
-                                                                if selected_net.name
-                                                                    == connected_net.name
-                                                                {
-                                                                    app.adapter
-                                                                        .device
-                                                                        .station
-                                                                        .as_ref()
-                                                                        .unwrap()
-                                                                        .disconnect(sender.clone())
-                                                                        .await?;
-                                                                } else {
-                                                                    let net_index = app
-                                                                        .adapter
-                                                                        .device
-                                                                        .station
-                                                                        .as_ref()
-                                                                        .unwrap()
-                                                                        .known_networks
-                                                                        .iter()
-                                                                        .position(|(n, _s)| {
-                                                                            n.name
-                                                                                == selected_net.name
-                                                                        });
-
-                                                                    if let Some(index) = net_index {
-                                                                        let (net, _) = app
-                                                                            .adapter
-                                                                            .device
-                                                                            .station
-                                                                            .as_ref()
-                                                                            .unwrap()
-                                                                            .known_networks[index]
-                                                                            .clone();
-                                                                        app.adapter
-                                                                            .device
-                                                                            .station
-                                                                            .as_ref()
-                                                                            .unwrap()
-                                                                            .disconnect(
-                                                                                sender.clone(),
-                                                                            )
-                                                                            .await?;
-                                                                        tokio::spawn(async move {
-                                                                            net.connect(
-                                                                                sender.clone(),
-                                                                            )
-                                                                            .await
-                                                                            .unwrap();
-                                                                        });
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                        None => {
-                                                            if let Some(selected_net_index) = app
-                                                                .adapter
-                                                                .device
-                                                                .station
-                                                                .as_ref()
-                                                                .unwrap()
-                                                                .known_networks_state
-                                                                .selected()
-                                                            {
-                                                                let (selected_net, _signal) = &app
-                                                                    .adapter
-                                                                    .device
-                                                                    .station
-                                                                    .as_ref()
-                                                                    .unwrap()
-                                                                    .known_networks
-                                                                    [selected_net_index];
-                                                                let net_index = app
-                                                                    .adapter
-                                                                    .device
-                                                                    .station
-                                                                    .as_ref()
-                                                                    .unwrap()
-                                                                    .known_networks
-                                                                    .iter()
-                                                                    .position(|(n, _s)| {
-                                                                        n.name == selected_net.name
-                                                                    });
-
-                                                                if let Some(index) = net_index {
-                                                                    let (net, _) = app
-                                                                        .adapter
-                                                                        .device
-                                                                        .station
-                                                                        .as_ref()
-                                                                        .unwrap()
-                                                                        .known_networks[index]
-                                                                        .clone();
-                                                                    tokio::spawn(async move {
-                                                                        net.connect(sender.clone())
-                                                                            .await
-                                                                            .unwrap();
-                                                                    });
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                _ => {}
-                                            }
+                                            toggle_connect(app, sender).await?
                                         }
 
                                         // Scroll down

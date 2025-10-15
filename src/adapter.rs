@@ -986,7 +986,7 @@ impl Adapter {
                 Span::from("  Down"),
                 Span::from(" | "),
                 Span::from(if self.config.station.toggle_connect == ' ' {
-                    "󱁐 ".to_string()
+                    "󱁐  or ↵ ".to_string()
                 } else {
                     self.config.station.toggle_connect.to_string()
                 })
@@ -1025,7 +1025,7 @@ impl Adapter {
                 Span::from("j,").bold(),
                 Span::from("  Down"),
                 Span::from(" | "),
-                Span::from("󱁐 ").bold(),
+                Span::from("󱁐  or ↵ ").bold(),
                 Span::from(" Connect"),
                 Span::from(" | "),
                 Span::from(self.config.station.start_scanning.to_string()).bold(),
