@@ -1,3 +1,11 @@
+## v0.4 - 2025-10-16
+
+- Adjust new network section size.
+- Rearrange sections for better layout.
+- Update Rust edition.
+- Replace help popup with help banner.
+- Enable network connect/disconnect with `Enter` key.
+
 ## v0.3.0 - 2025-07-10
 
 - Added an option to sensor password, thanks to [OneRandom1509](https://github.com/OneRandom1509)
