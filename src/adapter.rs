@@ -1040,9 +1040,16 @@ impl Adapter {
                 Span::from("⇄").bold(),
                 Span::from(" Nav"),
             ]),
-            FocusedBlock::AdapterInfos | FocusedBlock::AuthKey => {
+            FocusedBlock::AdapterInfos => {
                 Line::from(vec![Span::from("󱊷 ").bold(), Span::from(" Discard")])
             }
+            FocusedBlock::AuthKey => Line::from(vec![
+                Span::from("⇄").bold(),
+                Span::from(" Hide/Show password"),
+                Span::from(" | "),
+                Span::from("󱊷 ").bold(),
+                Span::from(" Discard"),
+            ]),
             _ => Line::from(""),
         };
 
