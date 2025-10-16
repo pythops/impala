@@ -115,7 +115,7 @@ impl App {
         let current_mode = adapter.device.mode.clone();
 
         let (passkey_sender, passkey_receiver) = async_channel::unbounded();
-        let show_password = false;
+        let show_password = true;
         let (cancel_signal_sender, cancel_signal_receiver) = async_channel::unbounded();
 
         let authentication_required = Arc::new(AtomicBool::new(false));

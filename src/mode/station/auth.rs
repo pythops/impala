@@ -2,6 +2,7 @@ use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style, Stylize},
+    text::Text,
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
 };
 use tui_input::Input;
@@ -30,7 +31,7 @@ impl Auth {
             .flex(ratatui::layout::Flex::SpaceBetween)
             .split(popup_layout[1])[1];
 
-        let (text_area, passkey_area) = {
+        let (text_area, passkey_area, show_password_area) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
@@ -55,11 +56,12 @@ impl Auth {
                 .constraints([
                     Constraint::Percentage(20),
                     Constraint::Fill(1),
+                    Constraint::Length(5),
                     Constraint::Percentage(20),
                 ])
                 .split(chunks[2]);
 
-            (area1[1], area2[1])
+            (area1[1], area2[1], area2[2])
         };
 
         let text = Paragraph::new("Enter the password")
@@ -78,6 +80,12 @@ impl Auth {
         .style(Style::default().fg(Color::White))
         .block(Block::new().style(Style::default().bg(Color::DarkGray)));
 
+        let show_password_icon = if show_password {
+            Text::from(" ").centered()
+        } else {
+            Text::from(" ").centered()
+        };
+
         frame.render_widget(Clear, area);
 
         frame.render_widget(
@@ -90,5 +98,6 @@ impl Auth {
         );
         frame.render_widget(text, text_area);
         frame.render_widget(passkey, passkey_area);
+        frame.render_widget(show_password_icon, show_password_area);
     }
 }
