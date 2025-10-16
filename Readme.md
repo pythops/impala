@@ -4,7 +4,8 @@
 
 ## 📸 Demo
 
-![](https://github.com/pythops/impala/assets/57548585/b96e7af4-cba4-49c7-a36f-12c83839134d)
+![](https://github.com/user-attachments/assets/55c800ff-d0aa-4454-aa6b-3990833ce530)
+
 
 ## 💡 Prerequisites
 
