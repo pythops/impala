@@ -1,3 +1,7 @@
+## v0.4.1 - 2025-10-23
+
+- Fix display issue on light mode background
+
 ## v0.4 - 2025-10-16
 
 - Adjust new network section size.
