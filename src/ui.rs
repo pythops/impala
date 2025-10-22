@@ -13,10 +13,10 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         app.render(frame);
     } else {
         // App
-        app.adapter.render(frame, app.color_mode, app.focused_block);
+        app.adapter.render(frame, app.focused_block);
 
         if app.focused_block == FocusedBlock::AdapterInfos {
-            app.adapter.render_adapter(frame, app.color_mode);
+            app.adapter.render_adapter(frame);
         }
 
         // Auth Popup

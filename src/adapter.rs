@@ -13,7 +13,7 @@ use ratatui::{
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    app::{AppResult, ColorMode, FocusedBlock},
+    app::{AppResult, FocusedBlock},
     config::Config,
     device::Device,
     event::Event,
@@ -64,26 +64,21 @@ impl Adapter {
         Ok(())
     }
 
-    pub fn render(&self, frame: &mut Frame, color_mode: ColorMode, focused_block: FocusedBlock) {
+    pub fn render(&self, frame: &mut Frame, focused_block: FocusedBlock) {
         match self.device.mode {
             Mode::Station => {
-                self.render_station_mode(frame, color_mode, focused_block);
+                self.render_station_mode(frame, focused_block);
             }
             Mode::Ap => {
                 if self.device.access_point.is_some() {
-                    self.render_access_point_mode(frame, color_mode, focused_block);
+                    self.render_access_point_mode(frame, focused_block);
                 }
             }
             _ => {}
         }
     }
 
-    pub fn render_access_point_mode(
-        &self,
-        frame: &mut Frame,
-        color_mode: ColorMode,
-        focused_block: FocusedBlock,
-    ) {
+    pub fn render_access_point_mode(&self, frame: &mut Frame, focused_block: FocusedBlock) {
         let any_connected_devices = match self.device.access_point.as_ref() {
             Some(ap) => !ap.connected_devices.is_empty(),
             None => false,
@@ -146,32 +141,11 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Line::from("Name")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Mode")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Powered")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Address")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
+                        Line::from("Name").centered(),
+                        Line::from("Mode").centered(),
+                        Line::from("Powered").centered(),
+                        Line::from("Address").centered(),
                     ])
-                    .style(Style::new().bold())
                     .bottom_margin(1)
                 }
             })
@@ -203,11 +177,7 @@ impl Adapter {
                     }),
             )
             .column_spacing(2)
-            .flex(Flex::SpaceBetween)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
-                ColorMode::Light => Style::default().fg(Color::Black),
-            })
+            .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::Device {
                 Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
@@ -306,38 +276,12 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Line::from("Started")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("SSID")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Frequency")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Cipher")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Scanning")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
+                        Line::from("Started").centered(),
+                        Line::from("SSID").centered(),
+                        Line::from("Frequency").centered(),
+                        Line::from("Cipher").centered(),
+                        Line::from("Scanning").centered(),
                     ])
-                    .style(Style::new().bold())
                     .bottom_margin(1)
                 }
             })
@@ -369,11 +313,7 @@ impl Adapter {
                     .padding(Padding::horizontal(1)),
             )
             .column_spacing(2)
-            .flex(Flex::SpaceBetween)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
-                ColorMode::Light => Style::default().fg(Color::Black),
-            })
+            .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::AccessPoint {
                 Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
@@ -397,38 +337,33 @@ impl Adapter {
                 .connected_devices
                 .clone();
 
-            let connected_devices_list = List::new(devices)
-                .block(
-                    Block::bordered()
-                        .title("Connected Devices")
-                        .title_style({
-                            if focused_block == FocusedBlock::AccessPointConnectedDevices {
-                                Style::default().bold()
-                            } else {
-                                Style::default()
-                            }
-                        })
-                        .borders(Borders::ALL)
-                        .border_style({
-                            if focused_block == FocusedBlock::AccessPointConnectedDevices {
-                                Style::default().fg(Color::Green)
-                            } else {
-                                Style::default()
-                            }
-                        })
-                        .border_type({
-                            if focused_block == FocusedBlock::AccessPointConnectedDevices {
-                                BorderType::Thick
-                            } else {
-                                BorderType::default()
-                            }
-                        })
-                        .padding(Padding::uniform(1)),
-                )
-                .style(match color_mode {
-                    ColorMode::Dark => Style::default().fg(Color::White),
-                    ColorMode::Light => Style::default().fg(Color::Black),
-                });
+            let connected_devices_list = List::new(devices).block(
+                Block::bordered()
+                    .title("Connected Devices")
+                    .title_style({
+                        if focused_block == FocusedBlock::AccessPointConnectedDevices {
+                            Style::default().bold()
+                        } else {
+                            Style::default()
+                        }
+                    })
+                    .borders(Borders::ALL)
+                    .border_style({
+                        if focused_block == FocusedBlock::AccessPointConnectedDevices {
+                            Style::default().fg(Color::Green)
+                        } else {
+                            Style::default()
+                        }
+                    })
+                    .border_type({
+                        if focused_block == FocusedBlock::AccessPointConnectedDevices {
+                            BorderType::Thick
+                        } else {
+                            BorderType::default()
+                        }
+                    })
+                    .padding(Padding::uniform(1)),
+            );
 
             frame.render_widget(connected_devices_list, connected_devices_block);
         }
@@ -474,12 +409,7 @@ impl Adapter {
         frame.render_widget(help_message, help_block);
     }
 
-    pub fn render_station_mode(
-        &self,
-        frame: &mut Frame,
-        color_mode: ColorMode,
-        focused_block: FocusedBlock,
-    ) {
+    pub fn render_station_mode(&self, frame: &mut Frame, focused_block: FocusedBlock) {
         let (known_networks_block, new_networks_block, device_block, help_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
@@ -580,50 +510,14 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Line::from("Name")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Mode")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Powered")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("State")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Scanning")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Frequency")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Security")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
+                        Line::from("Name").centered(),
+                        Line::from("Mode").centered(),
+                        Line::from("Powered").centered(),
+                        Line::from("State").centered(),
+                        Line::from("Scanning").centered(),
+                        Line::from("Frequency").centered(),
+                        Line::from("Security").centered(),
                     ])
-                    .style(Style::new().bold())
                     .bottom_margin(1)
                 }
             })
@@ -655,11 +549,7 @@ impl Adapter {
                     .padding(Padding::horizontal(1)),
             )
             .column_spacing(1)
-            .flex(Flex::SpaceBetween)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
-                ColorMode::Light => Style::default().fg(Color::Black),
-            })
+            .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::Device {
                 Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
@@ -753,38 +643,12 @@ impl Adapter {
                 } else {
                     Row::new(vec![
                         Line::from(""),
-                        Line::from("Name")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Security")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Hidden")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Auto Connect")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Signal")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
+                        Line::from("Name").centered(),
+                        Line::from("Security").centered(),
+                        Line::from("Hidden").centered(),
+                        Line::from("Auto Connect").centered(),
+                        Line::from("Signal").centered(),
                     ])
-                    .style(Style::new().bold())
                     .bottom_margin(1)
                 }
             })
@@ -815,12 +679,8 @@ impl Adapter {
                     })
                     .padding(Padding::horizontal(1)),
             )
-            .column_spacing(2)
-            .flex(Flex::SpaceBetween)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
-                ColorMode::Light => Style::default().fg(Color::Black),
-            })
+            .column_spacing(1)
+            .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::KnownNetworks {
                 Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
@@ -888,26 +748,10 @@ impl Adapter {
                     .bottom_margin(1)
                 } else {
                     Row::new(vec![
-                        Line::from("Name")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Security")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
-                        Line::from("Signal")
-                            .style(match color_mode {
-                                ColorMode::Dark => Style::default().fg(Color::White),
-                                ColorMode::Light => Style::default().fg(Color::Black),
-                            })
-                            .centered(),
+                        Line::from("Name").centered(),
+                        Line::from("Security").centered(),
+                        Line::from("Signal").centered(),
                     ])
-                    .style(Style::new().bold())
                     .bottom_margin(1)
                 }
             })
@@ -938,12 +782,8 @@ impl Adapter {
                     })
                     .padding(Padding::horizontal(1)),
             )
-            .column_spacing(2)
-            .flex(Flex::SpaceBetween)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
-                ColorMode::Light => Style::default().fg(Color::Black),
-            })
+            .column_spacing(1)
+            .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::NewNetworks {
                 Style::default().bg(Color::DarkGray).fg(Color::White)
             } else {
@@ -1058,7 +898,7 @@ impl Adapter {
         frame.render_widget(help_message, help_block);
     }
 
-    pub fn render_adapter(&self, frame: &mut Frame, color_mode: ColorMode) {
+    pub fn render_adapter(&self, frame: &mut Frame) {
         let popup_layout = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
             .constraints([
@@ -1121,10 +961,6 @@ impl Adapter {
                     .border_type(BorderType::Thick),
             )
             .column_spacing(3)
-            .style(match color_mode {
-                ColorMode::Dark => Style::default().fg(Color::White),
-                ColorMode::Light => Style::default().fg(Color::Black),
-            })
             .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
 
         frame.render_widget(Clear, area);
