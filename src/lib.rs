@@ -21,3 +21,7 @@ pub mod cli;
 pub mod rfkill;
 
 pub mod mode;
+
+pub mod reset;
+
+pub mod agent;

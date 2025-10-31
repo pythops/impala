@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::app::{App, AppResult, FocusedBlock};
 use crate::config::Config;
+use crate::device::Device;
 use crate::event::Event;
 use crate::mode::ap::APFocusedSection;
 use crate::notification::Notification;
@@ -12,116 +13,32 @@ use tokio::sync::mpsc::UnboundedSender;
 use tui_input::backend::crossterm::EventHandler;
 
 async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> AppResult<()> {
+    let station = &mut app.device.station.as_mut().unwrap();
     match app.focused_block {
         FocusedBlock::NewNetworks => {
-            if let Some(net_index) = app
-                .adapter
-                .device
-                .station
-                .as_ref()
-                .unwrap()
-                .new_networks_state
-                .selected()
-            {
-                let (net, _) =
-                    app.adapter.device.station.as_ref().unwrap().new_networks[net_index].clone();
-
-                let mode = app.current_mode.clone();
+            if let Some(net_index) = station.new_networks_state.selected() {
+                let (net, _) = station.new_networks[net_index].clone();
                 tokio::spawn(async move {
                     net.connect(sender.clone()).await.unwrap();
-
-                    sender.clone().send(Event::Reset(mode)).unwrap();
                 });
             }
         }
-        FocusedBlock::KnownNetworks => {
-            match &app
-                .adapter
-                .device
-                .station
-                .as_ref()
-                .unwrap()
-                .connected_network
-            {
-                Some(connected_net) => {
-                    if let Some(selected_net_index) = app
-                        .adapter
-                        .device
-                        .station
-                        .as_ref()
-                        .unwrap()
-                        .known_networks_state
-                        .selected()
-                    {
-                        let (selected_net, _signal) =
-                            &app.adapter.device.station.as_ref().unwrap().known_networks
-                                [selected_net_index];
+        FocusedBlock::KnownNetworks => match &station.connected_network {
+            Some(connected_net) => {
+                if let Some(selected_net_index) = station.known_networks_state.selected() {
+                    let (selected_net, _signal) = &station.known_networks[selected_net_index];
 
-                        if selected_net.name == connected_net.name {
-                            app.adapter
-                                .device
-                                .station
-                                .as_ref()
-                                .unwrap()
-                                .disconnect(sender.clone())
-                                .await?;
-                        } else {
-                            let net_index = app
-                                .adapter
-                                .device
-                                .station
-                                .as_ref()
-                                .unwrap()
-                                .known_networks
-                                .iter()
-                                .position(|(n, _s)| n.name == selected_net.name);
-
-                            if let Some(index) = net_index {
-                                let (net, _) =
-                                    app.adapter.device.station.as_ref().unwrap().known_networks
-                                        [index]
-                                        .clone();
-                                app.adapter
-                                    .device
-                                    .station
-                                    .as_ref()
-                                    .unwrap()
-                                    .disconnect(sender.clone())
-                                    .await?;
-                                tokio::spawn(async move {
-                                    net.connect(sender.clone()).await.unwrap();
-                                });
-                            }
-                        }
-                    }
-                }
-                None => {
-                    if let Some(selected_net_index) = app
-                        .adapter
-                        .device
-                        .station
-                        .as_ref()
-                        .unwrap()
-                        .known_networks_state
-                        .selected()
-                    {
-                        let (selected_net, _signal) =
-                            &app.adapter.device.station.as_ref().unwrap().known_networks
-                                [selected_net_index];
-                        let net_index = app
-                            .adapter
-                            .device
-                            .station
-                            .as_ref()
-                            .unwrap()
+                    if selected_net.name == connected_net.name {
+                        station.disconnect(sender.clone()).await?;
+                    } else {
+                        let net_index = station
                             .known_networks
                             .iter()
                             .position(|(n, _s)| n.name == selected_net.name);
 
                         if let Some(index) = net_index {
-                            let (net, _) =
-                                app.adapter.device.station.as_ref().unwrap().known_networks[index]
-                                    .clone();
+                            let (net, _) = station.known_networks[index].clone();
+                            station.disconnect(sender.clone()).await?;
                             tokio::spawn(async move {
                                 net.connect(sender.clone()).await.unwrap();
                             });
@@ -129,8 +46,63 @@ async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> AppRes
                     }
                 }
             }
-        }
+            None => {
+                if let Some(selected_net_index) = station.known_networks_state.selected() {
+                    let (selected_net, _signal) = &station.known_networks[selected_net_index];
+                    let net_index = station
+                        .known_networks
+                        .iter()
+                        .position(|(n, _s)| n.name == selected_net.name);
+
+                    if let Some(index) = net_index {
+                        let (net, _) = station.known_networks[index].clone();
+                        tokio::spawn(async move {
+                            net.connect(sender.clone()).await.unwrap();
+                        });
+                    }
+                }
+            }
+        },
         _ => {}
+    }
+    Ok(())
+}
+
+async fn toggle_device_power(sender: UnboundedSender<Event>, device: &Device) -> AppResult<()> {
+    if device.is_powered {
+        match device.power_off().await {
+            Ok(()) => {
+                Notification::send(
+                    "Device Powered Off".to_string(),
+                    crate::notification::NotificationLevel::Info,
+                    &sender.clone(),
+                )?;
+            }
+            Err(e) => {
+                Notification::send(
+                    e.to_string(),
+                    crate::notification::NotificationLevel::Error,
+                    &sender.clone(),
+                )?;
+            }
+        }
+    } else {
+        match device.power_on().await {
+            Ok(()) => {
+                Notification::send(
+                    "Device Powered On".to_string(),
+                    crate::notification::NotificationLevel::Info,
+                    &sender.clone(),
+                )?;
+            }
+            Err(e) => {
+                Notification::send(
+                    e.to_string(),
+                    crate::notification::NotificationLevel::Error,
+                    &sender.clone(),
+                )?;
+            }
+        }
     }
     Ok(())
 }
@@ -141,7 +113,7 @@ pub async fn handle_key_events(
     sender: UnboundedSender<Event>,
     config: Arc<Config>,
 ) -> AppResult<()> {
-    if app.reset_mode {
+    if app.reset.enable {
         match key_event.code {
             KeyCode::Char('q') => {
                 app.quit();
@@ -153,19 +125,19 @@ pub async fn handle_key_events(
             }
 
             KeyCode::Char('j') => {
-                if app.selected_mode == Mode::Station {
-                    app.selected_mode = Mode::Ap;
+                if app.reset.selected_mode == Mode::Station {
+                    app.reset.selected_mode = Mode::Ap;
                 }
             }
 
             KeyCode::Char('k') => {
-                if app.selected_mode == Mode::Ap {
-                    app.selected_mode = Mode::Station;
+                if app.reset.selected_mode == Mode::Ap {
+                    app.reset.selected_mode = Mode::Station;
                 }
             }
 
             KeyCode::Enter => {
-                sender.send(Event::Reset(app.selected_mode.clone()))?;
+                sender.send(Event::Reset(app.reset.selected_mode))?;
             }
 
             _ => {}
@@ -173,519 +145,324 @@ pub async fn handle_key_events(
         return Ok(());
     }
 
-    match app.focused_block {
-        FocusedBlock::AuthKey => match key_event.code {
-            KeyCode::Enter => {
-                app.send_passkey().await?;
-                app.focused_block = FocusedBlock::Device;
-            }
-
-            KeyCode::Esc => {
-                app.cancel_auth().await?;
-                app.focused_block = FocusedBlock::Device;
-            }
-
-            KeyCode::Tab => {
-                app.show_password = !app.show_password;
-            }
-
-            _ => {
-                app.passkey_input
-                    .handle_event(&crossterm::event::Event::Key(key_event));
-            }
-        },
-        FocusedBlock::AccessPointInput => match key_event.code {
-            KeyCode::Enter => {
-                if let Some(ap) = &mut app.adapter.device.access_point {
-                    ap.start(sender.clone()).await?;
-                    sender.send(Event::Reset(app.current_mode.clone()))?;
+    if !app.device.is_powered {
+        match app.focused_block {
+            FocusedBlock::AdapterInfos => {
+                if key_event.code == KeyCode::Esc {
                     app.focused_block = FocusedBlock::Device;
                 }
             }
 
-            KeyCode::Esc => {
-                if let Some(ap) = &app.adapter.device.access_point {
-                    // Start AP
-                    ap.ap_start
-                        .store(false, std::sync::atomic::Ordering::Relaxed);
-                }
-                app.focused_block = FocusedBlock::AccessPoint;
-            }
-            KeyCode::Tab => {
-                if let Some(ap) = &mut app.adapter.device.access_point {
-                    match ap.focused_section {
-                        APFocusedSection::SSID => ap.focused_section = APFocusedSection::PSK,
-                        APFocusedSection::PSK => ap.focused_section = APFocusedSection::SSID,
-                    }
-                }
-            }
-            _ => {
-                if let Some(ap) = &mut app.adapter.device.access_point {
-                    match ap.focused_section {
-                        APFocusedSection::SSID => ap
-                            .ssid
-                            .handle_event(&crossterm::event::Event::Key(key_event)),
-                        APFocusedSection::PSK => ap
-                            .psk
-                            .handle_event(&crossterm::event::Event::Key(key_event)),
-                    };
-                }
-            }
-        },
-        _ => {
-            match key_event.code {
+            FocusedBlock::Device => match key_event.code {
                 KeyCode::Char('q') => {
                     app.quit();
                 }
+
                 KeyCode::Char('c' | 'C') => {
                     if key_event.modifiers == KeyModifiers::CONTROL {
                         app.quit();
                     }
                 }
 
-                // Switch mode
-                KeyCode::Char(c)
-                    if c == config.switch && key_event.modifiers == KeyModifiers::CONTROL =>
-                {
-                    app.reset_mode = true;
+                KeyCode::Char(c) if c == config.device.infos => {
+                    app.focused_block = FocusedBlock::AdapterInfos;
                 }
+                KeyCode::Char(c) if c == config.device.toggle_power => {
+                    toggle_device_power(sender, &app.device).await?;
+                }
+                _ => {}
+            },
+            _ => {}
+        }
 
-                // Discard  popup
-                KeyCode::Esc => {
-                    if app.focused_block == FocusedBlock::AdapterInfos {
+        return Ok(());
+    }
+
+    match app.device.mode {
+        Mode::Station => {
+            let station = &mut app.device.station.as_mut().unwrap();
+            match app.focused_block {
+                FocusedBlock::AuthKey => match key_event.code {
+                    KeyCode::Enter => {
+                        app.send_passkey().await?;
+                        app.focused_block = FocusedBlock::NewNetworks;
+                        app.passkey_input.reset();
+                    }
+
+                    KeyCode::Esc => {
+                        app.cancel_auth().await?;
+                        app.focused_block = FocusedBlock::NewNetworks;
+                        app.passkey_input.reset();
+                    }
+
+                    KeyCode::Tab => {
+                        app.show_password = !app.show_password;
+                    }
+
+                    _ => {
+                        app.passkey_input
+                            .handle_event(&crossterm::event::Event::Key(key_event));
+                    }
+                },
+                FocusedBlock::AdapterInfos => {
+                    if key_event.code == KeyCode::Esc {
                         app.focused_block = FocusedBlock::Device;
                     }
                 }
+                _ => {
+                    match key_event.code {
+                        KeyCode::Char('q') => {
+                            app.quit();
+                        }
 
-                // Start Scan
-                KeyCode::Char(c) if c == config.station.start_scanning => {
-                    match app.adapter.device.mode {
-                        Mode::Station => {
-                            app.adapter
-                                .device
-                                .station
-                                .as_mut()
-                                .unwrap()
-                                .scan(sender)
-                                .await?;
+                        KeyCode::Char('c' | 'C') => {
+                            if key_event.modifiers == KeyModifiers::CONTROL {
+                                app.quit();
+                            }
                         }
-                        Mode::Ap => {
-                            app.adapter
-                                .device
-                                .access_point
-                                .as_mut()
-                                .unwrap()
-                                .scan(sender)
-                                .await?;
+
+                        // Switch mode
+                        KeyCode::Char(c)
+                            if c == config.switch
+                                && key_event.modifiers == KeyModifiers::CONTROL =>
+                        {
+                            app.reset.enable = true;
                         }
-                        _ => {}
+
+                        KeyCode::Tab => match app.focused_block {
+                            FocusedBlock::Device => {
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+                            FocusedBlock::KnownNetworks => {
+                                app.focused_block = FocusedBlock::NewNetworks;
+                            }
+                            FocusedBlock::NewNetworks => {
+                                app.focused_block = FocusedBlock::Device;
+                            }
+                            _ => {}
+                        },
+                        KeyCode::BackTab => match app.focused_block {
+                            FocusedBlock::Device => {
+                                app.focused_block = FocusedBlock::NewNetworks;
+                            }
+                            FocusedBlock::NewNetworks => {
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+                            FocusedBlock::KnownNetworks => {
+                                app.focused_block = FocusedBlock::Device;
+                            }
+                            _ => {}
+                        },
+
+                        KeyCode::Char(c) if c == config.station.start_scanning => {
+                            station.scan(sender).await?;
+                        }
+                        _ => match app.focused_block {
+                            FocusedBlock::Device => match key_event.code {
+                                KeyCode::Char(c) if c == config.device.infos => {
+                                    app.focused_block = FocusedBlock::AdapterInfos;
+                                }
+                                KeyCode::Char(c) if c == config.device.toggle_power => {
+                                    toggle_device_power(sender, &app.device).await?;
+                                }
+                                _ => {}
+                            },
+
+                            FocusedBlock::KnownNetworks => {
+                                match key_event.code {
+                                    // Remove a known network
+                                    KeyCode::Char(c)
+                                        if c == config.station.known_network.remove =>
+                                    {
+                                        if let Some(net_index) =
+                                            station.known_networks_state.selected()
+                                        {
+                                            let (net, _signal) = &station.known_networks[net_index];
+
+                                            let known_net = net.known_network.as_ref().unwrap();
+                                            known_net.forget(sender.clone()).await?;
+                                        }
+                                    }
+
+                                    // Toggle autoconnect
+                                    KeyCode::Char(c)
+                                        if c == config.station.known_network.toggle_autoconnect =>
+                                    {
+                                        if let Some(net_index) =
+                                            station.known_networks_state.selected()
+                                        {
+                                            let (net, _signal) = &station.known_networks[net_index];
+
+                                            let known_net = net.known_network.as_ref().unwrap();
+                                            known_net.toggle_autoconnect(sender.clone()).await?;
+                                        }
+                                    }
+
+                                    // Connect/Disconnect
+                                    KeyCode::Enter => toggle_connect(app, sender).await?,
+                                    KeyCode::Char(c) if c == config.station.toggle_connect => {
+                                        toggle_connect(app, sender).await?
+                                    }
+
+                                    // Scroll down
+                                    KeyCode::Char('j') | KeyCode::Down => {
+                                        if !station.known_networks.is_empty() {
+                                            let i = match station.known_networks_state.selected() {
+                                                Some(i) => {
+                                                    if i < station.known_networks.len() - 1 {
+                                                        i + 1
+                                                    } else {
+                                                        i
+                                                    }
+                                                }
+                                                None => 0,
+                                            };
+
+                                            station.known_networks_state.select(Some(i));
+                                        }
+                                    }
+                                    KeyCode::Char('k') | KeyCode::Up => {
+                                        if !station.known_networks.is_empty() {
+                                            let i = match station.known_networks_state.selected() {
+                                                Some(i) => i.saturating_sub(1),
+                                                None => 0,
+                                            };
+
+                                            station.known_networks_state.select(Some(i));
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            FocusedBlock::NewNetworks => match key_event.code {
+                                KeyCode::Enter => toggle_connect(app, sender).await?,
+                                KeyCode::Char(c) if c == config.station.toggle_connect => {
+                                    toggle_connect(app, sender).await?
+                                }
+                                KeyCode::Char('j') | KeyCode::Down => {
+                                    if !station.known_networks.is_empty() {
+                                        let i = match station.new_networks_state.selected() {
+                                            Some(i) => {
+                                                if i < station.new_networks.len() - 1 {
+                                                    i + 1
+                                                } else {
+                                                    i
+                                                }
+                                            }
+                                            None => 0,
+                                        };
+
+                                        station.new_networks_state.select(Some(i));
+                                    }
+                                }
+                                KeyCode::Char('k') | KeyCode::Up => {
+                                    if !station.new_networks.is_empty() {
+                                        let i = match station.new_networks_state.selected() {
+                                            Some(i) => i.saturating_sub(1),
+                                            None => 0,
+                                        };
+
+                                        station.new_networks_state.select(Some(i));
+                                    }
+                                }
+                                _ => {}
+                            },
+                            _ => {}
+                        },
                     }
                 }
+            }
+        }
 
-                KeyCode::Tab => match app.adapter.device.mode {
-                    Mode::Station => match app.focused_block {
-                        FocusedBlock::Device => {
-                            app.focused_block = FocusedBlock::KnownNetworks;
+        Mode::Ap => {
+            let ap = app.device.ap.as_mut().unwrap();
+
+            match app.focused_block {
+                FocusedBlock::AccessPointInput => match key_event.code {
+                    KeyCode::Enter => {
+                        ap.start(sender.clone()).await?;
+                        app.focused_block = FocusedBlock::Device;
+                    }
+
+                    KeyCode::Esc => {
+                        ap.ap_start
+                            .store(false, std::sync::atomic::Ordering::Relaxed);
+                        app.focused_block = FocusedBlock::AccessPoint;
+                    }
+                    KeyCode::Tab => match ap.focused_section {
+                        APFocusedSection::SSID => {
+                            ap.focused_section = APFocusedSection::PSK;
                         }
-                        FocusedBlock::KnownNetworks => {
-                            app.focused_block = FocusedBlock::NewNetworks;
+                        APFocusedSection::PSK => {
+                            ap.focused_section = APFocusedSection::SSID;
                         }
-                        FocusedBlock::NewNetworks => {
-                            app.focused_block = FocusedBlock::Device;
-                        }
-                        _ => {}
                     },
-                    Mode::Ap => match app.focused_block {
-                        FocusedBlock::Device => {
-                            app.focused_block = FocusedBlock::AccessPoint;
+                    _ => match ap.focused_section {
+                        APFocusedSection::SSID => {
+                            ap.ssid
+                                .handle_event(&crossterm::event::Event::Key(key_event));
                         }
-                        FocusedBlock::AccessPoint => {
-                            if let Some(ap) = app.adapter.device.access_point.as_ref() {
+                        APFocusedSection::PSK => {
+                            ap.psk
+                                .handle_event(&crossterm::event::Event::Key(key_event));
+                        }
+                    },
+                },
+
+                FocusedBlock::AdapterInfos => {
+                    if key_event.code == KeyCode::Esc {
+                        app.focused_block = FocusedBlock::Device;
+                    }
+                }
+                _ => {
+                    match key_event.code {
+                        KeyCode::Char('q') => {
+                            app.quit();
+                        }
+
+                        KeyCode::Char('c' | 'C') => {
+                            if key_event.modifiers == KeyModifiers::CONTROL {
+                                app.quit();
+                            }
+                        }
+
+                        // Switch mode
+                        KeyCode::Char(c)
+                            if c == config.switch
+                                && key_event.modifiers == KeyModifiers::CONTROL =>
+                        {
+                            app.reset.enable = true;
+                        }
+
+                        KeyCode::Tab => match app.focused_block {
+                            FocusedBlock::Device => {
+                                app.focused_block = FocusedBlock::AccessPoint;
+                            }
+                            FocusedBlock::AccessPoint => {
                                 if ap.connected_devices.is_empty() {
                                     app.focused_block = FocusedBlock::Device;
                                 } else {
                                     app.focused_block = FocusedBlock::AccessPointConnectedDevices;
                                 }
                             }
-                        }
-                        FocusedBlock::AccessPointConnectedDevices => {
-                            app.focused_block = FocusedBlock::Device;
-                        }
-                        FocusedBlock::AccessPointInput => {
-                            if let Some(ap) = &mut app.adapter.device.access_point {
-                                match ap.focused_section {
-                                    APFocusedSection::SSID => {
-                                        ap.focused_section = APFocusedSection::PSK;
-                                    }
-                                    APFocusedSection::PSK => {
-                                        ap.focused_section = APFocusedSection::SSID;
-                                    }
-                                }
-                            }
-                        }
-                        _ => {}
-                    },
-                    _ => {}
-                },
-
-                KeyCode::BackTab => match app.adapter.device.mode {
-                    Mode::Station => match app.focused_block {
-                        FocusedBlock::Device => {
-                            app.focused_block = FocusedBlock::NewNetworks;
-                        }
-                        FocusedBlock::KnownNetworks => {
-                            app.focused_block = FocusedBlock::Device;
-                        }
-                        FocusedBlock::NewNetworks => {
-                            app.focused_block = FocusedBlock::KnownNetworks;
-                        }
-                        _ => {}
-                    },
-                    Mode::Ap => match app.focused_block {
-                        FocusedBlock::Device => {
-                            if let Some(ap) = app.adapter.device.access_point.as_ref() {
-                                if ap.connected_devices.is_empty() {
-                                    app.focused_block = FocusedBlock::AccessPoint;
-                                } else {
-                                    app.focused_block = FocusedBlock::AccessPointConnectedDevices;
-                                }
-                            }
-                        }
-                        FocusedBlock::AccessPoint => {
-                            app.focused_block = FocusedBlock::Device;
-                        }
-                        FocusedBlock::AccessPointConnectedDevices => {
-                            app.focused_block = FocusedBlock::AccessPoint;
-                        }
-                        FocusedBlock::AccessPointInput => {
-                            if let Some(ap) = &mut app.adapter.device.access_point {
-                                match ap.focused_section {
-                                    APFocusedSection::SSID => {
-                                        ap.focused_section = APFocusedSection::PSK;
-                                    }
-                                    APFocusedSection::PSK => {
-                                        ap.focused_section = APFocusedSection::SSID;
-                                    }
-                                }
-                            }
-                        }
-                        _ => {}
-                    },
-                    _ => {}
-                },
-
-                _ => {
-                    match app.focused_block {
-                        FocusedBlock::Device => match key_event.code {
-                            KeyCode::Char(c) if c == config.device.infos => {
-                                app.focused_block = FocusedBlock::AdapterInfos;
-                            }
-
-                            KeyCode::Char(c) if c == config.device.toggle_power => {
-                                if app.adapter.device.is_powered {
-                                    match app.adapter.device.power_off().await {
-                                        Ok(()) => {
-                                            sender.send(Event::Reset(app.current_mode.clone()))?;
-                                            Notification::send(
-                                                "Device Powered Off".to_string(),
-                                                crate::notification::NotificationLevel::Info,
-                                                &sender.clone(),
-                                            )?;
-                                        }
-                                        Err(e) => {
-                                            Notification::send(
-                                                e.to_string(),
-                                                crate::notification::NotificationLevel::Error,
-                                                &sender.clone(),
-                                            )?;
-                                        }
-                                    }
-                                } else {
-                                    match app.adapter.device.power_on().await {
-                                        Ok(()) => {
-                                            sender.send(Event::Reset(app.current_mode.clone()))?;
-                                            Notification::send(
-                                                "Device Powered On".to_string(),
-                                                crate::notification::NotificationLevel::Info,
-                                                &sender.clone(),
-                                            )?;
-                                        }
-                                        Err(e) => {
-                                            Notification::send(
-                                                e.to_string(),
-                                                crate::notification::NotificationLevel::Error,
-                                                &sender.clone(),
-                                            )?;
-                                        }
-                                    }
-                                }
+                            FocusedBlock::AccessPointConnectedDevices => {
+                                app.focused_block = FocusedBlock::Device;
                             }
 
                             _ => {}
                         },
 
                         _ => {
-                            match app.adapter.device.mode {
-                                Mode::Station => {
-                                    match key_event.code {
-                                        // Remove a known network
-                                        KeyCode::Char(c)
-                                            if c == config.station.known_network.remove
-                                                && app.focused_block
-                                                    == FocusedBlock::KnownNetworks =>
-                                        {
-                                            if let Some(net_index) = app
-                                                .adapter
-                                                .device
-                                                .station
-                                                .as_ref()
-                                                .unwrap()
-                                                .known_networks_state
-                                                .selected()
-                                            {
-                                                let (net, _signal) = &app
-                                                    .adapter
-                                                    .device
-                                                    .station
-                                                    .as_ref()
-                                                    .unwrap()
-                                                    .known_networks[net_index];
-
-                                                let known_net = net.known_network.as_ref().unwrap();
-                                                known_net.forget(sender.clone()).await?;
-                                            }
-                                        }
-
-                                        // Toggle autoconnect
-                                        KeyCode::Char(c)
-                                            if c == config
-                                                .station
-                                                .known_network
-                                                .toggle_autoconnect
-                                                && app.focused_block
-                                                    == FocusedBlock::KnownNetworks =>
-                                        {
-                                            if let Some(net_index) = app
-                                                .adapter
-                                                .device
-                                                .station
-                                                .as_ref()
-                                                .unwrap()
-                                                .known_networks_state
-                                                .selected()
-                                            {
-                                                let (net, _signal) = &app
-                                                    .adapter
-                                                    .device
-                                                    .station
-                                                    .as_ref()
-                                                    .unwrap()
-                                                    .known_networks[net_index];
-
-                                                let known_net = net.known_network.as_ref().unwrap();
-                                                known_net
-                                                    .toggle_autoconnect(sender.clone())
-                                                    .await?;
-                                            }
-                                        }
-
-                                        // Connect/Disconnect
-                                        KeyCode::Enter => toggle_connect(app, sender).await?,
-                                        KeyCode::Char(c) if c == config.station.toggle_connect => {
-                                            toggle_connect(app, sender).await?
-                                        }
-
-                                        // Scroll down
-                                        KeyCode::Char('j') | KeyCode::Down => {
-                                            match app.focused_block {
-                                                FocusedBlock::KnownNetworks => {
-                                                    if !app
-                                                        .adapter
-                                                        .device
-                                                        .station
-                                                        .as_ref()
-                                                        .unwrap()
-                                                        .known_networks
-                                                        .is_empty()
-                                                    {
-                                                        let i = match app
-                                                            .adapter
-                                                            .device
-                                                            .station
-                                                            .as_ref()
-                                                            .unwrap()
-                                                            .known_networks_state
-                                                            .selected()
-                                                        {
-                                                            Some(i) => {
-                                                                if i < app
-                                                                    .adapter
-                                                                    .device
-                                                                    .station
-                                                                    .as_ref()
-                                                                    .unwrap()
-                                                                    .known_networks
-                                                                    .len()
-                                                                    - 1
-                                                                {
-                                                                    i + 1
-                                                                } else {
-                                                                    i
-                                                                }
-                                                            }
-                                                            None => 0,
-                                                        };
-
-                                                        app.adapter
-                                                            .device
-                                                            .station
-                                                            .as_mut()
-                                                            .unwrap()
-                                                            .known_networks_state
-                                                            .select(Some(i));
-                                                    }
-                                                }
-                                                FocusedBlock::NewNetworks => {
-                                                    if !app
-                                                        .adapter
-                                                        .device
-                                                        .station
-                                                        .as_ref()
-                                                        .unwrap()
-                                                        .new_networks
-                                                        .is_empty()
-                                                    {
-                                                        let i = match app
-                                                            .adapter
-                                                            .device
-                                                            .station
-                                                            .as_ref()
-                                                            .unwrap()
-                                                            .new_networks_state
-                                                            .selected()
-                                                        {
-                                                            Some(i) => {
-                                                                if i < app
-                                                                    .adapter
-                                                                    .device
-                                                                    .station
-                                                                    .as_ref()
-                                                                    .unwrap()
-                                                                    .new_networks
-                                                                    .len()
-                                                                    - 1
-                                                                {
-                                                                    i + 1
-                                                                } else {
-                                                                    i
-                                                                }
-                                                            }
-                                                            None => 0,
-                                                        };
-
-                                                        app.adapter
-                                                            .device
-                                                            .station
-                                                            .as_mut()
-                                                            .unwrap()
-                                                            .new_networks_state
-                                                            .select(Some(i));
-                                                    }
-                                                }
-
-                                                _ => {}
-                                            }
-                                        }
-
-                                        KeyCode::Char('k') | KeyCode::Up => match app.focused_block
-                                        {
-                                            FocusedBlock::KnownNetworks => {
-                                                if !app
-                                                    .adapter
-                                                    .device
-                                                    .station
-                                                    .as_ref()
-                                                    .unwrap()
-                                                    .known_networks
-                                                    .is_empty()
-                                                {
-                                                    let i = match app
-                                                        .adapter
-                                                        .device
-                                                        .station
-                                                        .as_ref()
-                                                        .unwrap()
-                                                        .known_networks_state
-                                                        .selected()
-                                                    {
-                                                        Some(i) => i.saturating_sub(1),
-                                                        None => 0,
-                                                    };
-
-                                                    app.adapter
-                                                        .device
-                                                        .station
-                                                        .as_mut()
-                                                        .unwrap()
-                                                        .known_networks_state
-                                                        .select(Some(i));
-                                                }
-                                            }
-                                            FocusedBlock::NewNetworks => {
-                                                if !app
-                                                    .adapter
-                                                    .device
-                                                    .station
-                                                    .as_ref()
-                                                    .unwrap()
-                                                    .new_networks
-                                                    .is_empty()
-                                                {
-                                                    let i = match app
-                                                        .adapter
-                                                        .device
-                                                        .station
-                                                        .as_ref()
-                                                        .unwrap()
-                                                        .new_networks_state
-                                                        .selected()
-                                                    {
-                                                        Some(i) => i.saturating_sub(1),
-                                                        None => 0,
-                                                    };
-
-                                                    app.adapter
-                                                        .device
-                                                        .station
-                                                        .as_mut()
-                                                        .unwrap()
-                                                        .new_networks_state
-                                                        .select(Some(i));
-                                                }
-                                            }
-                                            _ => {}
-                                        },
-                                        _ => {}
+                            if app.focused_block == FocusedBlock::Device {
+                                match key_event.code {
+                                    KeyCode::Char(c) if c == config.device.infos => {
+                                        app.focused_block = FocusedBlock::AdapterInfos;
                                     }
-                                }
-                                Mode::Ap => match key_event.code {
-                                    KeyCode::Char(c) if c == config.ap.start => {
-                                        if let Some(ap) = &app.adapter.device.access_point {
-                                            // Start AP
-                                            ap.ap_start
-                                                .store(true, std::sync::atomic::Ordering::Relaxed);
-                                        }
+                                    KeyCode::Char(c) if c == config.device.toggle_power => {
+                                        toggle_device_power(sender, &app.device).await?;
                                     }
-                                    KeyCode::Char(c) if c == config.ap.stop => {
-                                        if let Some(ap) = &mut app.adapter.device.access_point {
-                                            ap.stop(sender).await?;
-                                            ap.connected_devices = Vec::new();
-                                        }
-                                    }
-
                                     _ => {}
-                                },
-                                _ => {}
+                                }
                             }
                         }
                     }
@@ -693,5 +470,6 @@ pub async fn handle_key_events(
             }
         }
     }
+
     Ok(())
 }

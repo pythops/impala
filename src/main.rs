@@ -1,12 +1,14 @@
-use impala::app::{App, AppResult};
-use impala::config::Config;
-use impala::event::{Event, EventHandler};
-use impala::handler::handle_key_events;
-use impala::tui::Tui;
-use impala::{cli, rfkill};
+use impala::{
+    app::{App, AppResult},
+    cli,
+    config::Config,
+    event::{Event, EventHandler},
+    handler::handle_key_events,
+    rfkill,
+    tui::Tui,
+};
 use iwdrs::modes::Mode;
-use ratatui::Terminal;
-use ratatui::backend::CrosstermBackend;
+use ratatui::{Terminal, backend::CrosstermBackend};
 use std::io;
 use std::sync::Arc;
 
@@ -29,14 +31,7 @@ async fn main() -> AppResult<()> {
 
     let mode = Mode::try_from(mode.as_str())?;
 
-    if App::reset(mode.clone(), tui.events.sender.clone(), config.clone())
-        .await
-        .is_err()
-    {
-        tui.exit()?;
-    }
-
-    let mut app = App::new(config.clone(), mode, tui.events.sender.clone()).await?;
+    let mut app = App::new(config.clone(), mode).await?;
 
     while app.running {
         tui.draw(&mut app)?;
@@ -55,13 +50,10 @@ async fn main() -> AppResult<()> {
                 app.notifications.push(notification);
             }
             Event::Reset(mode) => {
-                if App::reset(mode.clone(), tui.events.sender.clone(), config.clone())
-                    .await
-                    .is_err()
-                {
+                if App::reset(mode).await.is_err() {
                     tui.exit()?;
                 }
-                app = App::new(config.clone(), mode, tui.events.sender.clone()).await?;
+                app = App::new(config.clone(), mode).await?;
             }
             _ => {}
         }

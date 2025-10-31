@@ -1,4 +1,4 @@
-use iwdrs::network::Network as iwdNetwork;
+use iwdrs::network::{Network as iwdNetwork, NetworkType};
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
@@ -12,7 +12,7 @@ use crate::{
 pub struct Network {
     pub n: iwdNetwork,
     pub name: String,
-    pub network_type: String,
+    pub network_type: NetworkType,
     pub is_connected: bool,
     pub known_network: Option<KnownNetwork>,
 }

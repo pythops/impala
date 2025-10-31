@@ -22,9 +22,8 @@ dirs = "6"
 serde = { version = "1", features = ["derive"] }
 toml = { version = "0.9" }
 clap = { version = "4", features = ["derive", "cargo"] }
-terminal-light = "1"
 anyhow = "1"
-iwdrs = "0.1"
+iwdrs = "0.2"
 chrono = "0.4"
 log = "0.4"
 env_logger = "0.11"

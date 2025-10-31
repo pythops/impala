@@ -1,5 +1,6 @@
 use chrono::{DateTime, FixedOffset};
-use iwdrs::known_netowk::KnownNetwork as iwdKnownNetwork;
+
+use iwdrs::{known_network::KnownNetwork as iwdKnownNetwork, network::NetworkType};
 
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -13,7 +14,7 @@ use crate::{
 pub struct KnownNetwork {
     pub n: iwdKnownNetwork,
     pub name: String,
-    pub network_type: String,
+    pub network_type: NetworkType,
     pub is_autoconnect: bool,
     pub is_hidden: bool,
     pub last_connected: Option<DateTime<FixedOffset>>,
