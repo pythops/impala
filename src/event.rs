@@ -15,6 +15,7 @@ pub enum Event {
     Resize(u16, u16),
     Notification(Notification),
     Reset(Mode),
+    Auth(String),
 }
 
 #[allow(dead_code)]

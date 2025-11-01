@@ -3,10 +3,7 @@ use std::sync::atomic::Ordering;
 use iwdrs::modes::Mode;
 use ratatui::Frame;
 
-use crate::{
-    app::{App, FocusedBlock},
-    mode::station::auth::Auth,
-};
+use crate::app::{App, FocusedBlock};
 
 pub fn render(app: &mut App, frame: &mut Frame) {
     if app.reset.enable {
@@ -36,9 +33,12 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         }
 
         // Auth Popup
-        if app.agent.required.load(Ordering::Relaxed) {
-            app.focused_block = FocusedBlock::AuthKey;
-            Auth.render(frame, &app.passkey_input, app.show_password);
+        if app.agent.psk_required.load(Ordering::Relaxed) {
+            app.focused_block = FocusedBlock::PskAuthKey;
+
+            app.auth
+                .psk
+                .render(frame, app.network_name_requiring_auth.clone());
         }
 
         // Notifications

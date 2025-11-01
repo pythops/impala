@@ -31,7 +31,7 @@ async fn main() -> AppResult<()> {
 
     let mode = Mode::try_from(mode.as_str())?;
 
-    let mut app = App::new(config.clone(), mode).await?;
+    let mut app = App::new(tui.events.sender.clone(), config.clone(), mode).await?;
 
     while app.running {
         tui.draw(&mut app)?;
@@ -53,7 +53,10 @@ async fn main() -> AppResult<()> {
                 if App::reset(mode).await.is_err() {
                     tui.exit()?;
                 }
-                app = App::new(config.clone(), mode).await?;
+                app = App::new(tui.events.sender.clone(), config.clone(), mode).await?;
+            }
+            Event::Auth(network_name) => {
+                app.network_name_requiring_auth = Some(network_name);
             }
             _ => {}
         }

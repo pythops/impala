@@ -182,28 +182,32 @@ pub async fn handle_key_events(
         Mode::Station => {
             let station = &mut app.device.station.as_mut().unwrap();
             match app.focused_block {
-                FocusedBlock::AuthKey => match key_event.code {
+                FocusedBlock::PskAuthKey => match key_event.code {
                     KeyCode::Enter => {
-                        app.send_passkey().await?;
+                        app.auth.psk.submit(&app.agent).await?;
                         app.focused_block = FocusedBlock::NewNetworks;
-                        app.passkey_input.reset();
                     }
 
                     KeyCode::Esc => {
-                        app.cancel_auth().await?;
+                        app.auth.psk.cancel(&app.agent).await?;
                         app.focused_block = FocusedBlock::NewNetworks;
-                        app.passkey_input.reset();
                     }
 
                     KeyCode::Tab => {
-                        app.show_password = !app.show_password;
+                        app.auth.psk.show_password = !app.auth.psk.show_password;
                     }
 
                     _ => {
-                        app.passkey_input
+                        app.auth
+                            .psk
+                            .passphrase
                             .handle_event(&crossterm::event::Event::Key(key_event));
                     }
                 },
+
+                FocusedBlock::WpaEntrepriseAuth => {
+                    unimplemented!()
+                }
                 FocusedBlock::AdapterInfos => {
                     if key_event.code == KeyCode::Esc {
                         app.focused_block = FocusedBlock::Device;

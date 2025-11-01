@@ -687,7 +687,7 @@ impl Station {
             FocusedBlock::AdapterInfos => {
                 Line::from(vec![Span::from("󱊷 ").bold(), Span::from(" Discard")])
             }
-            FocusedBlock::AuthKey => Line::from(vec![
+            FocusedBlock::PskAuthKey => Line::from(vec![
                 Span::from("⇄").bold(),
                 Span::from(" Hide/Show password"),
                 Span::from(" | "),

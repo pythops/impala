@@ -6,7 +6,6 @@
 
 ![](https://github.com/user-attachments/assets/55c800ff-d0aa-4454-aa6b-3990833ce530)
 
-
 ## 💡 Prerequisites
 
 A Linux based OS with [iwd](https://iwd.wiki.kernel.org/) installed.

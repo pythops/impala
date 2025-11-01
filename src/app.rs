@@ -5,13 +5,12 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::mpsc::UnboundedSender;
-use tui_input::Input;
 
 use iwdrs::{modes::Mode, session::Session};
 
 use crate::{
     adapter::Adapter, agent::AuthAgent, config::Config, device::Device, event::Event,
-    notification::Notification, reset::Reset,
+    mode::station::auth::Auth, notification::Notification, reset::Reset,
 };
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn Error>>;
@@ -22,7 +21,8 @@ pub enum FocusedBlock {
     AccessPoint,
     KnownNetworks,
     NewNetworks,
-    AuthKey,
+    PskAuthKey,
+    WpaEntrepriseAuth,
     AdapterInfos,
     AccessPointInput,
     AccessPointConnectedDevices,
@@ -39,12 +39,16 @@ pub struct App {
     pub agent: AuthAgent,
     pub reset: Reset,
     pub config: Arc<Config>,
-    pub passkey_input: Input,
-    pub show_password: bool,
+    pub auth: Auth,
+    pub network_name_requiring_auth: Option<String>,
 }
 
 impl App {
-    pub async fn new(config: Arc<Config>, mode: Mode) -> AppResult<Self> {
+    pub async fn new(
+        sender: UnboundedSender<Event>,
+        config: Arc<Config>,
+        mode: Mode,
+    ) -> AppResult<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -65,10 +69,9 @@ impl App {
         };
 
         let device = Device::new(session.clone()).await?;
-
         device.set_mode(mode).await?;
 
-        let agent = AuthAgent::new();
+        let agent = AuthAgent::new(sender);
         let _ = session.register_agent(agent.clone()).await?;
 
         let focused_block = if device.is_powered {
@@ -92,8 +95,8 @@ impl App {
             reset,
             device,
             config,
-            passkey_input: Input::default(),
-            show_password: true,
+            auth: Auth::default(),
+            network_name_requiring_auth: None,
         })
     }
 
@@ -115,26 +118,6 @@ impl App {
         };
 
         device.set_mode(mode).await?;
-        Ok(())
-    }
-
-    pub async fn send_passkey(&mut self) -> AppResult<()> {
-        let passkey: String = self.passkey_input.value().into();
-        self.agent.tx_passphrase.send(passkey).await?;
-        self.agent
-            .required
-            .store(false, std::sync::atomic::Ordering::Relaxed);
-        self.passkey_input.reset();
-
-        Ok(())
-    }
-
-    pub async fn cancel_auth(&mut self) -> AppResult<()> {
-        self.agent.tx_cancel.send(()).await?;
-        self.agent
-            .required
-            .store(false, std::sync::atomic::Ordering::Relaxed);
-        self.passkey_input.reset();
         Ok(())
     }
 

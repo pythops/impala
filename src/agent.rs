@@ -1,8 +1,11 @@
 use async_channel::{Receiver, Sender};
 use std::sync::{Arc, atomic::AtomicBool};
+use tokio::sync::mpsc::UnboundedSender;
 
 use iwdrs::error::agent::Canceled;
 use iwdrs::{agent::Agent, network::Network};
+
+use crate::event::Event;
 
 #[derive(Debug, Clone)]
 pub struct AuthAgent {
@@ -10,12 +13,17 @@ pub struct AuthAgent {
     pub rx_cancel: Receiver<()>,
     pub tx_passphrase: Sender<String>,
     pub rx_passphrase: Receiver<String>,
-    pub required: Arc<AtomicBool>,
+    pub tx_username_password: Sender<(String, String)>,
+    pub rx_username_password: Receiver<(String, String)>,
+    pub psk_required: Arc<AtomicBool>,
+    pub private_key_passphrase_required: Arc<AtomicBool>,
+    pub event_sender: UnboundedSender<Event>,
 }
 
 impl AuthAgent {
-    pub fn new() -> Self {
+    pub fn new(sender: UnboundedSender<Event>) -> Self {
         let (tx_passphrase, rx_passphrase) = async_channel::unbounded();
+        let (tx_username_password, rx_username_password) = async_channel::unbounded();
         let (tx_cancel, rx_cancel) = async_channel::unbounded();
 
         Self {
@@ -23,23 +31,24 @@ impl AuthAgent {
             rx_cancel,
             tx_passphrase,
             rx_passphrase,
-            required: Arc::new(AtomicBool::new(false)),
+            tx_username_password,
+            rx_username_password,
+            psk_required: Arc::new(AtomicBool::new(false)),
+            private_key_passphrase_required: Arc::new(AtomicBool::new(false)),
+            event_sender: sender,
         }
     }
 }
 
-impl Default for AuthAgent {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Agent for AuthAgent {
-    async fn request_passphrase(&self, _: &Network) -> Result<String, Canceled> {
-        self.required
+    async fn request_passphrase(&self, network: &Network) -> Result<String, Canceled> {
+        self.psk_required
             .store(true, std::sync::atomic::Ordering::Relaxed);
 
-        //TODO: add sender for notification
+        let network_name = network.name().await.map_err(|_| Canceled())?;
+        self.event_sender
+            .send(Event::Auth(network_name))
+            .map_err(|_| Canceled())?;
 
         tokio::select! {
         r = self.rx_passphrase.recv() =>  {
@@ -56,11 +65,26 @@ impl Agent for AuthAgent {
         }
     }
 
-    fn request_private_key_passphrase(
+    async fn request_private_key_passphrase(
         &self,
         _network: &Network,
-    ) -> impl Future<Output = Result<String, iwdrs::error::agent::Canceled>> + Send {
-        std::future::ready(Err(Canceled()))
+    ) -> Result<String, iwdrs::error::agent::Canceled> {
+        self.private_key_passphrase_required
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+
+        tokio::select! {
+        r = self.rx_passphrase.recv() =>  {
+                match r {
+                    Ok(key) => Ok(key),
+                    Err(_) => Err(Canceled()),
+                }
+            }
+
+        _ = self.rx_cancel.recv() => {
+                    Err(Canceled())
+            }
+
+        }
     }
 
     fn request_user_name_and_passphrase(
