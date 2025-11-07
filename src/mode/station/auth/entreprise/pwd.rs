@@ -1,3 +1,5 @@
+use std::{fs::OpenOptions, io::Write};
+
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     Frame,
@@ -97,8 +99,30 @@ impl PWD {
         self.state.selected().is_some()
     }
 
-    pub fn apply(&mut self) -> AppResult<()> {
+    pub fn apply(&mut self, network_name: &str) -> AppResult<()> {
         self.validate()?;
+
+        let mut file = OpenOptions::new()
+            .write(true)
+            .read(true)
+            .create(true)
+            .open(format!("/var/lib/iwd/{}.8021x", network_name))?;
+        let text = format!(
+            "
+[Security]
+EAP-Method=PWD
+EAP-Identity={}
+EAP-Password={}
+
+[Settings]
+AutoConnect=true",
+            self.identity.field.value(),
+            self.password.field.value(),
+        );
+
+        let text = text.trim_start();
+        file.write_all(text.as_bytes())?;
+
         Ok(())
     }
 

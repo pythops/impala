@@ -299,7 +299,7 @@ impl WPAEntreprise {
                             Eap::TLS(v) => v.apply(self.network_name.as_str()),
                             Eap::PAP(v) => v.apply(),
                             Eap::PEAP(v) => v.apply(),
-                            Eap::PWD(v) => v.apply(),
+                            Eap::PWD(v) => v.apply(self.network_name.as_str()),
                         };
                         if result.is_ok() {
                             sender.send(Event::EapNeworkConfigured)?;
