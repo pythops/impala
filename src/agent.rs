@@ -18,6 +18,7 @@ pub struct AuthAgent {
     pub psk_required: Arc<AtomicBool>,
     pub private_key_passphrase_required: Arc<AtomicBool>,
     pub password_required: Arc<AtomicBool>,
+    pub username_and_password_required: Arc<AtomicBool>,
     pub event_sender: UnboundedSender<Event>,
 }
 
@@ -37,6 +38,7 @@ impl AuthAgent {
             psk_required: Arc::new(AtomicBool::new(false)),
             private_key_passphrase_required: Arc::new(AtomicBool::new(false)),
             password_required: Arc::new(AtomicBool::new(false)),
+            username_and_password_required: Arc::new(AtomicBool::new(false)),
             event_sender: sender,
         }
     }
@@ -94,11 +96,30 @@ impl Agent for AuthAgent {
         }
     }
 
-    fn request_user_name_and_passphrase(
+    async fn request_user_name_and_passphrase(
         &self,
-        _network: &Network,
-    ) -> impl Future<Output = Result<(String, String), iwdrs::error::agent::Canceled>> + Send {
-        std::future::ready(Err(Canceled()))
+        network: &Network,
+    ) -> Result<(String, String), iwdrs::error::agent::Canceled> {
+        self.username_and_password_required
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+        let network_name = network.name().await.map_err(|_| Canceled())?;
+        self.event_sender
+            .send(Event::AuthReqUsernameAndPassword(network_name))
+            .map_err(|_| Canceled())?;
+
+        tokio::select! {
+        r = self.rx_username_password.recv() =>  {
+                match r {
+                    Ok((username, password)) => Ok((username, password)),
+                    Err(_) => Err(Canceled()),
+                }
+            }
+
+        _ = self.rx_cancel.recv() => {
+                    Err(Canceled())
+            }
+
+        }
     }
 
     async fn request_user_password(

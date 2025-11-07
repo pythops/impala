@@ -261,20 +261,37 @@ pub async fn handle_key_events(
                         }
                     }
                 }
+                FocusedBlock::RequestUsernameAndPassword => {
+                    if let Some(req) = &mut app.auth.request_username_and_password {
+                        match key_event.code {
+                            KeyCode::Enter => {
+                                req.submit(&app.agent).await?;
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+
+                            KeyCode::Esc => {
+                                req.cancel(&app.agent).await?;
+                                app.auth.request_username_and_password = None;
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+
+                            _ => {
+                                req.handle_key_events(key_event, sender).await?;
+                            }
+                        }
+                    }
+                }
 
                 FocusedBlock::WpaEntrepriseAuth => match key_event.code {
                     KeyCode::Esc => {
                         app.focused_block = FocusedBlock::NewNetworks;
-                        app.auth.reset();
+                        app.auth.eap = None;
                     }
 
                     _ => {
-                        app.auth
-                            .eap
-                            .as_mut()
-                            .unwrap()
-                            .handle_key_events(key_event, sender)
-                            .await?
+                        if let Some(eap) = &mut app.auth.eap {
+                            eap.handle_key_events(key_event, sender).await?
+                        }
                     }
                 },
                 FocusedBlock::AdapterInfos => {

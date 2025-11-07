@@ -65,6 +65,14 @@ async fn main() -> AppResult<()> {
                 app.focused_block = impala::app::FocusedBlock::KnownNetworks;
             }
 
+            Event::UsernameAndPasswordSubmit => {
+                if let Some(req) = &mut app.auth.request_username_and_password {
+                    req.submit(&app.agent).await?;
+                    app.focused_block = impala::app::FocusedBlock::KnownNetworks;
+                    app.auth.request_username_and_password = None;
+                }
+            }
+
             Event::ConfigureNewEapNetwork(network_name) => {
                 app.auth.init_eap(network_name);
                 app.focused_block = impala::app::FocusedBlock::WpaEntrepriseAuth;
@@ -78,6 +86,11 @@ async fn main() -> AppResult<()> {
             Event::AuthRequestPassword((network_name, user_name)) => {
                 app.auth.init_request_password(network_name, user_name);
                 app.focused_block = impala::app::FocusedBlock::RequestPassword
+            }
+
+            Event::AuthReqUsernameAndPassword(network_name) => {
+                app.auth.init_request_username_and_password(network_name);
+                app.focused_block = impala::app::FocusedBlock::RequestUsernameAndPassword
             }
             _ => {}
         }

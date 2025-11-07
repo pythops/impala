@@ -61,6 +61,15 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             req.render(frame);
         }
 
+        if app
+            .agent
+            .username_and_password_required
+            .load(Ordering::Relaxed)
+            && let Some(req) = &app.auth.request_username_and_password
+        {
+            req.render(frame);
+        }
+
         // Notifications
         for (index, notification) in app.notifications.iter().enumerate() {
             notification.render(index, frame);
