@@ -89,7 +89,7 @@ impl Device {
             match self.mode {
                 Mode::Station => {
                     if let Some(station) = &mut self.station {
-                        if station.diagnostic.is_none() {
+                        if station.diagnostic.is_none() && station.connected_network.is_some() {
                             sender.send(Event::Reset(Mode::Station))?;
                         } else {
                             station.refresh().await?;

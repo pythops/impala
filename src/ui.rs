@@ -28,17 +28,37 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             }
         };
 
+        if app.focused_block == FocusedBlock::WpaEntrepriseAuth
+            && let Some(eap) = &mut app.auth.eap
+        {
+            eap.render(frame);
+        }
+
         if app.focused_block == FocusedBlock::AdapterInfos {
             app.adapter.render(frame, app.device.address.clone());
         }
 
-        // Auth Popup
         if app.agent.psk_required.load(Ordering::Relaxed) {
             app.focused_block = FocusedBlock::PskAuthKey;
 
             app.auth
                 .psk
                 .render(frame, app.network_name_requiring_auth.clone());
+        }
+
+        if app
+            .agent
+            .private_key_passphrase_required
+            .load(Ordering::Relaxed)
+            && let Some(req) = &app.auth.request_key_passphrase
+        {
+            req.render(frame);
+        }
+
+        if app.agent.password_required.load(Ordering::Relaxed)
+            && let Some(req) = &app.auth.request_password
+        {
+            req.render(frame);
         }
 
         // Notifications

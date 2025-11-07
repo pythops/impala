@@ -55,8 +55,29 @@ async fn main() -> AppResult<()> {
                 }
                 app = App::new(tui.events.sender.clone(), config.clone(), mode).await?;
             }
+
             Event::Auth(network_name) => {
                 app.network_name_requiring_auth = Some(network_name);
+            }
+
+            Event::EapNeworkConfigured => {
+                app.auth.reset();
+                app.focused_block = impala::app::FocusedBlock::KnownNetworks;
+            }
+
+            Event::ConfigureNewEapNetwork(network_name) => {
+                app.auth.init_eap(network_name);
+                app.focused_block = impala::app::FocusedBlock::WpaEntrepriseAuth;
+            }
+
+            Event::AuthReqKeyPassphrase(network_name) => {
+                app.auth.init_request_key_passphrase(network_name.clone());
+                app.focused_block = impala::app::FocusedBlock::RequestKeyPasshphrase;
+            }
+
+            Event::AuthRequestPassword((network_name, user_name)) => {
+                app.auth.init_request_password(network_name, user_name);
+                app.focused_block = impala::app::FocusedBlock::RequestPassword
             }
             _ => {}
         }

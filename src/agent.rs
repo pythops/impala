@@ -17,6 +17,7 @@ pub struct AuthAgent {
     pub rx_username_password: Receiver<(String, String)>,
     pub psk_required: Arc<AtomicBool>,
     pub private_key_passphrase_required: Arc<AtomicBool>,
+    pub password_required: Arc<AtomicBool>,
     pub event_sender: UnboundedSender<Event>,
 }
 
@@ -35,6 +36,7 @@ impl AuthAgent {
             rx_username_password,
             psk_required: Arc::new(AtomicBool::new(false)),
             private_key_passphrase_required: Arc::new(AtomicBool::new(false)),
+            password_required: Arc::new(AtomicBool::new(false)),
             event_sender: sender,
         }
     }
@@ -67,10 +69,15 @@ impl Agent for AuthAgent {
 
     async fn request_private_key_passphrase(
         &self,
-        _network: &Network,
+        network: &Network,
     ) -> Result<String, iwdrs::error::agent::Canceled> {
         self.private_key_passphrase_required
             .store(true, std::sync::atomic::Ordering::Relaxed);
+
+        let network_name = network.name().await.map_err(|_| Canceled())?;
+        self.event_sender
+            .send(Event::AuthReqKeyPassphrase(network_name))
+            .map_err(|_| Canceled())?;
 
         tokio::select! {
         r = self.rx_passphrase.recv() =>  {
@@ -94,11 +101,33 @@ impl Agent for AuthAgent {
         std::future::ready(Err(Canceled()))
     }
 
-    fn request_user_password(
+    async fn request_user_password(
         &self,
-        _network: &Network,
-        _user_name: Option<&String>,
-    ) -> impl Future<Output = Result<(String, String), iwdrs::error::agent::Canceled>> + Send {
-        std::future::ready(Err(Canceled()))
+        network: &Network,
+        user_name: Option<&String>,
+    ) -> Result<String, iwdrs::error::agent::Canceled> {
+        self.password_required
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+        let network_name = network.name().await.map_err(|_| Canceled())?;
+        self.event_sender
+            .send(Event::AuthRequestPassword((
+                network_name,
+                user_name.cloned(),
+            )))
+            .map_err(|_| Canceled())?;
+
+        tokio::select! {
+        r = self.rx_passphrase.recv() =>  {
+                match r {
+                    Ok(password) => Ok(password),
+                    Err(_) => Err(Canceled()),
+                }
+            }
+
+        _ = self.rx_cancel.recv() => {
+                    Err(Canceled())
+            }
+
+        }
     }
 }

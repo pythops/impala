@@ -26,6 +26,8 @@ pub enum FocusedBlock {
     AdapterInfos,
     AccessPointInput,
     AccessPointConnectedDevices,
+    RequestKeyPasshphrase,
+    RequestPassword,
 }
 
 #[derive(Debug)]

@@ -14,7 +14,7 @@ use ratatui::{
     layout::{Constraint, Direction, Flex, Layout},
     style::{Color, Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Padding, Row, Table, TableState},
+    widgets::{Block, BorderType, Borders, Padding, Paragraph, Row, Table, TableState},
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -271,7 +271,7 @@ impl Station {
                     Constraint::Min(5),
                     Constraint::Min(5),
                     Constraint::Length(5),
-                    Constraint::Length(1),
+                    Constraint::Length(2),
                 ])
                 .margin(1)
                 .split(frame.area());
@@ -613,7 +613,7 @@ impl Station {
         );
 
         let help_message = match focused_block {
-            FocusedBlock::Device => Line::from(vec![
+            FocusedBlock::Device => vec![Line::from(vec![
                 Span::from(config.station.start_scanning.to_string()).bold(),
                 Span::from(" Scan"),
                 Span::from(" | "),
@@ -628,41 +628,84 @@ impl Station {
                 Span::from(" | "),
                 Span::from("⇄").bold(),
                 Span::from(" Nav"),
-            ]),
-            FocusedBlock::KnownNetworks => Line::from(vec![
-                Span::from("k,").bold(),
-                Span::from("  Up"),
-                Span::from(" | "),
-                Span::from("j,").bold(),
-                Span::from("  Down"),
-                Span::from(" | "),
-                Span::from(if config.station.toggle_connect == ' ' {
-                    "󱁐  or ↵ ".to_string()
+            ])],
+            FocusedBlock::KnownNetworks => {
+                if frame.area().width <= 120 {
+                    vec![
+                        Line::from(vec![
+                            Span::from(if config.station.toggle_connect == ' ' {
+                                "󱁐  or ↵ ".to_string()
+                            } else {
+                                config.station.toggle_connect.to_string()
+                            })
+                            .bold(),
+                            Span::from(" Dis/connect"),
+                            Span::from(" | "),
+                            Span::from(config.station.known_network.remove.to_string()).bold(),
+                            Span::from(" Remove"),
+                            Span::from(" | "),
+                            Span::from(config.station.known_network.toggle_autoconnect.to_string())
+                                .bold(),
+                            Span::from(" Autoconnect"),
+                            Span::from(" | "),
+                            Span::from(config.station.start_scanning.to_string()).bold(),
+                            Span::from(" Scan"),
+                        ]),
+                        Line::from(vec![
+                            Span::from("k,").bold(),
+                            Span::from("  Up"),
+                            Span::from(" | "),
+                            Span::from("j,").bold(),
+                            Span::from("  Down"),
+                            Span::from(" | "),
+                            Span::from("󱊷 ").bold(),
+                            Span::from(" Discard"),
+                            Span::from(" | "),
+                            Span::from("ctrl+r").bold(),
+                            Span::from(" Switch Mode"),
+                            Span::from(" | "),
+                            Span::from("⇄").bold(),
+                            Span::from(" Nav"),
+                        ]),
+                    ]
                 } else {
-                    config.station.toggle_connect.to_string()
-                })
-                .bold(),
-                Span::from(" Dis/connect"),
-                Span::from(" | "),
-                Span::from(config.station.known_network.remove.to_string()).bold(),
-                Span::from(" Remove"),
-                Span::from(" | "),
-                Span::from(config.station.known_network.toggle_autoconnect.to_string()).bold(),
-                Span::from(" Autoconnect"),
-                Span::from(" | "),
-                Span::from(config.station.start_scanning.to_string()).bold(),
-                Span::from(" Scan"),
-                Span::from(" | "),
-                Span::from("󱊷 ").bold(),
-                Span::from(" Discard"),
-                Span::from(" | "),
-                Span::from("ctrl+r").bold(),
-                Span::from(" Switch Mode"),
-                Span::from(" | "),
-                Span::from("⇄").bold(),
-                Span::from(" Nav"),
-            ]),
-            FocusedBlock::NewNetworks => Line::from(vec![
+                    vec![Line::from(vec![
+                        Span::from("k,").bold(),
+                        Span::from("  Up"),
+                        Span::from(" | "),
+                        Span::from("j,").bold(),
+                        Span::from("  Down"),
+                        Span::from(" | "),
+                        Span::from(if config.station.toggle_connect == ' ' {
+                            "󱁐  or ↵ ".to_string()
+                        } else {
+                            config.station.toggle_connect.to_string()
+                        })
+                        .bold(),
+                        Span::from(" Dis/connect"),
+                        Span::from(" | "),
+                        Span::from(config.station.known_network.remove.to_string()).bold(),
+                        Span::from(" Remove"),
+                        Span::from(" | "),
+                        Span::from(config.station.known_network.toggle_autoconnect.to_string())
+                            .bold(),
+                        Span::from(" Autoconnect"),
+                        Span::from(" | "),
+                        Span::from(config.station.start_scanning.to_string()).bold(),
+                        Span::from(" Scan"),
+                        Span::from(" | "),
+                        Span::from("󱊷 ").bold(),
+                        Span::from(" Discard"),
+                        Span::from(" | "),
+                        Span::from("ctrl+r").bold(),
+                        Span::from(" Switch Mode"),
+                        Span::from(" | "),
+                        Span::from("⇄").bold(),
+                        Span::from(" Nav"),
+                    ])]
+                }
+            }
+            FocusedBlock::NewNetworks => vec![Line::from(vec![
                 Span::from("k,").bold(),
                 Span::from("  Up"),
                 Span::from(" | "),
@@ -683,21 +726,37 @@ impl Station {
                 Span::from(" | "),
                 Span::from("⇄").bold(),
                 Span::from(" Nav"),
-            ]),
+            ])],
             FocusedBlock::AdapterInfos => {
-                Line::from(vec![Span::from("󱊷 ").bold(), Span::from(" Discard")])
+                vec![Line::from(vec![
+                    Span::from("󱊷 ").bold(),
+                    Span::from(" Discard"),
+                ])]
             }
-            FocusedBlock::PskAuthKey => Line::from(vec![
+            FocusedBlock::PskAuthKey => vec![Line::from(vec![
                 Span::from("⇄").bold(),
                 Span::from(" Hide/Show password"),
                 Span::from(" | "),
                 Span::from("󱊷 ").bold(),
                 Span::from(" Discard"),
-            ]),
-            _ => Line::from(""),
+            ])],
+            FocusedBlock::WpaEntrepriseAuth => vec![Line::from(vec![
+                Span::from("h,l,←,→").bold(),
+                Span::from(" Switch EAP"),
+                Span::from(" | "),
+                Span::from(" ↵ ").bold(),
+                Span::from(" Connect"),
+                Span::from(" | "),
+                Span::from("󱊷 ").bold(),
+                Span::from(" Discard"),
+                Span::from(" | "),
+                Span::from("⇄").bold(),
+                Span::from(" Nav"),
+            ])],
+            _ => vec![Line::from("")],
         };
 
-        let help_message = help_message.centered().blue();
+        let help_message = Paragraph::new(help_message).centered().blue();
 
         frame.render_widget(help_message, help_block);
     }
