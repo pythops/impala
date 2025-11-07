@@ -298,7 +298,7 @@ impl WPAEntreprise {
                         let result = match &mut self.eap {
                             Eap::TLS(v) => v.apply(self.network_name.as_str()),
                             Eap::PAP(v) => v.apply(),
-                            Eap::PEAP(v) => v.apply(),
+                            Eap::PEAP(v) => v.apply(self.network_name.as_str()),
                             Eap::PWD(v) => v.apply(self.network_name.as_str()),
                         };
                         if result.is_ok() {

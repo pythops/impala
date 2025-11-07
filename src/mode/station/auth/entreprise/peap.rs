@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{fs::OpenOptions, io::Write, path::Path};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
@@ -59,11 +59,20 @@ impl PEAP {
         self.ca_cert.error = None;
         if self.ca_cert.field.value().is_empty() {
             self.ca_cert.error = Some("Required field.".to_string());
+            return;
         }
-        if !Path::new(self.ca_cert.field.value()).exists() {
-            self.ca_cert.error = Some("The CA file does not exist.".to_string());
+        let path = Path::new(self.ca_cert.field.value());
+
+        if !path.is_absolute() {
+            self.ca_cert.error = Some("The file path should be absolute.".to_string());
+            return;
+        }
+
+        if !path.exists() {
+            self.ca_cert.error = Some("The file does not exist.".to_string());
         }
     }
+
     pub fn validate_server_domain_mask(&mut self) {
         self.server_domain_mask.error = None;
         if self.server_domain_mask.field.value().is_empty() {
@@ -134,8 +143,36 @@ impl PEAP {
         self.state.selected().is_some()
     }
 
-    pub fn apply(&mut self) -> AppResult<()> {
+    pub fn apply(&mut self, network_name: &str) -> AppResult<()> {
         self.validate()?;
+        let mut file = OpenOptions::new()
+            .write(true)
+            .read(true)
+            .create(true)
+            .open(format!("/var/lib/iwd/{}.8021x", network_name))?;
+        let text = format!(
+            "
+[Security]
+EAP-Method=PEAP
+EAP-PEAP-CACert={}
+EAP-Identity={}
+EAP-PEAP-ServerDomainMask={}
+EAP-PEAP-Phase2-Method=MSCHAPV2
+EAP-PEAP-Phase2-Identity={}
+EAP-PEAP-Phase2-Password={}
+
+[Settings]
+AutoConnect=true",
+            self.ca_cert.field.value(),
+            self.identity.field.value(),
+            self.server_domain_mask.field.value(),
+            self.phase2_identity.field.value(),
+            self.phase2_password.field.value(),
+        );
+
+        let text = text.trim_start();
+        file.write_all(text.as_bytes())?;
+
         Ok(())
     }
 
