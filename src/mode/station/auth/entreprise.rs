@@ -11,11 +11,11 @@ use ratatui::{
 
 use crate::{app::AppResult, event::Event};
 
-pub mod pap;
 pub mod peap;
 pub mod pwd;
 pub mod requests;
 pub mod tls;
+pub mod ttls;
 
 const ERROR_PADDING: &str = "                      ";
 
@@ -44,7 +44,7 @@ pub struct WPAEntreprise {
 
 #[derive(Debug)]
 pub enum Eap {
-    PAP(pap::PAP),
+    TTLS(ttls::TTLS),
     PEAP(peap::PEAP),
     PWD(pwd::PWD),
     TLS(tls::TLS),
@@ -83,8 +83,8 @@ impl WPAEntreprise {
                             v.focused_input = tls::FocusedInput::CaCert;
                             v.next();
                         }
-                        Eap::PAP(v) => {
-                            v.focused_input = pap::FocusedInput::CaCert;
+                        Eap::TTLS(v) => {
+                            v.focused_input = ttls::FocusedInput::CaCert;
                             v.next();
                         }
                         Eap::PEAP(v) => {
@@ -120,21 +120,25 @@ impl WPAEntreprise {
                             v.deselect();
                         }
                     },
-                    Eap::PAP(v) => match v.focused_input {
-                        pap::FocusedInput::CaCert => {
-                            v.focused_input = pap::FocusedInput::ServerDomainMask;
+                    Eap::TTLS(v) => match v.focused_input {
+                        ttls::FocusedInput::CaCert => {
+                            v.focused_input = ttls::FocusedInput::ServerDomainMask;
                             v.next();
                         }
-                        pap::FocusedInput::ServerDomainMask => {
-                            v.focused_input = pap::FocusedInput::Identity;
+                        ttls::FocusedInput::ServerDomainMask => {
+                            v.focused_input = ttls::FocusedInput::Identity;
                             v.next();
                         }
-                        pap::FocusedInput::Identity => {
-                            v.focused_input = pap::FocusedInput::Password;
+                        ttls::FocusedInput::Identity => {
+                            v.focused_input = ttls::FocusedInput::Phase2Identity;
                             v.next();
                         }
-                        pap::FocusedInput::Password => {
-                            v.focused_input = pap::FocusedInput::CaCert;
+                        ttls::FocusedInput::Phase2Identity => {
+                            v.focused_input = ttls::FocusedInput::Phase2Password;
+                            v.next();
+                        }
+                        ttls::FocusedInput::Phase2Password => {
+                            v.focused_input = ttls::FocusedInput::CaCert;
                             self.focused_section = FocusedSection::Apply;
                             v.next();
                         }
@@ -201,21 +205,25 @@ impl WPAEntreprise {
                             v.previous();
                         }
                     },
-                    Eap::PAP(v) => match v.focused_input {
-                        pap::FocusedInput::CaCert => {
+                    Eap::TTLS(v) => match v.focused_input {
+                        ttls::FocusedInput::CaCert => {
                             self.focused_section = FocusedSection::EapChoice;
                             v.previous();
                         }
-                        pap::FocusedInput::ServerDomainMask => {
-                            v.focused_input = pap::FocusedInput::CaCert;
+                        ttls::FocusedInput::ServerDomainMask => {
+                            v.focused_input = ttls::FocusedInput::CaCert;
                             v.previous();
                         }
-                        pap::FocusedInput::Identity => {
-                            v.focused_input = pap::FocusedInput::ServerDomainMask;
+                        ttls::FocusedInput::Identity => {
+                            v.focused_input = ttls::FocusedInput::ServerDomainMask;
                             v.previous();
                         }
-                        pap::FocusedInput::Password => {
-                            v.focused_input = pap::FocusedInput::Identity;
+                        ttls::FocusedInput::Phase2Identity => {
+                            v.focused_input = ttls::FocusedInput::Identity;
+                            v.previous();
+                        }
+                        ttls::FocusedInput::Phase2Password => {
+                            v.focused_input = ttls::FocusedInput::Phase2Identity;
                             v.previous();
                         }
                     },
@@ -258,8 +266,8 @@ impl WPAEntreprise {
                         self.focused_section = FocusedSection::Eap;
                         v.set_last();
                     }
-                    Eap::PAP(v) => {
-                        v.focused_input = pap::FocusedInput::Password;
+                    Eap::TTLS(v) => {
+                        v.focused_input = ttls::FocusedInput::Phase2Password;
                         self.focused_section = FocusedSection::Eap;
                         v.set_last();
                     }
@@ -278,17 +286,17 @@ impl WPAEntreprise {
             _ => match self.focused_section {
                 FocusedSection::EapChoice => match key_event.code {
                     KeyCode::Char('l') | KeyCode::Right => match self.eap {
-                        Eap::PAP(_) => self.eap = Eap::PEAP(peap::PEAP::new()),
+                        Eap::TTLS(_) => self.eap = Eap::PEAP(peap::PEAP::new()),
                         Eap::PEAP(_) => self.eap = Eap::PWD(pwd::PWD::new()),
                         Eap::PWD(_) => self.eap = Eap::TLS(tls::TLS::new()),
-                        Eap::TLS(_) => self.eap = Eap::PAP(pap::PAP::new()),
+                        Eap::TLS(_) => self.eap = Eap::TTLS(ttls::TTLS::new()),
                     },
                     KeyCode::Char('h') | KeyCode::Left => {}
                     _ => {}
                 },
                 FocusedSection::Eap => match &mut self.eap {
                     Eap::TLS(v) => v.handle_key_events(key_event, sender).await?,
-                    Eap::PAP(v) => v.handle_key_events(key_event, sender).await?,
+                    Eap::TTLS(v) => v.handle_key_events(key_event, sender).await?,
                     Eap::PEAP(v) => v.handle_key_events(key_event, sender).await?,
                     Eap::PWD(v) => v.handle_key_events(key_event, sender).await?,
                 },
@@ -297,7 +305,7 @@ impl WPAEntreprise {
                     if let KeyCode::Enter = key_event.code {
                         let result = match &mut self.eap {
                             Eap::TLS(v) => v.apply(self.network_name.as_str()),
-                            Eap::PAP(v) => v.apply(),
+                            Eap::TTLS(v) => v.apply(self.network_name.as_str()),
                             Eap::PEAP(v) => v.apply(self.network_name.as_str()),
                             Eap::PWD(v) => v.apply(self.network_name.as_str()),
                         };
@@ -360,7 +368,7 @@ impl WPAEntreprise {
         );
 
         let choice = match self.eap {
-            Eap::PAP(_) => Text::from(" < PAP >"),
+            Eap::TTLS(_) => Text::from(" < TTLS >"),
             Eap::PEAP(_) => Text::from(" < PEAP >"),
             Eap::PWD(_) => Text::from(" < PWD >"),
             Eap::TLS(_) => Text::from(" < TLS >"),
@@ -382,32 +390,19 @@ impl WPAEntreprise {
 
         match &mut self.eap {
             Eap::TLS(v) => {
-                // if self.focused_section == FocusedSection::Eap && !v.selected() {
-                //     v.next();
-                // }
                 v.render(frame, eap_block);
             }
             Eap::PWD(v) => {
-                // if self.focused_section == FocusedSection::Eap && !v.selected() {
-                //     v.next();
-                // }
                 v.render(frame, eap_block);
             }
-            Eap::PAP(v) => {
-                // if self.focused_section == FocusedSection::Eap && !v.selected() {
-                //     v.next();
-                // }
+            Eap::TTLS(v) => {
                 v.render(frame, eap_block);
             }
             Eap::PEAP(v) => {
-                // if self.focused_section == FocusedSection::Eap && !v.selected() {
-                //     v.next();
-                // }
                 v.render(frame, eap_block);
             }
         }
 
-        // Apply Block
         let text = if self.focused_section == FocusedSection::Apply {
             Text::from("Apply").bold().green().centered()
         } else {

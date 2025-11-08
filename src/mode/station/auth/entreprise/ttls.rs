@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{fs::OpenOptions, io::Write, path::Path};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
@@ -24,15 +24,17 @@ pub enum FocusedInput {
     CaCert,
     ServerDomainMask,
     Identity,
-    Password,
+    Phase2Identity,
+    Phase2Password,
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct PAP {
+pub struct TTLS {
     ca_cert: UserInputField,
     server_domain_mask: UserInputField,
     identity: UserInputField,
-    password: UserInputField,
+    phase2_identity: UserInputField,
+    phase2_password: UserInputField,
     pub focused_input: FocusedInput,
     state: ListState,
 }
@@ -43,7 +45,7 @@ struct UserInputField {
     error: Option<String>,
 }
 
-impl PAP {
+impl TTLS {
     pub fn new() -> Self {
         Self::default()
     }
@@ -52,9 +54,17 @@ impl PAP {
         self.ca_cert.error = None;
         if self.ca_cert.field.value().is_empty() {
             self.ca_cert.error = Some("Required field.".to_string());
+            return;
         }
-        if !Path::new(self.ca_cert.field.value()).exists() {
-            self.ca_cert.error = Some("The CA file does not exist.".to_string());
+        let path = Path::new(self.ca_cert.field.value());
+
+        if !path.is_absolute() {
+            self.ca_cert.error = Some("The file path should be absolute.".to_string());
+            return;
+        }
+
+        if !path.exists() {
+            self.ca_cert.error = Some("The file does not exist.".to_string());
         }
     }
     pub fn validate_server_domain_mask(&mut self) {
@@ -69,11 +79,17 @@ impl PAP {
             self.identity.error = Some("Required field.".to_string());
         }
     }
+    pub fn validate_phase2_identity(&mut self) {
+        self.identity.error = None;
+        if self.phase2_identity.field.value().is_empty() {
+            self.phase2_identity.error = Some("Required field.".to_string());
+        }
+    }
 
-    pub fn validate_password(&mut self) {
-        self.password.error = None;
-        if self.password.field.value().is_empty() {
-            self.password.error = Some("Required field.".to_string());
+    pub fn validate_phase2_password(&mut self) {
+        self.phase2_password.error = None;
+        if self.phase2_password.field.value().is_empty() {
+            self.phase2_password.error = Some("Required field.".to_string());
         }
     }
 
@@ -81,11 +97,13 @@ impl PAP {
         self.validate_ca_cert();
         self.validate_server_domain_mask();
         self.validate_identity();
-        self.validate_password();
+        self.validate_phase2_identity();
+        self.validate_phase2_password();
         if self.ca_cert.error.is_some()
             | self.identity.error.is_some()
             | self.server_domain_mask.error.is_some()
-            | self.password.error.is_some()
+            | self.phase2_identity.error.is_some()
+            | self.phase2_password.error.is_some()
         {
             return Err("Valdidation Error".into());
         }
@@ -94,7 +112,7 @@ impl PAP {
 
     pub fn next(&mut self) {
         let i = match self.state.selected() {
-            Some(6) => None,
+            Some(8) => None,
             Some(i) => Some(i + 2),
             None => Some(0),
         };
@@ -105,22 +123,50 @@ impl PAP {
         let i = match self.state.selected() {
             Some(0) => None,
             Some(i) => Some(i.saturating_sub(2)),
-            None => Some(6),
+            None => Some(8),
         };
 
         self.state.select(i);
     }
 
     pub fn set_last(&mut self) {
-        self.state.select(Some(6));
+        self.state.select(Some(8));
     }
 
     pub fn selected(&self) -> bool {
         self.state.selected().is_some()
     }
 
-    pub fn apply(&mut self) -> AppResult<()> {
+    pub fn apply(&mut self, network_name: &str) -> AppResult<()> {
         self.validate()?;
+        let mut file = OpenOptions::new()
+            .write(true)
+            .read(true)
+            .create(true)
+            .open(format!("/var/lib/iwd/{}.8021x", network_name))?;
+        let text = format!(
+            "
+[Security]
+EAP-Method=TTLS
+EAP-TTLS-CACert={}
+EAP-Identity={}
+EAP-TTLS-ServerDomainMask={}
+EAP-TTLS-Phase2-Method=Tunneled-PAP
+EAP-TTLS-Phase2-Identity={}
+EAP-TTLS-Phase2-Password={}
+
+[Settings]
+AutoConnect=true",
+            self.ca_cert.field.value(),
+            self.identity.field.value(),
+            self.server_domain_mask.field.value(),
+            self.phase2_identity.field.value(),
+            self.phase2_password.field.value(),
+        );
+
+        let text = text.trim_start();
+        file.write_all(text.as_bytes())?;
+
         Ok(())
     }
 
@@ -139,18 +185,23 @@ impl PAP {
                         .field
                         .handle_event(&crossterm::event::Event::Key(key_event));
                 }
+                FocusedInput::ServerDomainMask => {
+                    self.server_domain_mask
+                        .field
+                        .handle_event(&crossterm::event::Event::Key(key_event));
+                }
                 FocusedInput::Identity => {
                     self.identity
                         .field
                         .handle_event(&crossterm::event::Event::Key(key_event));
                 }
-                FocusedInput::Password => {
-                    self.password
+                FocusedInput::Phase2Identity => {
+                    self.phase2_identity
                         .field
                         .handle_event(&crossterm::event::Event::Key(key_event));
                 }
-                FocusedInput::ServerDomainMask => {
-                    self.server_domain_mask
+                FocusedInput::Phase2Password => {
+                    self.phase2_password
                         .field
                         .handle_event(&crossterm::event::Event::Key(key_event));
                 }
@@ -228,14 +279,29 @@ impl PAP {
             }])
             .red(),
             Line::from(vec![
-                Span::from(pad_string(" Password", 20))
+                Span::from(pad_string(" Phase2 Identity", 20))
                     .bold()
                     .bg(Color::DarkGray),
                 Span::from("  "),
-                Span::from(pad_string(self.password.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.phase2_identity.field.value(), 50)).bg(Color::DarkGray),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
-                if let Some(error) = &self.password.error {
+                if let Some(error) = &self.phase2_identity.error {
+                    Span::from(error)
+                } else {
+                    Span::from("")
+                }
+            }])
+            .red(),
+            Line::from(vec![
+                Span::from(pad_string(" Phase2 Password", 20))
+                    .bold()
+                    .bg(Color::DarkGray),
+                Span::from("  "),
+                Span::from(pad_string(self.phase2_password.field.value(), 50)).bg(Color::DarkGray),
+            ]),
+            Line::from(vec![Span::from(ERROR_PADDING), {
+                if let Some(error) = &self.phase2_password.error {
                     Span::from(error)
                 } else {
                     Span::from("")
