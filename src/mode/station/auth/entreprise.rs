@@ -11,6 +11,7 @@ use ratatui::{
 
 use crate::{app::AppResult, event::Event};
 
+pub mod eduroam;
 pub mod peap;
 pub mod pwd;
 pub mod requests;
@@ -48,6 +49,7 @@ pub enum Eap {
     PEAP(peap::PEAP),
     PWD(pwd::PWD),
     TLS(tls::TLS),
+    Eduroam(eduroam::Eduroam),
 }
 
 impl Default for Eap {
@@ -93,6 +95,10 @@ impl WPAEntreprise {
                         }
                         Eap::PWD(v) => {
                             v.focused_input = pwd::FocusedInput::Identity;
+                            v.next();
+                        }
+                        Eap::Eduroam(v) => {
+                            v.focused_input = eduroam::FocusedInput::Identity;
                             v.next();
                         }
                     };
@@ -173,6 +179,21 @@ impl WPAEntreprise {
                         }
                         pwd::FocusedInput::Password => {
                             v.focused_input = pwd::FocusedInput::Identity;
+                            self.focused_section = FocusedSection::Apply;
+                            v.next();
+                        }
+                    },
+                    Eap::Eduroam(v) => match v.focused_input {
+                        eduroam::FocusedInput::Identity => {
+                            v.focused_input = eduroam::FocusedInput::Phase2Identity;
+                            v.next();
+                        }
+                        eduroam::FocusedInput::Phase2Identity => {
+                            v.focused_input = eduroam::FocusedInput::Phase2Password;
+                            v.next();
+                        }
+                        eduroam::FocusedInput::Phase2Password => {
+                            v.focused_input = eduroam::FocusedInput::Identity;
                             self.focused_section = FocusedSection::Apply;
                             v.next();
                         }
@@ -259,6 +280,20 @@ impl WPAEntreprise {
                             v.previous();
                         }
                     },
+                    Eap::Eduroam(v) => match v.focused_input {
+                        eduroam::FocusedInput::Identity => {
+                            self.focused_section = FocusedSection::EapChoice;
+                            v.previous();
+                        }
+                        eduroam::FocusedInput::Phase2Identity => {
+                            v.focused_input = eduroam::FocusedInput::Identity;
+                            v.previous();
+                        }
+                        eduroam::FocusedInput::Phase2Password => {
+                            v.focused_input = eduroam::FocusedInput::Phase2Identity;
+                            v.previous();
+                        }
+                    },
                 },
                 FocusedSection::Apply => match &mut self.eap {
                     Eap::TLS(v) => {
@@ -281,6 +316,11 @@ impl WPAEntreprise {
                         self.focused_section = FocusedSection::Eap;
                         v.set_last();
                     }
+                    Eap::Eduroam(v) => {
+                        v.focused_input = eduroam::FocusedInput::Phase2Password;
+                        self.focused_section = FocusedSection::Eap;
+                        v.set_last();
+                    }
                 },
             },
             _ => match self.focused_section {
@@ -289,7 +329,8 @@ impl WPAEntreprise {
                         Eap::TTLS(_) => self.eap = Eap::PEAP(peap::PEAP::new()),
                         Eap::PEAP(_) => self.eap = Eap::PWD(pwd::PWD::new()),
                         Eap::PWD(_) => self.eap = Eap::TLS(tls::TLS::new()),
-                        Eap::TLS(_) => self.eap = Eap::TTLS(ttls::TTLS::new()),
+                        Eap::TLS(_) => self.eap = Eap::Eduroam(eduroam::Eduroam::new()),
+                        Eap::Eduroam(_) => self.eap = Eap::TTLS(ttls::TTLS::new()),
                     },
                     KeyCode::Char('h') | KeyCode::Left => {}
                     _ => {}
@@ -299,6 +340,7 @@ impl WPAEntreprise {
                     Eap::TTLS(v) => v.handle_key_events(key_event, sender).await?,
                     Eap::PEAP(v) => v.handle_key_events(key_event, sender).await?,
                     Eap::PWD(v) => v.handle_key_events(key_event, sender).await?,
+                    Eap::Eduroam(v) => v.handle_key_events(key_event, sender).await?,
                 },
 
                 FocusedSection::Apply => {
@@ -308,6 +350,7 @@ impl WPAEntreprise {
                             Eap::TTLS(v) => v.apply(self.network_name.as_str()),
                             Eap::PEAP(v) => v.apply(self.network_name.as_str()),
                             Eap::PWD(v) => v.apply(self.network_name.as_str()),
+                            Eap::Eduroam(v) => v.apply(),
                         };
                         if result.is_ok() {
                             sender.send(Event::EapNeworkConfigured)?;
@@ -372,6 +415,7 @@ impl WPAEntreprise {
             Eap::PEAP(_) => Text::from(" < PEAP >"),
             Eap::PWD(_) => Text::from(" < PWD >"),
             Eap::TLS(_) => Text::from(" < TLS >"),
+            Eap::Eduroam(_) => Text::from(" < Eduroam >"),
         };
 
         let choice = if self.focused_section == FocusedSection::EapChoice {
@@ -399,6 +443,9 @@ impl WPAEntreprise {
                 v.render(frame, eap_block);
             }
             Eap::PEAP(v) => {
+                v.render(frame, eap_block);
+            }
+            Eap::Eduroam(v) => {
                 v.render(frame, eap_block);
             }
         }

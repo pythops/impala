@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions, io::Write, path::Path};
+use std::{fs::OpenOptions, io::Write};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
@@ -26,17 +26,13 @@ fn pad_string(input: &str, length: usize) -> String {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum FocusedInput {
     #[default]
-    CaCert,
-    ServerDomainMask,
     Identity,
     Phase2Identity,
     Phase2Password,
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct PEAP {
-    ca_cert: UserInputField,
-    server_domain_mask: UserInputField,
+pub struct Eduroam {
     identity: UserInputField,
     phase2_identity: UserInputField,
     phase2_password: UserInputField,
@@ -50,35 +46,11 @@ struct UserInputField {
     error: Option<String>,
 }
 
-impl PEAP {
+impl Eduroam {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn validate_ca_cert(&mut self) {
-        self.ca_cert.error = None;
-        if self.ca_cert.field.value().is_empty() {
-            self.ca_cert.error = Some("Required field.".to_string());
-            return;
-        }
-        let path = Path::new(self.ca_cert.field.value());
-
-        if !path.is_absolute() {
-            self.ca_cert.error = Some("The file path should be absolute.".to_string());
-            return;
-        }
-
-        if !path.exists() {
-            self.ca_cert.error = Some("The file does not exist.".to_string());
-        }
-    }
-
-    pub fn validate_server_domain_mask(&mut self) {
-        self.server_domain_mask.error = None;
-        if self.server_domain_mask.field.value().is_empty() {
-            self.server_domain_mask.error = Some("Required field.".to_string());
-        }
-    }
     pub fn validate_identity(&mut self) {
         self.identity.error = None;
         if self.identity.field.value().is_empty() {
@@ -100,14 +72,10 @@ impl PEAP {
     }
 
     pub fn validate(&mut self) -> AppResult<()> {
-        self.validate_ca_cert();
-        self.validate_server_domain_mask();
         self.validate_identity();
         self.validate_phase2_identity();
         self.validate_phase2_password();
-        if self.ca_cert.error.is_some()
-            | self.identity.error.is_some()
-            | self.server_domain_mask.error.is_some()
+        if self.identity.error.is_some()
             | self.phase2_identity.error.is_some()
             | self.phase2_password.error.is_some()
         {
@@ -118,7 +86,7 @@ impl PEAP {
 
     pub fn next(&mut self) {
         let i = match self.state.selected() {
-            Some(8) => None,
+            Some(4) => None,
             Some(i) => Some(i + 2),
             None => Some(0),
         };
@@ -129,44 +97,40 @@ impl PEAP {
         let i = match self.state.selected() {
             Some(0) => None,
             Some(i) => Some(i.saturating_sub(2)),
-            None => Some(8),
+            None => Some(4),
         };
 
         self.state.select(i);
     }
 
     pub fn set_last(&mut self) {
-        self.state.select(Some(8));
+        self.state.select(Some(4));
     }
 
     pub fn selected(&self) -> bool {
         self.state.selected().is_some()
     }
 
-    pub fn apply(&mut self, network_name: &str) -> AppResult<()> {
+    pub fn apply(&mut self) -> AppResult<()> {
         self.validate()?;
         let mut file = OpenOptions::new()
             .write(true)
             .read(true)
             .create(true)
             .truncate(true)
-            .open(format!("/var/lib/iwd/{}.8021x", network_name))?;
+            .open("/var/lib/iwd/eduroam.8021x")?;
         let text = format!(
             "
 [Security]
 EAP-Method=PEAP
-EAP-PEAP-CACert={}
 EAP-Identity={}
-EAP-PEAP-ServerDomainMask={}
 EAP-PEAP-Phase2-Method=MSCHAPV2
 EAP-PEAP-Phase2-Identity={}
 EAP-PEAP-Phase2-Password={}
 
 [Settings]
 AutoConnect=true",
-            self.ca_cert.field.value(),
             self.identity.field.value(),
-            self.server_domain_mask.field.value(),
             self.phase2_identity.field.value(),
             self.phase2_password.field.value(),
         );
@@ -187,16 +151,6 @@ AutoConnect=true",
                 let _ = self.validate();
             }
             _ => match self.focused_input {
-                FocusedInput::CaCert => {
-                    self.ca_cert
-                        .field
-                        .handle_event(&crossterm::event::Event::Key(key_event));
-                }
-                FocusedInput::ServerDomainMask => {
-                    self.server_domain_mask
-                        .field
-                        .handle_event(&crossterm::event::Event::Key(key_event));
-                }
                 FocusedInput::Identity => {
                     self.identity
                         .field
@@ -239,37 +193,6 @@ AutoConnect=true",
             .split(layout[1])[1];
 
         let items = [
-            Line::from(vec![
-                Span::from(pad_string(" CA Cert", 20))
-                    .bold()
-                    .bg(Color::DarkGray),
-                Span::from("  "),
-                Span::from(pad_string(self.ca_cert.field.value(), 50)).bg(Color::DarkGray),
-            ]),
-            Line::from(vec![Span::from(ERROR_PADDING), {
-                if let Some(error) = &self.ca_cert.error {
-                    Span::from(error)
-                } else {
-                    Span::from("")
-                }
-            }])
-            .red(),
-            Line::from(vec![
-                Span::from(pad_string(" Server Domain Mask", 20))
-                    .bold()
-                    .bg(Color::DarkGray),
-                Span::from("  "),
-                Span::from(pad_string(self.server_domain_mask.field.value(), 50))
-                    .bg(Color::DarkGray),
-            ]),
-            Line::from(vec![Span::from(ERROR_PADDING), {
-                if let Some(error) = &self.server_domain_mask.error {
-                    Span::from(error)
-                } else {
-                    Span::from("")
-                }
-            }])
-            .red(),
             Line::from(vec![
                 Span::from(pad_string(" Identity", 20))
                     .bold()

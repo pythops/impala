@@ -169,6 +169,7 @@ impl TLS {
             .write(true)
             .read(true)
             .create(true)
+            .truncate(true)
             .open(format!("/var/lib/iwd/{}.8021x", network_name))?;
         let mut text = format!(
             "
