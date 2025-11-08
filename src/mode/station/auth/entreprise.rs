@@ -324,15 +324,23 @@ impl WPAEntreprise {
                 },
             },
             _ => match self.focused_section {
+                // TLS => TTLS =>  PEAP => PWD => Eduroam
                 FocusedSection::EapChoice => match key_event.code {
                     KeyCode::Char('l') | KeyCode::Right => match self.eap {
+                        Eap::TLS(_) => self.eap = Eap::TTLS(ttls::TTLS::new()),
                         Eap::TTLS(_) => self.eap = Eap::PEAP(peap::PEAP::new()),
                         Eap::PEAP(_) => self.eap = Eap::PWD(pwd::PWD::new()),
-                        Eap::PWD(_) => self.eap = Eap::TLS(tls::TLS::new()),
-                        Eap::TLS(_) => self.eap = Eap::Eduroam(eduroam::Eduroam::new()),
-                        Eap::Eduroam(_) => self.eap = Eap::TTLS(ttls::TTLS::new()),
+                        Eap::PWD(_) => self.eap = Eap::Eduroam(eduroam::Eduroam::new()),
+                        Eap::Eduroam(_) => self.eap = Eap::TLS(tls::TLS::new()),
                     },
-                    KeyCode::Char('h') | KeyCode::Left => {}
+                    KeyCode::Char('h') | KeyCode::Left => match self.eap {
+                        Eap::Eduroam(_) => self.eap = Eap::PWD(pwd::PWD::new()),
+                        Eap::PWD(_) => self.eap = Eap::PEAP(peap::PEAP::new()),
+                        Eap::PEAP(_) => self.eap = Eap::TTLS(ttls::TTLS::new()),
+                        Eap::TTLS(_) => self.eap = Eap::TLS(tls::TLS::new()),
+                        Eap::TLS(_) => self.eap = Eap::Eduroam(eduroam::Eduroam::new()),
+                    },
+
                     _ => {}
                 },
                 FocusedSection::Eap => match &mut self.eap {
