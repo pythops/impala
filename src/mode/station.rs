@@ -630,7 +630,7 @@ impl Station {
                 Span::from(" Nav"),
             ])],
             FocusedBlock::KnownNetworks => {
-                if frame.area().width <= 120 {
+                if frame.area().width <= 110 {
                     vec![
                         Line::from(vec![
                             Span::from(if config.station.toggle_connect == ' ' {
@@ -657,9 +657,6 @@ impl Station {
                             Span::from(" | "),
                             Span::from("j,").bold(),
                             Span::from("  Down"),
-                            Span::from(" | "),
-                            Span::from("󱊷 ").bold(),
-                            Span::from(" Discard"),
                             Span::from(" | "),
                             Span::from("ctrl+r").bold(),
                             Span::from(" Switch Mode"),
@@ -694,8 +691,52 @@ impl Station {
                         Span::from(config.station.start_scanning.to_string()).bold(),
                         Span::from(" Scan"),
                         Span::from(" | "),
-                        Span::from("󱊷 ").bold(),
-                        Span::from(" Discard"),
+                        Span::from("ctrl+r").bold(),
+                        Span::from(" Switch Mode"),
+                        Span::from(" | "),
+                        Span::from("⇄").bold(),
+                        Span::from(" Nav"),
+                    ])]
+                }
+            }
+            FocusedBlock::NewNetworks => {
+                if frame.area().width < 80 {
+                    vec![
+                        Line::from(vec![
+                            Span::from("󱁐  or ↵ ").bold(),
+                            Span::from(" Connect"),
+                            Span::from(" | "),
+                            Span::from(config.station.start_scanning.to_string()).bold(),
+                            Span::from(" Scan"),
+                            Span::from(" | "),
+                        ]),
+                        Line::from(vec![
+                            Span::from("k,").bold(),
+                            Span::from("  Up"),
+                            Span::from(" | "),
+                            Span::from("j,").bold(),
+                            Span::from("  Down"),
+                            Span::from(" | "),
+                            Span::from("ctrl+r").bold(),
+                            Span::from(" Switch Mode"),
+                            Span::from(" | "),
+                            Span::from("⇄").bold(),
+                            Span::from(" Nav"),
+                        ]),
+                    ]
+                } else {
+                    vec![Line::from(vec![
+                        Span::from("k,").bold(),
+                        Span::from("  Up"),
+                        Span::from(" | "),
+                        Span::from("j,").bold(),
+                        Span::from("  Down"),
+                        Span::from(" | "),
+                        Span::from("󱁐  or ↵ ").bold(),
+                        Span::from(" Connect"),
+                        Span::from(" | "),
+                        Span::from(config.station.start_scanning.to_string()).bold(),
+                        Span::from(" Scan"),
                         Span::from(" | "),
                         Span::from("ctrl+r").bold(),
                         Span::from(" Switch Mode"),
@@ -705,28 +746,6 @@ impl Station {
                     ])]
                 }
             }
-            FocusedBlock::NewNetworks => vec![Line::from(vec![
-                Span::from("k,").bold(),
-                Span::from("  Up"),
-                Span::from(" | "),
-                Span::from("j,").bold(),
-                Span::from("  Down"),
-                Span::from(" | "),
-                Span::from("󱁐  or ↵ ").bold(),
-                Span::from(" Connect"),
-                Span::from(" | "),
-                Span::from(config.station.start_scanning.to_string()).bold(),
-                Span::from(" Scan"),
-                Span::from(" | "),
-                Span::from("󱊷 ").bold(),
-                Span::from(" Discard"),
-                Span::from(" | "),
-                Span::from("ctrl+r").bold(),
-                Span::from(" Switch Mode"),
-                Span::from(" | "),
-                Span::from("⇄").bold(),
-                Span::from(" Nav"),
-            ])],
             FocusedBlock::AdapterInfos => {
                 vec![Line::from(vec![
                     Span::from("󱊷 ").bold(),
@@ -753,7 +772,10 @@ impl Station {
                 Span::from("⇄").bold(),
                 Span::from(" Nav"),
             ])],
-            _ => vec![Line::from("")],
+            _ => vec![Line::from(vec![
+                Span::from("󱊷 ").bold(),
+                Span::from(" Discard"),
+            ])],
         };
 
         let help_message = Paragraph::new(help_message).centered().blue();
