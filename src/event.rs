@@ -16,6 +16,12 @@ pub enum Event {
     Notification(Notification),
     Reset(Mode),
     Auth(String),
+    EapNeworkConfigured(String),
+    ConfigureNewEapNetwork(String),
+    AuthRequestPassword((String, Option<String>)),
+    AuthReqKeyPassphrase(String),
+    AuthReqUsernameAndPassword(String),
+    UsernameAndPasswordSubmit,
 }
 
 #[allow(dead_code)]

@@ -9,6 +9,7 @@ use crate::notification::Notification;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use iwdrs::modes::Mode;
+use iwdrs::network::NetworkType;
 use tokio::sync::mpsc::UnboundedSender;
 use tui_input::backend::crossterm::EventHandler;
 
@@ -18,6 +19,11 @@ async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> AppRes
         FocusedBlock::NewNetworks => {
             if let Some(net_index) = station.new_networks_state.selected() {
                 let (net, _) = station.new_networks[net_index].clone();
+
+                if net.network_type == NetworkType::Eap {
+                    sender.send(Event::ConfigureNewEapNetwork(net.name.clone()))?;
+                    return Ok(());
+                }
                 tokio::spawn(async move {
                     net.connect(sender.clone()).await.unwrap();
                 });
@@ -205,9 +211,89 @@ pub async fn handle_key_events(
                     }
                 },
 
-                FocusedBlock::WpaEntrepriseAuth => {
-                    unimplemented!()
+                FocusedBlock::RequestKeyPasshphrase => {
+                    if let Some(req) = &mut app.auth.request_key_passphrase {
+                        match key_event.code {
+                            KeyCode::Enter => {
+                                req.submit(&app.agent).await?;
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+
+                            KeyCode::Esc => {
+                                req.cancel(&app.agent).await?;
+                                app.auth.request_key_passphrase = None;
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+
+                            KeyCode::Tab => {
+                                req.show_password = !req.show_password;
+                            }
+
+                            _ => {
+                                req.passphrase
+                                    .handle_event(&crossterm::event::Event::Key(key_event));
+                            }
+                        }
+                    }
                 }
+                FocusedBlock::RequestPassword => {
+                    if let Some(req) = &mut app.auth.request_password {
+                        match key_event.code {
+                            KeyCode::Enter => {
+                                req.submit(&app.agent).await?;
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+
+                            KeyCode::Esc => {
+                                req.cancel(&app.agent).await?;
+                                app.auth.request_password = None;
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+
+                            KeyCode::Tab => {
+                                req.show_password = !req.show_password;
+                            }
+
+                            _ => {
+                                req.password
+                                    .handle_event(&crossterm::event::Event::Key(key_event));
+                            }
+                        }
+                    }
+                }
+                FocusedBlock::RequestUsernameAndPassword => {
+                    if let Some(req) = &mut app.auth.request_username_and_password {
+                        match key_event.code {
+                            KeyCode::Enter => {
+                                req.submit(&app.agent).await?;
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+
+                            KeyCode::Esc => {
+                                req.cancel(&app.agent).await?;
+                                app.auth.request_username_and_password = None;
+                                app.focused_block = FocusedBlock::KnownNetworks;
+                            }
+
+                            _ => {
+                                req.handle_key_events(key_event, sender).await?;
+                            }
+                        }
+                    }
+                }
+
+                FocusedBlock::WpaEntrepriseAuth => match key_event.code {
+                    KeyCode::Esc => {
+                        app.focused_block = FocusedBlock::NewNetworks;
+                        app.auth.eap = None;
+                    }
+
+                    _ => {
+                        if let Some(eap) = &mut app.auth.eap {
+                            eap.handle_key_events(key_event, sender).await?
+                        }
+                    }
+                },
                 FocusedBlock::AdapterInfos => {
                     if key_event.code == KeyCode::Esc {
                         app.focused_block = FocusedBlock::Device;
@@ -344,7 +430,7 @@ pub async fn handle_key_events(
                                     toggle_connect(app, sender).await?
                                 }
                                 KeyCode::Char('j') | KeyCode::Down => {
-                                    if !station.known_networks.is_empty() {
+                                    if !station.new_networks.is_empty() {
                                         let i = match station.new_networks_state.selected() {
                                             Some(i) => {
                                                 if i < station.new_networks.len() - 1 {

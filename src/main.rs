@@ -4,6 +4,7 @@ use impala::{
     config::Config,
     event::{Event, EventHandler},
     handler::handle_key_events,
+    notification::{Notification, NotificationLevel},
     rfkill,
     tui::Tui,
 };
@@ -55,8 +56,47 @@ async fn main() -> AppResult<()> {
                 }
                 app = App::new(tui.events.sender.clone(), config.clone(), mode).await?;
             }
+
             Event::Auth(network_name) => {
                 app.network_name_requiring_auth = Some(network_name);
+            }
+
+            Event::EapNeworkConfigured(network_name) => {
+                app.auth.reset();
+                app.focused_block = impala::app::FocusedBlock::KnownNetworks;
+                Notification::send(
+                    format!("Network {} configured", network_name),
+                    NotificationLevel::Info,
+                    &tui.events.sender.clone(),
+                )?;
+            }
+
+            Event::UsernameAndPasswordSubmit => {
+                if let Some(req) = &mut app.auth.request_username_and_password {
+                    req.submit(&app.agent).await?;
+                    app.focused_block = impala::app::FocusedBlock::KnownNetworks;
+                    app.auth.request_username_and_password = None;
+                }
+            }
+
+            Event::ConfigureNewEapNetwork(network_name) => {
+                app.auth.init_eap(network_name);
+                app.focused_block = impala::app::FocusedBlock::WpaEntrepriseAuth;
+            }
+
+            Event::AuthReqKeyPassphrase(network_name) => {
+                app.auth.init_request_key_passphrase(network_name.clone());
+                app.focused_block = impala::app::FocusedBlock::RequestKeyPasshphrase;
+            }
+
+            Event::AuthRequestPassword((network_name, user_name)) => {
+                app.auth.init_request_password(network_name, user_name);
+                app.focused_block = impala::app::FocusedBlock::RequestPassword
+            }
+
+            Event::AuthReqUsernameAndPassword(network_name) => {
+                app.auth.init_request_username_and_password(network_name);
+                app.focused_block = impala::app::FocusedBlock::RequestUsernameAndPassword
             }
             _ => {}
         }
