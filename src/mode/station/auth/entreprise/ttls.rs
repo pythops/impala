@@ -1,3 +1,4 @@
+use anyhow::{Result, anyhow};
 use std::{fs::OpenOptions, io::Write, path::Path};
 
 use crossterm::event::{KeyCode, KeyEvent};
@@ -13,7 +14,6 @@ use tokio::sync::mpsc::UnboundedSender;
 use tui_input::{Input, backend::crossterm::EventHandler};
 
 use crate::{
-    app::AppResult,
     event::Event,
     mode::station::auth::entreprise::{ERROR_PADDING, pad_string},
 };
@@ -93,7 +93,7 @@ impl TTLS {
         }
     }
 
-    pub fn validate(&mut self) -> AppResult<()> {
+    pub fn validate(&mut self) -> Result<()> {
         self.validate_ca_cert();
         self.validate_server_domain_mask();
         self.validate_identity();
@@ -105,7 +105,7 @@ impl TTLS {
             | self.phase2_identity.error.is_some()
             | self.phase2_password.error.is_some()
         {
-            return Err("Valdidation Error".into());
+            return Err(anyhow!("Valdidation Error"));
         }
         Ok(())
     }
@@ -137,7 +137,7 @@ impl TTLS {
         self.state.selected().is_some()
     }
 
-    pub fn apply(&mut self, network_name: &str) -> AppResult<()> {
+    pub fn apply(&mut self, network_name: &str) -> Result<()> {
         self.validate()?;
         let mut file = OpenOptions::new()
             .write(true)
@@ -175,7 +175,7 @@ AutoConnect=true",
         &mut self,
         key_event: KeyEvent,
         _sender: UnboundedSender<Event>,
-    ) -> AppResult<()> {
+    ) -> Result<()> {
         match key_event.code {
             KeyCode::Enter => {
                 let _ = self.validate();

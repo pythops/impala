@@ -1,3 +1,4 @@
+use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -9,7 +10,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear},
 };
 
-use crate::{app::AppResult, event::Event};
+use crate::event::Event;
 
 pub mod eduroam;
 pub mod peap;
@@ -75,7 +76,7 @@ impl WPAEntreprise {
         &mut self,
         key_event: KeyEvent,
         sender: UnboundedSender<Event>,
-    ) -> AppResult<()> {
+    ) -> Result<()> {
         match key_event.code {
             KeyCode::Tab => match self.focused_section {
                 FocusedSection::EapChoice => {

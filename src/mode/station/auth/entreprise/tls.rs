@@ -1,3 +1,4 @@
+use anyhow::{Result, anyhow};
 use std::{fs::OpenOptions, io::Write, path::Path};
 
 use crossterm::event::{KeyCode, KeyEvent};
@@ -12,7 +13,7 @@ use ratatui::{
 use tokio::sync::mpsc::UnboundedSender;
 use tui_input::{Input, backend::crossterm::EventHandler};
 
-use crate::{app::AppResult, event::Event, mode::station::auth::entreprise::ERROR_PADDING};
+use crate::{event::Event, mode::station::auth::entreprise::ERROR_PADDING};
 
 fn pad_string(input: &str, length: usize) -> String {
     let current_length = input.chars().count();
@@ -117,7 +118,7 @@ impl TLS {
         }
     }
 
-    pub fn validate(&mut self) -> AppResult<()> {
+    pub fn validate(&mut self) -> Result<()> {
         self.validate_ca_cert();
         self.validate_identity();
         self.validate_client_cert();
@@ -127,7 +128,7 @@ impl TLS {
             | self.client_cert.error.is_some()
             | self.client_key.error.is_some()
         {
-            return Err("Valdidation Error".into());
+            return Err(anyhow!("Valdidation Error"));
         }
         Ok(())
     }
@@ -163,7 +164,7 @@ impl TLS {
         self.state.selected().is_some()
     }
 
-    pub fn apply(&mut self, network_name: &str) -> AppResult<()> {
+    pub fn apply(&mut self, network_name: &str) -> Result<()> {
         self.validate()?;
         let mut file = OpenOptions::new()
             .write(true)
@@ -212,7 +213,7 @@ AutoConnect=true",
         &mut self,
         key_event: KeyEvent,
         _sender: UnboundedSender<Event>,
-    ) -> AppResult<()> {
+    ) -> Result<()> {
         match key_event.code {
             KeyCode::Enter => {}
             _ => match self.focused_input {

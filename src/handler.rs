@@ -1,6 +1,7 @@
+use anyhow::Result;
 use std::sync::Arc;
 
-use crate::app::{App, AppResult, FocusedBlock};
+use crate::app::{App, FocusedBlock};
 use crate::config::Config;
 use crate::device::Device;
 use crate::event::Event;
@@ -13,7 +14,7 @@ use iwdrs::network::NetworkType;
 use tokio::sync::mpsc::UnboundedSender;
 use tui_input::backend::crossterm::EventHandler;
 
-async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> AppResult<()> {
+async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Result<()> {
     if let Some(station) = &mut app.device.station {
         match app.focused_block {
             FocusedBlock::NewNetworks => {
@@ -75,7 +76,7 @@ async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> AppRes
     Ok(())
 }
 
-async fn toggle_device_power(sender: UnboundedSender<Event>, device: &Device) -> AppResult<()> {
+async fn toggle_device_power(sender: UnboundedSender<Event>, device: &Device) -> Result<()> {
     if device.is_powered {
         match device.power_off().await {
             Ok(()) => {
@@ -119,7 +120,7 @@ pub async fn handle_key_events(
     app: &mut App,
     sender: UnboundedSender<Event>,
     config: Arc<Config>,
-) -> AppResult<()> {
+) -> Result<()> {
     if app.reset.enable {
         match key_event.code {
             KeyCode::Char('q') => {

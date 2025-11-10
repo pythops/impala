@@ -1,3 +1,4 @@
+use anyhow::Result;
 use chrono::{DateTime, FixedOffset};
 
 use iwdrs::{known_network::KnownNetwork as iwdKnownNetwork, network::NetworkType};
@@ -5,7 +6,6 @@ use iwdrs::{known_network::KnownNetwork as iwdKnownNetwork, network::NetworkType
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    app::AppResult,
     event::Event,
     notification::{Notification, NotificationLevel},
 };
@@ -21,7 +21,7 @@ pub struct KnownNetwork {
 }
 
 impl KnownNetwork {
-    pub async fn new(n: iwdKnownNetwork) -> AppResult<Self> {
+    pub async fn new(n: iwdKnownNetwork) -> Result<Self> {
         let name = n.name().await?;
         let network_type = n.network_type().await?;
         let is_autoconnect = n.get_autoconnect().await?;
@@ -41,7 +41,7 @@ impl KnownNetwork {
         })
     }
 
-    pub async fn forget(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn forget(&self, sender: UnboundedSender<Event>) -> Result<()> {
         if let Err(e) = self.n.forget().await {
             Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?;
             return Ok(());
@@ -55,7 +55,7 @@ impl KnownNetwork {
         Ok(())
     }
 
-    pub async fn toggle_autoconnect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn toggle_autoconnect(&self, sender: UnboundedSender<Event>) -> Result<()> {
         if self.is_autoconnect {
             match self.n.set_autoconnect(false).await {
                 Ok(()) => {

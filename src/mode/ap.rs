@@ -1,3 +1,4 @@
+use anyhow::{Result, anyhow};
 use std::sync::{Arc, atomic::AtomicBool};
 
 use iwdrs::session::Session;
@@ -14,7 +15,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{AppResult, FocusedBlock},
+    app::FocusedBlock,
     config::Config,
     device::Device,
     event::Event,
@@ -45,13 +46,13 @@ pub struct AccessPoint {
 }
 
 impl AccessPoint {
-    pub async fn new(session: Arc<Session>) -> AppResult<Self> {
+    pub async fn new(session: Arc<Session>) -> Result<Self> {
         let iwd_access_point = session
             .access_points()
             .await
             .unwrap()
             .pop()
-            .ok_or("no ap found")?;
+            .ok_or(anyhow!("no ap found"))?;
         let iwd_access_point_diagnostic = session.access_points_diagnostics().await.unwrap().pop();
 
         let has_started = iwd_access_point.has_started().await?;
@@ -215,7 +216,7 @@ impl AccessPoint {
         frame.render_widget(psk_input, psk_input_area);
     }
 
-    pub async fn refresh(&mut self) -> AppResult<()> {
+    pub async fn refresh(&mut self) -> Result<()> {
         let iwd_access_point = self.session.access_points().await.unwrap().pop().unwrap();
         let iwd_access_point_diagnostic = self
             .session
@@ -245,7 +246,7 @@ impl AccessPoint {
         Ok(())
     }
 
-    pub async fn scan(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn scan(&self, sender: UnboundedSender<Event>) -> Result<()> {
         let iwd_access_point = self.session.access_points().await.unwrap().pop().unwrap();
         match iwd_access_point.scan().await {
             Ok(()) => Notification::send(
@@ -259,7 +260,7 @@ impl AccessPoint {
         Ok(())
     }
 
-    pub async fn start(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn start(&self, sender: UnboundedSender<Event>) -> Result<()> {
         let iwd_access_point = self.session.access_points().await.unwrap().pop().unwrap();
         match iwd_access_point
             .start(self.ssid.value(), self.psk.value())
@@ -278,7 +279,7 @@ impl AccessPoint {
         Ok(())
     }
 
-    pub async fn stop(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn stop(&self, sender: UnboundedSender<Event>) -> Result<()> {
         let iwd_access_point = self.session.access_points().await.unwrap().pop().unwrap();
         match iwd_access_point.stop().await {
             Ok(()) => {

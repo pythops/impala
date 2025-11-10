@@ -1,9 +1,5 @@
-use anyhow::anyhow;
-use std::{
-    error::Error,
-    process::{self, exit},
-    sync::Arc,
-};
+use anyhow::{Result, anyhow};
+use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
 use iwdrs::{modes::Mode, session::Session};
@@ -12,8 +8,6 @@ use crate::{
     adapter::Adapter, agent::AuthAgent, config::Config, device::Device, event::Event,
     mode::station::auth::Auth, notification::Notification, reset::Reset,
 };
-
-pub type AppResult<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FocusedBlock {
@@ -51,13 +45,16 @@ impl App {
         sender: UnboundedSender<Event>,
         config: Arc<Config>,
         mode: Mode,
-    ) -> AppResult<Self> {
+    ) -> Result<Self> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
                 Err(e) => {
-                    eprintln!("Can not access the iwd service {e}");
-                    exit(1);
+                    return Err(anyhow!(
+                        "Can not access the iwd service.
+Error: {}",
+                        e
+                    ));
                 }
             }
         };
@@ -65,9 +62,7 @@ impl App {
         let adapter = match Adapter::new(session.clone(), config.clone()).await {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("{e}");
-                eprintln!("Make sure iwd daemon is up and running");
-                process::exit(1);
+                return Err(anyhow!("Can not access the iwd service: {}", e));
             }
         };
 
@@ -103,28 +98,24 @@ impl App {
         })
     }
 
-    pub async fn reset(mode: Mode) -> AppResult<()> {
+    pub async fn reset(mode: Mode) -> Result<()> {
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
-                Err(e) => return Err(anyhow!("Can not access the iwd service: {}", e).into()),
+                Err(e) => return Err(anyhow!("Can not access the iwd service: {}", e)),
             }
         };
 
         let device = match Device::new(session.clone()).await {
             Ok(v) => v,
-            Err(e) => {
-                eprintln!("{e}");
-                eprintln!("Make sure iwd daemon is up and running");
-                process::exit(1);
-            }
+            Err(e) => return Err(anyhow!("Can not access the iwd service: {}", e)),
         };
 
         device.set_mode(mode).await?;
         Ok(())
     }
 
-    pub async fn tick(&mut self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn tick(&mut self, sender: UnboundedSender<Event>) -> Result<()> {
         self.notifications.retain(|n| n.ttl > 0);
         self.notifications.iter_mut().for_each(|n| n.ttl -= 1);
 

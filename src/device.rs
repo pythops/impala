@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::sync::Arc;
 
 use iwdrs::{device::Device as iwdDevice, modes::Mode, session::Session};
@@ -12,7 +13,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{AppResult, FocusedBlock},
+    app::FocusedBlock,
     config::Config,
     event::Event,
     mode::{ap::AccessPoint, station::Station},
@@ -31,7 +32,7 @@ pub struct Device {
 }
 
 impl Device {
-    pub async fn new(session: Arc<Session>) -> AppResult<Self> {
+    pub async fn new(session: Arc<Session>) -> Result<Self> {
         let device = session.devices().await.unwrap().pop().unwrap();
         let name = device.name().await?;
         let address = device.address().await?;
@@ -67,22 +68,22 @@ impl Device {
         })
     }
 
-    pub async fn set_mode(&self, mode: Mode) -> AppResult<()> {
+    pub async fn set_mode(&self, mode: Mode) -> Result<()> {
         self.device.set_mode(mode).await?;
         Ok(())
     }
 
-    pub async fn power_off(&self) -> AppResult<()> {
+    pub async fn power_off(&self) -> Result<()> {
         self.device.set_power(false).await?;
         Ok(())
     }
 
-    pub async fn power_on(&self) -> AppResult<()> {
+    pub async fn power_on(&self) -> Result<()> {
         self.device.set_power(true).await?;
         Ok(())
     }
 
-    pub async fn refresh(&mut self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn refresh(&mut self, sender: UnboundedSender<Event>) -> Result<()> {
         self.is_powered = self.device.is_powered().await?;
         self.mode = self.device.get_mode().await?;
         if self.is_powered {

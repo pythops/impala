@@ -1,4 +1,5 @@
-use crate::{agent::AuthAgent, app::AppResult};
+use crate::agent::AuthAgent;
+use anyhow::Result;
 
 use ratatui::{
     Frame,
@@ -26,7 +27,7 @@ impl RequestPassword {
             user_name,
         }
     }
-    pub async fn submit(&mut self, agent: &AuthAgent) -> AppResult<()> {
+    pub async fn submit(&mut self, agent: &AuthAgent) -> Result<()> {
         let passkey: String = self.password.value().into();
         agent.tx_passphrase.send(passkey).await?;
         agent
@@ -36,7 +37,7 @@ impl RequestPassword {
         Ok(())
     }
 
-    pub async fn cancel(&mut self, agent: &AuthAgent) -> AppResult<()> {
+    pub async fn cancel(&mut self, agent: &AuthAgent) -> Result<()> {
         agent.tx_cancel.send(()).await?;
         agent
             .password_required

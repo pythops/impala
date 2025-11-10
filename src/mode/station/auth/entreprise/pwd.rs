@@ -1,3 +1,4 @@
+use anyhow::{Result, anyhow};
 use std::{fs::OpenOptions, io::Write};
 
 use crossterm::event::{KeyCode, KeyEvent};
@@ -12,7 +13,7 @@ use ratatui::{
 use tokio::sync::mpsc::UnboundedSender;
 use tui_input::{Input, backend::crossterm::EventHandler};
 
-use crate::{app::AppResult, event::Event, mode::station::auth::entreprise::ERROR_PADDING};
+use crate::{event::Event, mode::station::auth::entreprise::ERROR_PADDING};
 
 fn pad_string(input: &str, length: usize) -> String {
     let current_length = input.chars().count();
@@ -63,11 +64,11 @@ impl PWD {
         }
     }
 
-    pub fn validate(&mut self) -> AppResult<()> {
+    pub fn validate(&mut self) -> Result<()> {
         self.validate_identity();
         self.validate_password();
         if self.identity.error.is_some() | self.password.error.is_some() {
-            return Err("Valdidation Error".into());
+            return Err(anyhow!("Valdidation Error"));
         }
         Ok(())
     }
@@ -99,7 +100,7 @@ impl PWD {
         self.state.selected().is_some()
     }
 
-    pub fn apply(&mut self, network_name: &str) -> AppResult<()> {
+    pub fn apply(&mut self, network_name: &str) -> Result<()> {
         self.validate()?;
 
         let mut file = OpenOptions::new()
@@ -131,7 +132,7 @@ AutoConnect=true",
         &mut self,
         key_event: KeyEvent,
         _sender: UnboundedSender<Event>,
-    ) -> AppResult<()> {
+    ) -> Result<()> {
         match key_event.code {
             KeyCode::Enter => {
                 let _ = self.validate();

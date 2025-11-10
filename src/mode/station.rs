@@ -1,3 +1,4 @@
+use anyhow::{Result, anyhow};
 pub mod auth;
 pub mod known_network;
 pub mod network;
@@ -19,7 +20,7 @@ use ratatui::{
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    app::{AppResult, FocusedBlock},
+    app::FocusedBlock,
     config::Config,
     device::Device,
     event::Event,
@@ -42,13 +43,13 @@ pub struct Station {
 }
 
 impl Station {
-    pub async fn new(session: Arc<Session>) -> AppResult<Self> {
+    pub async fn new(session: Arc<Session>) -> Result<Self> {
         let iwd_station = session
             .stations()
             .await
             .unwrap()
             .pop()
-            .ok_or("no station found")?;
+            .ok_or(anyhow!("no station found"))?;
 
         let iwd_station_diagnostic = session.stations_diagnostics().await.unwrap().pop();
 
@@ -126,7 +127,7 @@ impl Station {
         })
     }
 
-    pub async fn refresh(&mut self) -> AppResult<()> {
+    pub async fn refresh(&mut self) -> Result<()> {
         let iwd_station = self.session.stations().await.unwrap().pop().unwrap();
 
         self.state = iwd_station.state().await?;
@@ -227,7 +228,7 @@ impl Station {
         Ok(())
     }
 
-    pub async fn scan(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn scan(&self, sender: UnboundedSender<Event>) -> Result<()> {
         let iwd_station = self.session.stations().await.unwrap().pop().unwrap();
         match iwd_station.scan().await {
             Ok(()) => Notification::send(
@@ -241,7 +242,7 @@ impl Station {
         Ok(())
     }
 
-    pub async fn disconnect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn disconnect(&self, sender: UnboundedSender<Event>) -> Result<()> {
         let iwd_station = self.session.stations().await.unwrap().pop().unwrap();
         match iwd_station.disconnect().await {
             Ok(()) => Notification::send(

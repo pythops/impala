@@ -1,4 +1,5 @@
-use crate::{agent::AuthAgent, app::AppResult};
+use crate::agent::AuthAgent;
+use anyhow::Result;
 
 use ratatui::{
     Frame,
@@ -25,7 +26,7 @@ impl Default for Psk {
 }
 
 impl Psk {
-    pub async fn submit(&mut self, agent: &AuthAgent) -> AppResult<()> {
+    pub async fn submit(&mut self, agent: &AuthAgent) -> Result<()> {
         let passkey: String = self.passphrase.value().into();
         agent.tx_passphrase.send(passkey).await?;
         agent
@@ -35,7 +36,7 @@ impl Psk {
         Ok(())
     }
 
-    pub async fn cancel(&mut self, agent: &AuthAgent) -> AppResult<()> {
+    pub async fn cancel(&mut self, agent: &AuthAgent) -> Result<()> {
         agent.tx_cancel.send(()).await?;
         agent
             .psk_required

@@ -1,5 +1,6 @@
+use anyhow::Result;
 use impala::{
-    app::{App, AppResult},
+    app::App,
     cli,
     config::Config,
     event::{Event, EventHandler},
@@ -14,7 +15,7 @@ use std::io;
 use std::sync::Arc;
 
 #[tokio::main]
-async fn main() -> AppResult<()> {
+async fn main() -> Result<()> {
     let args = cli::cli().get_matches();
 
     rfkill::check()?;

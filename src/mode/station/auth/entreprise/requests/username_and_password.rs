@@ -1,5 +1,6 @@
+use crate::agent::AuthAgent;
 use crate::event::Event;
-use crate::{agent::AuthAgent, app::AppResult};
+use anyhow::Result;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crossterm::event::{KeyCode, KeyEvent};
@@ -45,7 +46,7 @@ impl RequestUsernameAndPassword {
         &mut self,
         key_event: KeyEvent,
         sender: UnboundedSender<Event>,
-    ) -> AppResult<()> {
+    ) -> Result<()> {
         match key_event.code {
             KeyCode::Tab => match self.focused_section {
                 FocusedSection::Username => {
@@ -85,7 +86,7 @@ impl RequestUsernameAndPassword {
         }
         Ok(())
     }
-    pub async fn submit(&mut self, agent: &AuthAgent) -> AppResult<()> {
+    pub async fn submit(&mut self, agent: &AuthAgent) -> Result<()> {
         let username: String = self.username.value().into();
         let password: String = self.password.value().into();
         agent
@@ -98,7 +99,7 @@ impl RequestUsernameAndPassword {
         Ok(())
     }
 
-    pub async fn cancel(&mut self, agent: &AuthAgent) -> AppResult<()> {
+    pub async fn cancel(&mut self, agent: &AuthAgent) -> Result<()> {
         agent.tx_cancel.send(()).await?;
         agent
             .username_and_password_required

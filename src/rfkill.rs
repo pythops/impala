@@ -1,8 +1,7 @@
+use anyhow::Result;
 use std::fs;
 
-use crate::app::AppResult;
-
-pub fn check() -> AppResult<()> {
+pub fn check() -> Result<()> {
     let entries = fs::read_dir("/sys/class/rfkill/")?;
 
     for entry in entries {

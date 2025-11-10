@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::sync::Arc;
 
 use anyhow::Context;
@@ -10,7 +11,7 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, Cell, Clear, Padding, Row, Table},
 };
 
-use crate::{app::AppResult, config::Config};
+use crate::config::Config;
 
 #[derive(Debug)]
 pub struct Adapter {
@@ -24,7 +25,7 @@ pub struct Adapter {
 }
 
 impl Adapter {
-    pub async fn new(session: Arc<Session>, config: Arc<Config>) -> AppResult<Self> {
+    pub async fn new(session: Arc<Session>, config: Arc<Config>) -> Result<Self> {
         let adapter = session
             .adapters()
             .await
@@ -49,7 +50,7 @@ impl Adapter {
         })
     }
 
-    pub async fn refresh(&mut self) -> AppResult<()> {
+    pub async fn refresh(&mut self) -> Result<()> {
         self.is_powered = self.adapter.is_powered().await?;
         Ok(())
     }

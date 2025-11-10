@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::time::Duration;
 
 use crossterm::event::{Event as CrosstermEvent, KeyEvent, MouseEvent};
@@ -5,7 +6,7 @@ use futures::{FutureExt, StreamExt};
 use iwdrs::modes::Mode;
 use tokio::sync::mpsc;
 
-use crate::{app::AppResult, notification::Notification};
+use crate::notification::Notification;
 
 #[derive(Clone, Debug)]
 pub enum Event {
@@ -73,10 +74,10 @@ impl EventHandler {
         }
     }
 
-    pub async fn next(&mut self) -> AppResult<Event> {
+    pub async fn next(&mut self) -> Result<Event> {
         self.receiver
             .recv()
             .await
-            .ok_or(Box::new(std::io::Error::other("This is an IO error")))
+            .ok_or(std::io::Error::other("This is an IO error").into())
     }
 }

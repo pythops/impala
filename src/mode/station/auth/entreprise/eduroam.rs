@@ -1,3 +1,4 @@
+use anyhow::{Result, anyhow};
 use std::{fs::OpenOptions, io::Write};
 
 use crossterm::event::{KeyCode, KeyEvent};
@@ -12,7 +13,7 @@ use ratatui::{
 use tokio::sync::mpsc::UnboundedSender;
 use tui_input::{Input, backend::crossterm::EventHandler};
 
-use crate::{app::AppResult, event::Event, mode::station::auth::entreprise::ERROR_PADDING};
+use crate::{event::Event, mode::station::auth::entreprise::ERROR_PADDING};
 
 fn pad_string(input: &str, length: usize) -> String {
     let current_length = input.chars().count();
@@ -71,7 +72,7 @@ impl Eduroam {
         }
     }
 
-    pub fn validate(&mut self) -> AppResult<()> {
+    pub fn validate(&mut self) -> Result<()> {
         self.validate_identity();
         self.validate_phase2_identity();
         self.validate_phase2_password();
@@ -79,7 +80,7 @@ impl Eduroam {
             | self.phase2_identity.error.is_some()
             | self.phase2_password.error.is_some()
         {
-            return Err("Valdidation Error".into());
+            return Err(anyhow!("Valdidation Error"));
         }
         Ok(())
     }
@@ -111,7 +112,7 @@ impl Eduroam {
         self.state.selected().is_some()
     }
 
-    pub fn apply(&mut self) -> AppResult<()> {
+    pub fn apply(&mut self) -> Result<()> {
         self.validate()?;
         let mut file = OpenOptions::new()
             .write(true)
@@ -145,7 +146,7 @@ AutoConnect=true",
         &mut self,
         key_event: KeyEvent,
         _sender: UnboundedSender<Event>,
-    ) -> AppResult<()> {
+    ) -> Result<()> {
         match key_event.code {
             KeyCode::Enter => {
                 let _ = self.validate();

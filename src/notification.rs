@@ -1,3 +1,4 @@
+use anyhow::Result;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -7,7 +8,7 @@ use ratatui::{
 };
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::{app::AppResult, event::Event};
+use crate::event::Event;
 
 #[derive(Debug, Clone)]
 pub struct Notification {
@@ -65,7 +66,7 @@ impl Notification {
         message: String,
         level: NotificationLevel,
         sender: &UnboundedSender<Event>,
-    ) -> AppResult<()> {
+    ) -> Result<()> {
         let notif = Notification {
             message,
             level,

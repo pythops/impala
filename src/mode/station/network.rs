@@ -1,8 +1,8 @@
+use anyhow::Result;
 use iwdrs::network::{Network as iwdNetwork, NetworkType};
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    app::AppResult,
     event::Event,
     mode::station::known_network::KnownNetwork,
     notification::{Notification, NotificationLevel},
@@ -18,7 +18,7 @@ pub struct Network {
 }
 
 impl Network {
-    pub async fn new(n: iwdNetwork) -> AppResult<Self> {
+    pub async fn new(n: iwdNetwork) -> Result<Self> {
         let name = n.name().await?;
         let network_type = n.network_type().await?;
         let is_connected = n.connected().await?;
@@ -41,7 +41,7 @@ impl Network {
         })
     }
 
-    pub async fn connect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn connect(&self, sender: UnboundedSender<Event>) -> Result<()> {
         match self.n.connect().await {
             Ok(()) => Notification::send(
                 format!("Connected to {}", self.name),
