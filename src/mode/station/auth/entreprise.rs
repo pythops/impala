@@ -361,7 +361,7 @@ impl WPAEntreprise {
                             Eap::Eduroam(v) => v.apply(),
                         };
                         if result.is_ok() {
-                            sender.send(Event::EapNeworkConfigured)?;
+                            sender.send(Event::EapNeworkConfigured(self.network_name.clone()))?;
                         }
                     }
                 }

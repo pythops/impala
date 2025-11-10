@@ -4,6 +4,7 @@ use impala::{
     config::Config,
     event::{Event, EventHandler},
     handler::handle_key_events,
+    notification::{Notification, NotificationLevel},
     rfkill,
     tui::Tui,
 };
@@ -60,9 +61,14 @@ async fn main() -> AppResult<()> {
                 app.network_name_requiring_auth = Some(network_name);
             }
 
-            Event::EapNeworkConfigured => {
+            Event::EapNeworkConfigured(network_name) => {
                 app.auth.reset();
                 app.focused_block = impala::app::FocusedBlock::KnownNetworks;
+                Notification::send(
+                    format!("Network {} configured", network_name),
+                    NotificationLevel::Info,
+                    &tui.events.sender.clone(),
+                )?;
             }
 
             Event::UsernameAndPasswordSubmit => {
