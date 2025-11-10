@@ -1,3 +1,9 @@
+## 0.5.0 - TBA
+
+- Support for WPA2 Entreprise
+- Support for Eduroam
+- Make help banner responsive
+
 ## v0.4.1 - 2025-10-23
 
 - Fix display issue on light mode background
