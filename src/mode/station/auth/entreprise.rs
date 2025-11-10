@@ -3,7 +3,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Flex, Layout, Margin},
+    layout::{Constraint, Direction, Layout, Margin},
     style::{Style, Stylize},
     text::Text,
     widgets::{Block, Borders, Clear},
@@ -375,7 +375,7 @@ impl WPAEntreprise {
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Fill(1),
-                Constraint::Length(20),
+                Constraint::Length(21),
                 Constraint::Fill(1),
             ])
             .flex(ratatui::layout::Flex::SpaceBetween)
@@ -385,7 +385,7 @@ impl WPAEntreprise {
             .direction(Direction::Horizontal)
             .constraints([
                 Constraint::Fill(1),
-                Constraint::Percentage(80),
+                Constraint::Max(80),
                 Constraint::Fill(1),
             ])
             .flex(ratatui::layout::Flex::SpaceBetween)
@@ -393,37 +393,44 @@ impl WPAEntreprise {
 
         frame.render_widget(Clear, block);
 
-        let (eap_choice_block, eap_block, apply_block) = {
+        let (title_block, eap_choice_block, eap_block, apply_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
-                    Constraint::Length(5),
-                    Constraint::Length(10),
-                    Constraint::Length(4),
+                    Constraint::Length(2),
+                    Constraint::Length(1), // Title
+                    Constraint::Length(2),
+                    Constraint::Length(1), // Eap choice
+                    Constraint::Length(1),
+                    Constraint::Length(10), // Form
+                    Constraint::Length(2),
+                    Constraint::Length(1), // Submit
+                    Constraint::Length(2),
                 ])
-                .flex(Flex::SpaceBetween)
                 .split(block);
 
-            (chunks[0], chunks[1], chunks[2])
+            (chunks[1], chunks[3], chunks[5], chunks[7])
         };
 
         frame.render_widget(
             Block::default()
-                .title(format!(" Configure {} Network ", self.network_name))
-                .title_alignment(ratatui::layout::Alignment::Center)
-                .title_style(Style::default().bold())
                 .borders(Borders::ALL)
                 .border_type(ratatui::widgets::BorderType::Thick)
                 .border_style(Style::default().green()),
             block,
         );
 
+        let title = Text::from(format!("Configure the network {}", self.network_name))
+            .centered()
+            .bold();
+        frame.render_widget(title, title_block);
+
         let choice = match self.eap {
-            Eap::TTLS(_) => Text::from(" < TTLS >"),
-            Eap::PEAP(_) => Text::from(" < PEAP >"),
-            Eap::PWD(_) => Text::from(" < PWD >"),
-            Eap::TLS(_) => Text::from(" < TLS >"),
-            Eap::Eduroam(_) => Text::from(" < Eduroam >"),
+            Eap::TTLS(_) => Text::from("< TTLS >").centered(),
+            Eap::PEAP(_) => Text::from("< PEAP >").centered(),
+            Eap::PWD(_) => Text::from("< PWD >").centered(),
+            Eap::TLS(_) => Text::from("< TLS >").centered(),
+            Eap::Eduroam(_) => Text::from("< Eduroam >").centered(),
         };
 
         let choice = if self.focused_section == FocusedSection::EapChoice {
@@ -436,7 +443,7 @@ impl WPAEntreprise {
             choice.centered(),
             eap_choice_block.inner(Margin {
                 horizontal: 1,
-                vertical: 2,
+                vertical: 0,
             }),
         );
 
@@ -459,16 +466,16 @@ impl WPAEntreprise {
         }
 
         let text = if self.focused_section == FocusedSection::Apply {
-            Text::from("Apply").bold().green().centered()
+            Text::from("APPLY").centered().green().bold()
         } else {
-            Text::from("Apply").centered()
+            Text::from("APPLY").centered()
         };
 
         frame.render_widget(
             text,
             apply_block.inner(Margin {
                 horizontal: 1,
-                vertical: 1,
+                vertical: 0,
             }),
         );
     }

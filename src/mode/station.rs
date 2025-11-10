@@ -753,6 +753,9 @@ impl Station {
                 ])]
             }
             FocusedBlock::PskAuthKey => vec![Line::from(vec![
+                Span::from(" ↵ ").bold(),
+                Span::from(" Apply"),
+                Span::from(" | "),
                 Span::from("⇄").bold(),
                 Span::from(" Hide/Show password"),
                 Span::from(" | "),
@@ -760,11 +763,11 @@ impl Station {
                 Span::from(" Discard"),
             ])],
             FocusedBlock::WpaEntrepriseAuth => vec![Line::from(vec![
+                Span::from(" ↵ ").bold(),
+                Span::from(" Apply"),
+                Span::from(" | "),
                 Span::from("h,l,←,→").bold(),
                 Span::from(" Switch EAP"),
-                Span::from(" | "),
-                Span::from(" ↵ ").bold(),
-                Span::from(" Connect"),
                 Span::from(" | "),
                 Span::from("󱊷 ").bold(),
                 Span::from(" Discard"),

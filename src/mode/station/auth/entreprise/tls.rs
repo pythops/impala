@@ -261,7 +261,7 @@ AutoConnect=true",
             .direction(Direction::Horizontal)
             .constraints([
                 Constraint::Fill(1),
-                Constraint::Percentage(80),
+                Constraint::Max(70),
                 Constraint::Fill(1),
             ])
             .flex(ratatui::layout::Flex::SpaceBetween)
