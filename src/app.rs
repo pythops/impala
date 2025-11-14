@@ -119,8 +119,8 @@ Error: {}",
         self.notifications.retain(|n| n.ttl > 0);
         self.notifications.iter_mut().for_each(|n| n.ttl -= 1);
 
-        self.device.refresh(sender).await.unwrap();
-        self.adapter.refresh().await.unwrap();
+        self.device.refresh(sender).await?;
+        self.adapter.refresh().await?;
 
         Ok(())
     }

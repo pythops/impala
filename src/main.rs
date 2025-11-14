@@ -11,8 +11,8 @@ use impala::{
 };
 use iwdrs::modes::Mode;
 use ratatui::{Terminal, backend::CrosstermBackend};
-use std::io;
 use std::sync::Arc;
+use std::{io, process::exit};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -33,28 +33,54 @@ async fn main() -> Result<()> {
 
     let mode = Mode::try_from(mode.as_str())?;
 
-    let mut app = App::new(tui.events.sender.clone(), config.clone(), mode).await?;
+    let mut app = match App::new(tui.events.sender.clone(), config.clone(), mode).await {
+        Ok(app) => app,
+        Err(e) => {
+            tui.exit()?;
+
+            if e.to_string()
+                .contains("org.freedesktop.DBus.Error.AccessDenied")
+            {
+                eprintln!("Permission Denied");
+            } else {
+                eprintln!("{}", e);
+            }
+            exit(1);
+        }
+    };
+
+    let mut exit_error_message = None;
 
     while app.running {
         tui.draw(&mut app)?;
         match tui.events.next().await? {
-            Event::Tick => app.tick(tui.events.sender.clone()).await?,
+            Event::Tick => {
+                if let Err(e) = app.tick(tui.events.sender.clone()).await {
+                    exit_error_message = Some(e);
+                    break;
+                }
+            }
             Event::Key(key_event) => {
-                handle_key_events(
+                if let Err(e) = handle_key_events(
                     key_event,
                     &mut app,
                     tui.events.sender.clone(),
                     config.clone(),
                 )
-                .await?;
+                .await
+                {
+                    exit_error_message = Some(e);
+                    break;
+                }
             }
             Event::Notification(notification) => {
                 app.notifications.push(notification);
             }
             Event::Reset(mode) => {
-                if App::reset(mode).await.is_err() {
-                    tui.exit()?;
-                }
+                if let Err(e) = App::reset(mode).await {
+                    exit_error_message = Some(e);
+                    break;
+                };
                 app = App::new(tui.events.sender.clone(), config.clone(), mode).await?;
             }
 
@@ -74,7 +100,10 @@ async fn main() -> Result<()> {
 
             Event::UsernameAndPasswordSubmit => {
                 if let Some(req) = &mut app.auth.request_username_and_password {
-                    req.submit(&app.agent).await?;
+                    if let Err(e) = req.submit(&app.agent).await {
+                        exit_error_message = Some(e);
+                        break;
+                    }
                     app.focused_block = impala::app::FocusedBlock::KnownNetworks;
                     app.auth.request_username_and_password = None;
                 }
@@ -104,5 +133,11 @@ async fn main() -> Result<()> {
     }
 
     tui.exit()?;
+
+    if let Some(error) = exit_error_message {
+        eprintln!("{}", error);
+        exit(1);
+    }
+
     Ok(())
 }
