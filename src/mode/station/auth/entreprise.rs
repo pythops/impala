@@ -9,6 +9,7 @@ use ratatui::{
     text::Text,
     widgets::{Block, Borders, Clear},
 };
+use tui_input::Input;
 
 use crate::event::Event;
 
@@ -27,6 +28,22 @@ fn pad_string(input: &str, length: usize) -> String {
         input.to_string()
     } else {
         format!("{:<width$}", input, width = length)
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+struct UserInputField {
+    field: Input,
+    error: Option<String>,
+}
+
+impl UserInputField {
+    fn is_empty(&self) -> bool {
+        self.field.value().is_empty()
+    }
+
+    fn value(&self) -> &str {
+        self.field.value()
     }
 }
 
@@ -91,7 +108,7 @@ impl WPAEntreprise {
                             v.next();
                         }
                         Eap::PEAP(v) => {
-                            v.focused_input = peap::FocusedInput::CaCert;
+                            v.focused_input = peap::FocusedInput::Identity;
                             v.next();
                         }
                         Eap::PWD(v) => {
@@ -167,15 +184,31 @@ impl WPAEntreprise {
                         }
                     },
                     Eap::PEAP(v) => match v.focused_input {
-                        peap::FocusedInput::CaCert => {
+                        peap::FocusedInput::Identity => {
                             v.focused_input = peap::FocusedInput::ServerDomainMask;
                             v.next();
                         }
                         peap::FocusedInput::ServerDomainMask => {
-                            v.focused_input = peap::FocusedInput::Identity;
+                            v.focused_input = peap::FocusedInput::CaCert;
                             v.next();
                         }
-                        peap::FocusedInput::Identity => {
+                        peap::FocusedInput::CaCert => {
+                            v.focused_input = peap::FocusedInput::ClientCert;
+                            v.next();
+                        }
+                        peap::FocusedInput::ClientCert => {
+                            v.focused_input = peap::FocusedInput::ClientKey;
+                            v.next();
+                        }
+                        peap::FocusedInput::ClientKey => {
+                            v.focused_input = peap::FocusedInput::KeyPassphrase;
+                            v.next();
+                        }
+                        peap::FocusedInput::KeyPassphrase => {
+                            v.focused_input = peap::FocusedInput::Phase2Method;
+                            v.next();
+                        }
+                        peap::FocusedInput::Phase2Method => {
                             v.focused_input = peap::FocusedInput::Phase2Identity;
                             v.next();
                         }
@@ -282,20 +315,36 @@ impl WPAEntreprise {
                         }
                     },
                     Eap::PEAP(v) => match v.focused_input {
-                        peap::FocusedInput::CaCert => {
+                        peap::FocusedInput::Identity => {
                             self.focused_section = FocusedSection::EapChoice;
                             v.previous();
                         }
                         peap::FocusedInput::ServerDomainMask => {
-                            v.focused_input = peap::FocusedInput::CaCert;
+                            v.focused_input = peap::FocusedInput::Identity;
                             v.previous();
                         }
-                        peap::FocusedInput::Identity => {
+                        peap::FocusedInput::CaCert => {
                             v.focused_input = peap::FocusedInput::ServerDomainMask;
                             v.previous();
                         }
+                        peap::FocusedInput::ClientCert => {
+                            v.focused_input = peap::FocusedInput::CaCert;
+                            v.previous();
+                        }
+                        peap::FocusedInput::ClientKey => {
+                            v.focused_input = peap::FocusedInput::ClientCert;
+                            v.previous();
+                        }
+                        peap::FocusedInput::KeyPassphrase => {
+                            v.focused_input = peap::FocusedInput::ClientKey;
+                            v.previous();
+                        }
+                        peap::FocusedInput::Phase2Method => {
+                            v.focused_input = peap::FocusedInput::KeyPassphrase;
+                            v.previous();
+                        }
                         peap::FocusedInput::Phase2Identity => {
-                            v.focused_input = peap::FocusedInput::Identity;
+                            v.focused_input = peap::FocusedInput::Phase2Method;
                             v.previous();
                         }
                         peap::FocusedInput::Phase2Password => {

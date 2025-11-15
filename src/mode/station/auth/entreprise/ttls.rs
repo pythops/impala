@@ -11,11 +11,11 @@ use ratatui::{
 };
 
 use tokio::sync::mpsc::UnboundedSender;
-use tui_input::{Input, backend::crossterm::EventHandler};
+use tui_input::backend::crossterm::EventHandler;
 
 use crate::{
     event::Event,
-    mode::station::auth::entreprise::{ERROR_PADDING, pad_string},
+    mode::station::auth::entreprise::{ERROR_PADDING, UserInputField, pad_string},
 };
 
 #[derive(Debug, Clone, PartialEq, Default, strum_macros::Display)]
@@ -55,22 +55,6 @@ pub struct TTLS {
     phase2_password: UserInputField,
     pub focused_input: FocusedInput,
     state: ListState,
-}
-
-#[derive(Debug, Clone, Default)]
-struct UserInputField {
-    field: Input,
-    error: Option<String>,
-}
-
-impl UserInputField {
-    fn is_empty(&self) -> bool {
-        self.field.value().is_empty()
-    }
-
-    fn value(&self) -> &str {
-        self.field.value()
-    }
 }
 
 impl TTLS {
