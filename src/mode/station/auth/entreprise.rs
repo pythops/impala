@@ -87,7 +87,7 @@ impl WPAEntreprise {
                             v.next();
                         }
                         Eap::TTLS(v) => {
-                            v.focused_input = ttls::FocusedInput::CaCert;
+                            v.focused_input = ttls::FocusedInput::Identity;
                             v.next();
                         }
                         Eap::PEAP(v) => {
@@ -128,15 +128,31 @@ impl WPAEntreprise {
                         }
                     },
                     Eap::TTLS(v) => match v.focused_input {
-                        ttls::FocusedInput::CaCert => {
+                        ttls::FocusedInput::Identity => {
                             v.focused_input = ttls::FocusedInput::ServerDomainMask;
                             v.next();
                         }
                         ttls::FocusedInput::ServerDomainMask => {
-                            v.focused_input = ttls::FocusedInput::Identity;
+                            v.focused_input = ttls::FocusedInput::CaCert;
                             v.next();
                         }
-                        ttls::FocusedInput::Identity => {
+                        ttls::FocusedInput::CaCert => {
+                            v.focused_input = ttls::FocusedInput::ClientCert;
+                            v.next();
+                        }
+                        ttls::FocusedInput::ClientCert => {
+                            v.focused_input = ttls::FocusedInput::ClientKey;
+                            v.next();
+                        }
+                        ttls::FocusedInput::ClientKey => {
+                            v.focused_input = ttls::FocusedInput::KeyPassphrase;
+                            v.next();
+                        }
+                        ttls::FocusedInput::KeyPassphrase => {
+                            v.focused_input = ttls::FocusedInput::Phase2Method;
+                            v.next();
+                        }
+                        ttls::FocusedInput::Phase2Method => {
                             v.focused_input = ttls::FocusedInput::Phase2Identity;
                             v.next();
                         }
@@ -228,20 +244,36 @@ impl WPAEntreprise {
                         }
                     },
                     Eap::TTLS(v) => match v.focused_input {
-                        ttls::FocusedInput::CaCert => {
+                        ttls::FocusedInput::Identity => {
                             self.focused_section = FocusedSection::EapChoice;
                             v.previous();
                         }
                         ttls::FocusedInput::ServerDomainMask => {
-                            v.focused_input = ttls::FocusedInput::CaCert;
+                            v.focused_input = ttls::FocusedInput::Identity;
                             v.previous();
                         }
-                        ttls::FocusedInput::Identity => {
+                        ttls::FocusedInput::CaCert => {
                             v.focused_input = ttls::FocusedInput::ServerDomainMask;
                             v.previous();
                         }
+                        ttls::FocusedInput::ClientCert => {
+                            v.focused_input = ttls::FocusedInput::CaCert;
+                            v.previous();
+                        }
+                        ttls::FocusedInput::ClientKey => {
+                            v.focused_input = ttls::FocusedInput::ClientCert;
+                            v.previous();
+                        }
+                        ttls::FocusedInput::KeyPassphrase => {
+                            v.focused_input = ttls::FocusedInput::ClientKey;
+                            v.previous();
+                        }
+                        ttls::FocusedInput::Phase2Method => {
+                            v.focused_input = ttls::FocusedInput::KeyPassphrase;
+                            v.previous();
+                        }
                         ttls::FocusedInput::Phase2Identity => {
-                            v.focused_input = ttls::FocusedInput::Identity;
+                            v.focused_input = ttls::FocusedInput::Phase2Method;
                             v.previous();
                         }
                         ttls::FocusedInput::Phase2Password => {
@@ -376,7 +408,7 @@ impl WPAEntreprise {
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Fill(1),
-                Constraint::Length(21),
+                Constraint::Length(30),
                 Constraint::Fill(1),
             ])
             .flex(ratatui::layout::Flex::SpaceBetween)
@@ -402,8 +434,8 @@ impl WPAEntreprise {
                     Constraint::Length(1), // Title
                     Constraint::Length(2),
                     Constraint::Length(1), // Eap choice
-                    Constraint::Length(1),
-                    Constraint::Length(10), // Form
+                    Constraint::Length(2),
+                    Constraint::Length(30), // Form
                     Constraint::Length(2),
                     Constraint::Length(1), // Submit
                     Constraint::Length(2),
