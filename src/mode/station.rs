@@ -768,7 +768,7 @@ impl Station {
                 Span::from(" Apply"),
                 Span::from(" | "),
                 Span::from("h,l,←,→").bold(),
-                Span::from(" Switch EAP"),
+                Span::from(" Switch EAP/Method"),
                 Span::from(" | "),
                 Span::from("󱊷 ").bold(),
                 Span::from(" Discard"),

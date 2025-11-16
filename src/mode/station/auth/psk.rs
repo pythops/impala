@@ -126,9 +126,9 @@ impl Psk {
         .block(Block::new().style(Style::default().bg(Color::DarkGray)));
 
         let show_password_icon = if self.show_password {
-            Text::from(" ").centered()
+            Text::from("󰈈 ").centered()
         } else {
-            Text::from(" ").centered()
+            Text::from("󰈉 ").centered()
         };
 
         frame.render_widget(Clear, area);
