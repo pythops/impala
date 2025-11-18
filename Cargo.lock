@@ -1031,6 +1031,8 @@ dependencies = [
  "log",
  "ratatui 0.29.0",
  "serde",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "tokio",
  "toml",
  "tui-input",
