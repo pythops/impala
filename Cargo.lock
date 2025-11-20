@@ -1028,6 +1028,7 @@ dependencies = [
  "env_logger",
  "futures",
  "iwdrs",
+ "libc",
  "log",
  "ratatui 0.29.0",
  "serde",

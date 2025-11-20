@@ -1,10 +1,12 @@
 use anyhow::Result;
+use anyhow::anyhow;
+use env_logger::Target;
 use impala::{
     app::App,
     cli,
     config::Config,
     event::{Event, EventHandler},
-    handler::handle_key_events,
+    handler::{handle_key_events, toggle_connect},
     notification::{Notification, NotificationLevel},
     rfkill,
     tui::Tui,
@@ -16,6 +18,11 @@ use std::{io, process::exit};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    env_logger::builder()
+        .format_timestamp(None)
+        .target(Target::Stderr)
+        .init();
+
     let args = cli::cli().get_matches();
 
     rfkill::check()?;
@@ -76,12 +83,26 @@ async fn main() -> Result<()> {
             Event::Notification(notification) => {
                 app.notifications.push(notification);
             }
+
             Event::Reset(mode) => {
                 if let Err(e) = App::reset(mode).await {
                     exit_error_message = Some(e);
                     break;
                 };
-                app = App::new(tui.events.sender.clone(), config.clone(), mode).await?;
+
+                match App::new(tui.events.sender.clone(), config.clone(), mode).await {
+                    Ok(v) => app = v,
+                    Err(e) => {
+                        if e.to_string()
+                            .contains("org.freedesktop.DBus.Error.AccessDenied")
+                        {
+                            exit_error_message = Some(anyhow!("Permission Denied"));
+                        } else {
+                            exit_error_message = Some(e);
+                        }
+                        break;
+                    }
+                };
             }
 
             Event::Auth(network_name) => {
@@ -96,6 +117,19 @@ async fn main() -> Result<()> {
                     NotificationLevel::Info,
                     &tui.events.sender.clone(),
                 )?;
+
+                if let Some(station) = &mut app.device.station
+                    && let Some(index) = station
+                        .known_networks
+                        .iter()
+                        .position(|(net, _)| net.name == network_name)
+                {
+                    station.known_networks_state.select(Some(index));
+                    if let Err(e) = toggle_connect(&mut app, tui.events.sender.clone()).await {
+                        exit_error_message = Some(e);
+                        break;
+                    }
+                }
             }
 
             Event::UsernameAndPasswordSubmit => {

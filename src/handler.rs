@@ -14,7 +14,7 @@ use iwdrs::network::NetworkType;
 use tokio::sync::mpsc::UnboundedSender;
 use tui_input::backend::crossterm::EventHandler;
 
-async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Result<()> {
+pub async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Result<()> {
     if let Some(station) = &mut app.device.station {
         match app.focused_block {
             FocusedBlock::NewNetworks => {
