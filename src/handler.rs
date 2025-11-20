@@ -292,7 +292,7 @@ pub async fn handle_key_events(
 
                         _ => {
                             if let Some(eap) = &mut app.auth.eap {
-                                eap.handle_key_events(key_event, sender).await?
+                                eap.handle_key_events(key_event, sender);
                             }
                         }
                     },

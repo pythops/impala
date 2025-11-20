@@ -2,7 +2,6 @@ use anyhow::Result;
 use std::sync::Arc;
 
 use iwdrs::{device::Device as iwdDevice, modes::Mode, session::Session};
-use tokio::sync::mpsc::UnboundedSender;
 
 use ratatui::{
     Frame,
@@ -15,7 +14,6 @@ use ratatui::{
 use crate::{
     app::FocusedBlock,
     config::Config,
-    event::Event,
     mode::{ap::AccessPoint, station::Station},
 };
 
@@ -83,18 +81,14 @@ impl Device {
         Ok(())
     }
 
-    pub async fn refresh(&mut self, sender: UnboundedSender<Event>) -> Result<()> {
+    pub async fn refresh(&mut self) -> Result<()> {
         self.is_powered = self.device.is_powered().await?;
         self.mode = self.device.get_mode().await?;
         if self.is_powered {
             match self.mode {
                 Mode::Station => {
                     if let Some(station) = &mut self.station {
-                        if station.diagnostic.is_none() && station.connected_network.is_some() {
-                            sender.send(Event::Reset(Mode::Station))?;
-                        } else {
-                            station.refresh().await?;
-                        }
+                        station.refresh().await?;
                     } else {
                         self.station = Station::new(self.session.clone()).await.ok();
                     }

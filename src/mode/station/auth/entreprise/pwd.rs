@@ -10,10 +10,9 @@ use ratatui::{
     widgets::{HighlightSpacing, List, ListState},
 };
 
-use tokio::sync::mpsc::UnboundedSender;
 use tui_input::{Input, backend::crossterm::EventHandler};
 
-use crate::{event::Event, mode::station::auth::entreprise::ERROR_PADDING};
+use crate::mode::station::auth::entreprise::ERROR_PADDING;
 
 fn pad_string(input: &str, length: usize) -> String {
     let current_length = input.chars().count();
@@ -128,11 +127,7 @@ AutoConnect=true",
         Ok(())
     }
 
-    pub async fn handle_key_events(
-        &mut self,
-        key_event: KeyEvent,
-        _sender: UnboundedSender<Event>,
-    ) -> Result<()> {
+    pub fn handle_key_events(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Enter => {
                 let _ = self.validate();
@@ -150,7 +145,6 @@ AutoConnect=true",
                 }
             },
         }
-        Ok(())
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {

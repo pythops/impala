@@ -1,5 +1,3 @@
-use anyhow::Result;
-use anyhow::anyhow;
 use crossterm::event::{KeyCode, KeyEvent};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -90,11 +88,7 @@ impl WPAEntreprise {
             focused_section: FocusedSection::EapChoice,
         }
     }
-    pub async fn handle_key_events(
-        &mut self,
-        key_event: KeyEvent,
-        sender: UnboundedSender<Event>,
-    ) -> Result<()> {
+    pub fn handle_key_events(&mut self, key_event: KeyEvent, sender: UnboundedSender<Event>) {
         match key_event.code {
             KeyCode::Tab => match self.focused_section {
                 FocusedSection::EapChoice => {
@@ -427,21 +421,15 @@ impl WPAEntreprise {
                     _ => {}
                 },
                 FocusedSection::Eap => match &mut self.eap {
-                    Eap::TLS(v) => v.handle_key_events(key_event, sender).await?,
-                    Eap::TTLS(v) => v.handle_key_events(key_event, sender).await?,
-                    Eap::PEAP(v) => v.handle_key_events(key_event, sender).await?,
-                    Eap::PWD(v) => v.handle_key_events(key_event, sender).await?,
-                    Eap::Eduroam(v) => v.handle_key_events(key_event, sender).await?,
+                    Eap::TLS(v) => v.handle_key_events(key_event),
+                    Eap::TTLS(v) => v.handle_key_events(key_event),
+                    Eap::PEAP(v) => v.handle_key_events(key_event),
+                    Eap::PWD(v) => v.handle_key_events(key_event),
+                    Eap::Eduroam(v) => v.handle_key_events(key_event),
                 },
 
                 FocusedSection::Apply => {
                     if let KeyCode::Enter = key_event.code {
-                        if unsafe { libc::geteuid() } != 0 {
-                            return Err(anyhow!(
-                                "impala must be run as root to configure WPA Entreprise networks"
-                            ));
-                        }
-
                         let result = match &mut self.eap {
                             Eap::TLS(v) => v.apply(self.network_name.as_str()),
                             Eap::TTLS(v) => v.apply(self.network_name.as_str()),
@@ -450,14 +438,14 @@ impl WPAEntreprise {
                             Eap::Eduroam(v) => v.apply(),
                         };
                         if result.is_ok() {
-                            sender.send(Event::Tick)?;
-                            sender.send(Event::EapNeworkConfigured(self.network_name.clone()))?;
+                            let _ = sender.send(Event::Tick);
+                            let _ =
+                                sender.send(Event::EapNeworkConfigured(self.network_name.clone()));
                         }
                     }
                 }
             },
         }
-        Ok(())
     }
 
     pub fn render(&mut self, frame: &mut Frame) {

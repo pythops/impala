@@ -115,11 +115,11 @@ Error: {}",
         Ok(())
     }
 
-    pub async fn tick(&mut self, sender: UnboundedSender<Event>) -> Result<()> {
+    pub async fn tick(&mut self) -> Result<()> {
         self.notifications.retain(|n| n.ttl > 0);
         self.notifications.iter_mut().for_each(|n| n.ttl -= 1);
 
-        self.device.refresh(sender).await?;
+        self.device.refresh().await?;
         self.adapter.refresh().await?;
 
         Ok(())

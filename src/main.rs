@@ -1,6 +1,7 @@
 use anyhow::Result;
 use anyhow::anyhow;
 use env_logger::Target;
+use impala::notification;
 use impala::{
     app::App,
     cli,
@@ -62,24 +63,22 @@ async fn main() -> Result<()> {
         tui.draw(&mut app)?;
         match tui.events.next().await? {
             Event::Tick => {
-                if let Err(e) = app.tick(tui.events.sender.clone()).await {
+                if let Err(e) = app.tick().await {
                     exit_error_message = Some(e);
                     break;
                 }
             }
+
             Event::Key(key_event) => {
-                if let Err(e) = handle_key_events(
+                let _ = handle_key_events(
                     key_event,
                     &mut app,
                     tui.events.sender.clone(),
                     config.clone(),
                 )
-                .await
-                {
-                    exit_error_message = Some(e);
-                    break;
-                }
+                .await;
             }
+
             Event::Notification(notification) => {
                 app.notifications.push(notification);
             }
@@ -144,6 +143,16 @@ async fn main() -> Result<()> {
             }
 
             Event::ConfigureNewEapNetwork(network_name) => {
+                if unsafe { libc::geteuid() } != 0 {
+                    let _ = Notification::send(
+                        "impala must be run as root to configure WPA Entreprise networks"
+                            .to_string(),
+                        notification::NotificationLevel::Info,
+                        &tui.events.sender.clone(),
+                    );
+
+                    continue;
+                }
                 app.auth.init_eap(network_name);
                 app.focused_block = impala::app::FocusedBlock::WpaEntrepriseAuth;
             }

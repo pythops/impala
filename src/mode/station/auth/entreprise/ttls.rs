@@ -10,13 +10,9 @@ use ratatui::{
     widgets::{HighlightSpacing, List, ListState},
 };
 
-use tokio::sync::mpsc::UnboundedSender;
 use tui_input::backend::crossterm::EventHandler;
 
-use crate::{
-    event::Event,
-    mode::station::auth::entreprise::{ERROR_PADDING, UserInputField, pad_string},
-};
+use crate::mode::station::auth::entreprise::{ERROR_PADDING, UserInputField, pad_string};
 
 #[derive(Debug, Clone, PartialEq, Default, strum_macros::Display)]
 enum Phase2Method {
@@ -269,11 +265,7 @@ EAP-TTLS-Phase2-Password={}
         Ok(())
     }
 
-    pub async fn handle_key_events(
-        &mut self,
-        key_event: KeyEvent,
-        _sender: UnboundedSender<Event>,
-    ) -> Result<()> {
+    pub fn handle_key_events(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Enter => {
                 let _ = self.validate();
@@ -338,7 +330,6 @@ EAP-TTLS-Phase2-Password={}
                 }
             },
         }
-        Ok(())
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
