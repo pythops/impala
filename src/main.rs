@@ -49,7 +49,10 @@ async fn main() -> Result<()> {
             if e.to_string()
                 .contains("org.freedesktop.DBus.Error.AccessDenied")
             {
-                eprintln!("Permission Denied");
+                eprintln!("Insufficient Permissions.");
+                eprintln!(
+                    "You do not have the required permissions. Ensure you are part of the appropriate user group or use sudo."
+                )
             } else {
                 eprintln!("{}", e);
             }
@@ -95,7 +98,10 @@ async fn main() -> Result<()> {
                         if e.to_string()
                             .contains("org.freedesktop.DBus.Error.AccessDenied")
                         {
-                            exit_error_message = Some(anyhow!("Permission Denied"));
+                            exit_error_message = Some(anyhow!("
+Insufficient Permissions.
+You do not have the required permissions. Ensure you are part of the appropriate user group or use sudo.
+"));
                         } else {
                             exit_error_message = Some(e);
                         }
