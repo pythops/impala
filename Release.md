@@ -1,8 +1,11 @@
-## 0.5.0 - TBA
+## 0.5.0 - 2025-11-21
 
 - Support for WPA2 Entreprise
 - Support for Eduroam
 - Make help banner responsive
+- Improve error messages
+- Fix crash when wifi adapter is switched off
+- Reset terminal on error
 
 ## v0.4.1 - 2025-10-23
 
