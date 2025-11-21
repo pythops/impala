@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use futures::future::join_all;
 use iwdrs::{
+    error::{IWDError, station::ScanError},
     session::Session,
     station::{State, diagnostics::ActiveStationDiagnostics},
 };
@@ -236,7 +237,19 @@ impl Station {
                 NotificationLevel::Info,
                 &sender,
             )?,
-            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?,
+            Err(e) => match e {
+                IWDError::OperationError(e) => match e {
+                    ScanError::Busy => {
+                        Notification::send(e.to_string(), NotificationLevel::Info, &sender.clone())?
+                    }
+                    _ => Notification::send(
+                        e.to_string(),
+                        NotificationLevel::Error,
+                        &sender.clone(),
+                    )?,
+                },
+                _ => Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?,
+            },
         }
 
         Ok(())

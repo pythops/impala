@@ -1,5 +1,8 @@
 use anyhow::Result;
-use iwdrs::network::{Network as iwdNetwork, NetworkType};
+use iwdrs::{
+    error::{IWDError, network::ConnectError},
+    network::{Network as iwdNetwork, NetworkType},
+};
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
@@ -48,17 +51,19 @@ impl Network {
                 NotificationLevel::Info,
                 &sender,
             )?,
-            Err(e) => {
-                if e.to_string().contains("net.connman.iwd.Aborted") {
-                    Notification::send(
-                        "Connection canceled".to_string(),
-                        NotificationLevel::Info,
-                        &sender,
-                    )?;
-                } else {
+            Err(e) => match e {
+                IWDError::OperationError(e) => match e {
+                    ConnectError::Aborted => {
+                        Notification::send(e.to_string(), NotificationLevel::Info, &sender)?;
+                    }
+                    _ => {
+                        Notification::send(e.to_string(), NotificationLevel::Error, &sender)?;
+                    }
+                },
+                _ => {
                     Notification::send(e.to_string(), NotificationLevel::Error, &sender)?;
                 }
-            }
+            },
         }
         Ok(())
     }
