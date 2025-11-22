@@ -126,6 +126,9 @@ pub async fn handle_key_events(
             KeyCode::Char('q') => {
                 app.quit();
             }
+            KeyCode::Esc if app.config.esc_quit => {
+                app.quit();
+            }
             KeyCode::Char('c' | 'C') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
                     app.quit();
@@ -163,6 +166,9 @@ pub async fn handle_key_events(
 
             FocusedBlock::Device => match key_event.code {
                 KeyCode::Char('q') => {
+                    app.quit();
+                }
+                KeyCode::Esc if app.config.esc_quit => {
                     app.quit();
                 }
 
@@ -304,6 +310,9 @@ pub async fn handle_key_events(
                     _ => {
                         match key_event.code {
                             KeyCode::Char('q') => {
+                                app.quit();
+                            }
+                            KeyCode::Esc if app.config.esc_quit => {
                                 app.quit();
                             }
 
@@ -523,6 +532,9 @@ pub async fn handle_key_events(
                     _ => {
                         match key_event.code {
                             KeyCode::Char('q') => {
+                                app.quit();
+                            }
+                            KeyCode::Esc if app.config.esc_quit => {
                                 app.quit();
                             }
 

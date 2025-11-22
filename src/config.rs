@@ -11,6 +11,9 @@ pub struct Config {
     #[serde(default = "default_device_mode")]
     pub mode: String,
 
+    #[serde(default = "default_esc_quit")]
+    pub esc_quit: bool,
+
     #[serde(default)]
     pub device: Device,
 
@@ -27,6 +30,10 @@ fn default_switch_mode() -> char {
 
 fn default_device_mode() -> String {
     "station".to_string()
+}
+
+fn default_esc_quit() -> bool {
+    false
 }
 
 // Device
