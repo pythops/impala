@@ -69,7 +69,7 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 `esc`: Dismiss the different pop-ups.
 
-`q` or `ctrl+c`: Quit the app.
+`q` or `ctrl+c` or `Esc`: Quit the app.
 
 ### Device
 

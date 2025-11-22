@@ -123,7 +123,7 @@ pub async fn handle_key_events(
 ) -> Result<()> {
     if app.reset.enable {
         match key_event.code {
-            KeyCode::Char('q') => {
+            KeyCode::Char('q') | KeyCode::Esc => {
                 app.quit();
             }
             KeyCode::Char('c' | 'C') => {
@@ -162,7 +162,7 @@ pub async fn handle_key_events(
             }
 
             FocusedBlock::Device => match key_event.code {
-                KeyCode::Char('q') => {
+                KeyCode::Char('q') | KeyCode::Esc => {
                     app.quit();
                 }
 
@@ -303,7 +303,7 @@ pub async fn handle_key_events(
                     }
                     _ => {
                         match key_event.code {
-                            KeyCode::Char('q') => {
+                            KeyCode::Char('q') | KeyCode::Esc => {
                                 app.quit();
                             }
 
@@ -522,7 +522,7 @@ pub async fn handle_key_events(
                     }
                     _ => {
                         match key_event.code {
-                            KeyCode::Char('q') => {
+                            KeyCode::Char('q') | KeyCode::Esc => {
                                 app.quit();
                             }
 
