@@ -69,7 +69,7 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 `esc`: Dismiss the different pop-ups.
 
-`q` or `ctrl+c` or `Esc`: Quit the app.
+`q` or `ctrl+c`: Quit the app. (Note: `<Esc>` can also quit if `esc_quit = true` is set in config)
 
 ### Device
 
@@ -103,6 +103,7 @@ Keybindings can be customized in the config file `$HOME/.config/impala/config.to
 
 switch = "r"
 mode = "station"
+esc_quit = false  # Set to true to enable Esc key to quit the app
 
 [device]
 infos = "i"

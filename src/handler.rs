@@ -123,7 +123,10 @@ pub async fn handle_key_events(
 ) -> Result<()> {
     if app.reset.enable {
         match key_event.code {
-            KeyCode::Char('q') | KeyCode::Esc => {
+            KeyCode::Char('q') => {
+                app.quit();
+            }
+            KeyCode::Esc if app.config.esc_quit => {
                 app.quit();
             }
             KeyCode::Char('c' | 'C') => {
@@ -162,7 +165,10 @@ pub async fn handle_key_events(
             }
 
             FocusedBlock::Device => match key_event.code {
-                KeyCode::Char('q') | KeyCode::Esc => {
+                KeyCode::Char('q') => {
+                    app.quit();
+                }
+                KeyCode::Esc if app.config.esc_quit => {
                     app.quit();
                 }
 
@@ -303,7 +309,10 @@ pub async fn handle_key_events(
                     }
                     _ => {
                         match key_event.code {
-                            KeyCode::Char('q') | KeyCode::Esc => {
+                            KeyCode::Char('q') => {
+                                app.quit();
+                            }
+                            KeyCode::Esc if app.config.esc_quit => {
                                 app.quit();
                             }
 
@@ -522,7 +531,10 @@ pub async fn handle_key_events(
                     }
                     _ => {
                         match key_event.code {
-                            KeyCode::Char('q') | KeyCode::Esc => {
+                            KeyCode::Char('q') => {
+                                app.quit();
+                            }
+                            KeyCode::Esc if app.config.esc_quit => {
                                 app.quit();
                             }
 
