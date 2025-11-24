@@ -8,10 +8,12 @@
 
 ## 💡 Prerequisites
 
-A Linux based OS with [iwd](https://iwd.wiki.kernel.org/) installed.
+- A Linux based OS
+- [iwd](https://iwd.wiki.kernel.org/) running.
+- [nerdfonts](https://www.nerdfonts.com/) (Optional) for icons.
 
-> [!NOTE]
-> You might need to install [nerdfonts](https://www.nerdfonts.com/) for the icons to be displayed correctly.
+> [!IMPORTANT]
+> To avoid conflicts, ensure wireless management services like NetworkManager or wpa_supplicant are disabled.
 
 ## 🚀 Installation
 
