@@ -42,16 +42,20 @@ impl KnownNetwork {
     }
 
     pub async fn forget(&self, sender: UnboundedSender<Event>) -> Result<()> {
-        if let Err(e) = self.n.forget().await {
-            Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone())?;
-            return Ok(());
+        match self.n.forget().await {
+            Ok(()) => {
+                let _ = Notification::send(
+                    format!("The Network {} is removed", self.name),
+                    NotificationLevel::Info,
+                    &sender,
+                );
+            }
+            Err(e) => {
+                let _ =
+                    Notification::send(e.to_string(), NotificationLevel::Error, &sender.clone());
+            }
         }
 
-        Notification::send(
-            "Network Removed".to_string(),
-            NotificationLevel::Info,
-            &sender,
-        )?;
         Ok(())
     }
 

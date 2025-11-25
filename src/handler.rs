@@ -33,6 +33,11 @@ pub async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Re
             FocusedBlock::KnownNetworks => match &station.connected_network {
                 Some(connected_net) => {
                     if let Some(selected_net_index) = station.known_networks_state.selected() {
+                        if selected_net_index > station.known_networks.len() - 1 {
+                            // Can not connect to unavailble network
+                            return Ok(());
+                        }
+
                         let (selected_net, _signal) = &station.known_networks[selected_net_index];
 
                         if selected_net.name == connected_net.name {
@@ -55,6 +60,10 @@ pub async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Re
                 }
                 None => {
                     if let Some(selected_net_index) = station.known_networks_state.selected() {
+                        if selected_net_index > station.known_networks.len() - 1 {
+                            // Can not connect to unavailble network
+                            return Ok(());
+                        }
                         let (selected_net, _signal) = &station.known_networks[selected_net_index];
                         let net_index = station
                             .known_networks
@@ -378,11 +387,20 @@ pub async fn handle_key_events(
                                             if let Some(net_index) =
                                                 station.known_networks_state.selected()
                                             {
-                                                let (net, _signal) =
-                                                    &station.known_networks[net_index];
+                                                if net_index > station.known_networks.len() - 1 {
+                                                    let index = net_index.saturating_sub(
+                                                        station.known_networks.len(),
+                                                    );
+                                                    let network =
+                                                        &station.unavailable_known_networks[index];
+                                                    network.forget(sender.clone()).await?;
+                                                } else {
+                                                    let (net, _signal) =
+                                                        &station.known_networks[net_index];
 
-                                                if let Some(known_net) = &net.known_network {
-                                                    known_net.forget(sender.clone()).await?;
+                                                    if let Some(known_net) = &net.known_network {
+                                                        known_net.forget(sender.clone()).await?;
+                                                    }
                                                 }
                                             }
                                         }
@@ -396,9 +414,9 @@ pub async fn handle_key_events(
                                         {
                                             if let Some(net_index) =
                                                 station.known_networks_state.selected()
+                                                && net_index < station.known_networks.len()
                                             {
-                                                let (net, _signal) =
-                                                    &station.known_networks[net_index];
+                                                let (net, _) = &station.known_networks[net_index];
 
                                                 if let Some(known_net) = &net.known_network {
                                                     known_net
@@ -406,6 +424,14 @@ pub async fn handle_key_events(
                                                         .await?;
                                                 }
                                             }
+                                        }
+
+                                        // Show / Hide unavailable networks
+                                        KeyCode::Char(c)
+                                            if c == config.station.known_network.show_all =>
+                                        {
+                                            station.show_unavailable_known_networks =
+                                                !station.show_unavailable_known_networks;
                                         }
 
                                         // Connect/Disconnect
@@ -420,12 +446,19 @@ pub async fn handle_key_events(
                                                 let i =
                                                     match station.known_networks_state.selected() {
                                                         Some(i) => {
-                                                            if i < station.known_networks.len() - 1
+                                                            let limit = if station
+                                                                .show_unavailable_known_networks
                                                             {
-                                                                i + 1
+                                                                station.new_networks.len()
+                                                                    + station
+                                                                        .unavailable_known_networks
+                                                                        .len()
+                                                                    - 1
                                                             } else {
-                                                                i
-                                                            }
+                                                                station.new_networks.len() - 1
+                                                            };
+
+                                                            if i < limit { i + 1 } else { i }
                                                         }
                                                         None => 0,
                                                     };
