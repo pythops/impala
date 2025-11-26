@@ -12,7 +12,9 @@ use ratatui::{
 
 use tui_input::backend::crossterm::EventHandler;
 
-use crate::mode::station::auth::entreprise::{ERROR_PADDING, UserInputField, pad_string};
+use crate::mode::station::auth::entreprise::{
+    ERROR_PADDING, UserInputField, iwd_network_name, pad_string,
+};
 
 #[derive(Debug, Clone, PartialEq, Default, strum_macros::Display)]
 enum Phase2Method {
@@ -175,6 +177,7 @@ impl TTLS {
 
     pub fn apply(&mut self, network_name: &str) -> Result<()> {
         self.validate()?;
+        let network_name = iwd_network_name(network_name);
         let mut file = OpenOptions::new()
             .write(true)
             .read(true)

@@ -12,7 +12,7 @@ use ratatui::{
 
 use tui_input::{Input, backend::crossterm::EventHandler};
 
-use crate::mode::station::auth::entreprise::ERROR_PADDING;
+use crate::mode::station::auth::entreprise::{ERROR_PADDING, iwd_network_name};
 
 fn pad_string(input: &str, length: usize) -> String {
     let current_length = input.chars().count();
@@ -101,7 +101,7 @@ impl PWD {
 
     pub fn apply(&mut self, network_name: &str) -> Result<()> {
         self.validate()?;
-
+        let network_name = iwd_network_name(network_name);
         let mut file = OpenOptions::new()
             .write(true)
             .read(true)
