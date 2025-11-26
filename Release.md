@@ -1,6 +1,7 @@
 ## TBA
 
 - Show all the configured networks
+- Encode network names correctly
 
 ## 0.5.0 - 2025-11-21
 
