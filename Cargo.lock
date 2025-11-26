@@ -845,6 +845,7 @@ dependencies = [
  "dirs",
  "env_logger",
  "futures",
+ "hex",
  "iwdrs",
  "libc",
  "log",
