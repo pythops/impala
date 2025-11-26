@@ -25,6 +25,7 @@ use crate::{
     config::Config,
     device::Device,
     event::Event,
+    mode::station::known_network::KnownNetwork,
     notification::{Notification, NotificationLevel},
 };
 
@@ -38,9 +39,11 @@ pub struct Station {
     pub connected_network: Option<Network>,
     pub new_networks: Vec<(Network, i16)>,
     pub known_networks: Vec<(Network, i16)>,
+    pub unavailable_known_networks: Vec<KnownNetwork>,
     pub known_networks_state: TableState,
     pub new_networks_state: TableState,
     pub diagnostic: Option<ActiveStationDiagnostics>,
+    pub show_unavailable_known_networks: bool,
 }
 
 impl Station {
@@ -94,6 +97,24 @@ impl Station {
             .filter(|(net, _signal)| net.known_network.is_some())
             .collect();
 
+        let available_networks_names: Vec<String> =
+            known_networks.iter().map(|(n, _)| n.name.clone()).collect();
+
+        let unavailable_known_networks =
+            if let Ok(iwd_known_networks) = session.known_networks().await {
+                let mut unavailable_known_networks = Vec::new();
+                for iwd_network in iwd_known_networks {
+                    if let Ok(known_network) = KnownNetwork::new(iwd_network).await
+                        && !available_networks_names.contains(&known_network.name)
+                    {
+                        unavailable_known_networks.push(known_network);
+                    }
+                }
+                unavailable_known_networks
+            } else {
+                Vec::new()
+            };
+
         let mut new_networks_state = TableState::default();
         if new_networks.is_empty() {
             new_networks_state.select(None);
@@ -122,9 +143,11 @@ impl Station {
             connected_network,
             new_networks,
             known_networks,
+            unavailable_known_networks,
             known_networks_state,
             new_networks_state,
             diagnostic,
+            show_unavailable_known_networks: false,
         })
     }
 
@@ -216,6 +239,29 @@ impl Station {
             self.known_networks_state = known_networks_state;
             self.known_networks = known_networks;
         }
+
+        let available_networks_names: Vec<String> = self
+            .known_networks
+            .iter()
+            .map(|(n, _)| n.name.clone())
+            .collect();
+
+        let unavailable_known_networks =
+            if let Ok(iwd_known_networks) = self.session.known_networks().await {
+                let mut unavailable_known_networks = Vec::new();
+                for iwd_network in iwd_known_networks {
+                    if let Ok(known_network) = KnownNetwork::new(iwd_network).await
+                        && !available_networks_names.contains(&known_network.name)
+                    {
+                        unavailable_known_networks.push(known_network);
+                    }
+                }
+                unavailable_known_networks
+            } else {
+                Vec::new()
+            };
+
+        self.unavailable_known_networks = unavailable_known_networks;
 
         self.connected_network = connected_network;
 
@@ -403,7 +449,7 @@ impl Station {
         //
         // Known networks
         //
-        let rows: Vec<Row> = self
+        let mut rows: Vec<Row> = self
             .known_networks
             .iter()
             .map(|(net, signal)| {
@@ -454,6 +500,22 @@ impl Station {
                 }
             })
             .collect();
+
+        if self.show_unavailable_known_networks {
+            self.unavailable_known_networks.iter().for_each(|net| {
+                let row = Row::new(vec![
+                    Line::from(""),
+                    Line::from(net.name.clone()).centered(),
+                    Line::from(net.network_type.to_string()).centered(),
+                    Line::from(""),
+                    Line::from(""),
+                    Line::from(""),
+                ])
+                .fg(Color::DarkGray);
+
+                rows.push(row);
+            });
+        }
 
         let widths = [
             Constraint::Length(2),
@@ -644,7 +706,7 @@ impl Station {
                 Span::from(" Nav"),
             ])],
             FocusedBlock::KnownNetworks => {
-                if frame.area().width <= 110 {
+                if frame.area().width <= 120 {
                     vec![
                         Line::from(vec![
                             Span::from(if config.station.toggle_connect == ' ' {
@@ -654,6 +716,9 @@ impl Station {
                             })
                             .bold(),
                             Span::from(" Dis/connect"),
+                            Span::from(" | "),
+                            Span::from(config.station.known_network.show_all.to_string()).bold(),
+                            Span::from(" Show All"),
                             Span::from(" | "),
                             Span::from(config.station.known_network.remove.to_string()).bold(),
                             Span::from(" Remove"),
@@ -694,6 +759,9 @@ impl Station {
                         })
                         .bold(),
                         Span::from(" Dis/connect"),
+                        Span::from(" | "),
+                        Span::from(config.station.known_network.show_all.to_string()).bold(),
+                        Span::from(" Show All"),
                         Span::from(" | "),
                         Span::from(config.station.known_network.remove.to_string()).bold(),
                         Span::from(" Remove"),

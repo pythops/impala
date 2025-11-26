@@ -93,13 +93,15 @@ pub struct KnownNetwork {
     #[serde(default = "default_station_remove_known_network")]
     pub remove: char,
     pub toggle_autoconnect: char,
+    pub show_all: char,
 }
 
 impl Default for KnownNetwork {
     fn default() -> Self {
         Self {
             remove: 'd',
-            toggle_autoconnect: 'a',
+            toggle_autoconnect: 't',
+            show_all: 'a',
         }
     }
 }

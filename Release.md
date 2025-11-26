@@ -1,3 +1,7 @@
+## TBA
+
+- Show all the configured networks
+
 ## 0.5.0 - 2025-11-21
 
 - Support for WPA2 Entreprise

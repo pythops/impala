@@ -87,9 +87,11 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 ### Known Networks
 
-`a`: Enable/Disable auto-connect.
+`t`: Enable/Disable auto-connect.
 
 `d`: Remove the network from the known networks list.
+
+`a`: Show all the known networks.
 
 ### Access Point
 
