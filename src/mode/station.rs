@@ -240,6 +240,29 @@ impl Station {
             self.known_networks = known_networks;
         }
 
+        let available_networks_names: Vec<String> = self
+            .known_networks
+            .iter()
+            .map(|(n, _)| n.name.clone())
+            .collect();
+
+        let unavailable_known_networks =
+            if let Ok(iwd_known_networks) = self.session.known_networks().await {
+                let mut unavailable_known_networks = Vec::new();
+                for iwd_network in iwd_known_networks {
+                    if let Ok(known_network) = KnownNetwork::new(iwd_network).await
+                        && !available_networks_names.contains(&known_network.name)
+                    {
+                        unavailable_known_networks.push(known_network);
+                    }
+                }
+                unavailable_known_networks
+            } else {
+                Vec::new()
+            };
+
+        self.unavailable_known_networks = unavailable_known_networks;
+
         self.connected_network = connected_network;
 
         let iwd_station_diagnostic = self.session.stations_diagnostics().await.unwrap().pop();
