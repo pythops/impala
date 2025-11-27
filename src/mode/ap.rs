@@ -430,7 +430,7 @@ impl AccessPoint {
         };
 
         let row = Row::new(vec![
-            Line::from(self.has_started.to_string()).centered(),
+            Line::from(if self.has_started { "Yes" } else { "No" }).centered(),
             Line::from(ap_name).centered(),
             Line::from(ap_frequency).centered(),
             Line::from(ap_used_cipher).centered(),

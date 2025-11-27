@@ -355,7 +355,7 @@ impl Station {
                 }
             },
             Line::from(self.state.to_string()).centered(),
-            Line::from(self.is_scanning.to_string()).centered(),
+            Line::from(if self.is_scanning { "Yes" } else { "No" }).centered(),
             Line::from({
                 if let Some(diagnostic) = &self.diagnostic {
                     format!("{:.2} GHz", diagnostic.frequency_mhz as f32 / 1000.)
@@ -471,8 +471,8 @@ impl Station {
                             Line::from("󰖩 ").centered(),
                             Line::from(net.name.clone()).centered(),
                             Line::from(net.network_type.to_string()).centered(),
-                            Line::from(net.is_hidden.to_string()).centered(),
-                            Line::from(net.is_autoconnect.to_string()).centered(),
+                            Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
+                            Line::from(if net.is_autoconnect { "Yes" } else { "No" }).centered(),
                             Line::from(signal).centered(),
                         ];
 
@@ -482,8 +482,8 @@ impl Station {
                             Line::from(""),
                             Line::from(net.name.clone()).centered(),
                             Line::from(net.network_type.to_string()).centered(),
-                            Line::from(net.is_hidden.to_string()).centered(),
-                            Line::from(net.is_autoconnect.to_string()).centered(),
+                            Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
+                            Line::from(if net.is_autoconnect { "Yes" } else { "No" }).centered(),
                             Line::from(signal).centered(),
                         ];
 
@@ -494,8 +494,8 @@ impl Station {
                         Line::from("").centered(),
                         Line::from(net.name.clone()).centered(),
                         Line::from(net.network_type.to_string()).centered(),
-                        Line::from(net.is_hidden.to_string()).centered(),
-                        Line::from(net.is_autoconnect.to_string()).centered(),
+                        Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
+                        Line::from(if net.is_autoconnect { "Yes" } else { "No" }).centered(),
                         Line::from(signal).centered(),
                     ];
 
