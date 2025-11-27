@@ -487,8 +487,7 @@ pub async fn handle_key_events(
                                         }
 
                                         // Connect/Disconnect
-                                        KeyCode::Enter => toggle_connect(app, sender).await?,
-                                        KeyCode::Char(c) if c == config.station.toggle_connect => {
+                                        KeyCode::Enter | KeyCode::Char(' ') => {
                                             toggle_connect(app, sender).await?
                                         }
 
@@ -533,8 +532,7 @@ pub async fn handle_key_events(
                                     }
                                 }
                                 FocusedBlock::NewNetworks => match key_event.code {
-                                    KeyCode::Enter => toggle_connect(app, sender).await?,
-                                    KeyCode::Char(c) if c == config.station.toggle_connect => {
+                                    KeyCode::Enter | KeyCode::Char(' ') => {
                                         toggle_connect(app, sender).await?
                                     }
                                     KeyCode::Char('j') | KeyCode::Down => {

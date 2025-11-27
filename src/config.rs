@@ -63,9 +63,6 @@ pub struct Station {
     #[serde(default = "default_station_start_scanning")]
     pub start_scanning: char,
 
-    #[serde(default = "default_station_toggle_connect")]
-    pub toggle_connect: char,
-
     #[serde(default)]
     pub known_network: KnownNetwork,
 }
@@ -74,7 +71,6 @@ impl Default for Station {
     fn default() -> Self {
         Self {
             start_scanning: 's',
-            toggle_connect: ' ',
             known_network: KnownNetwork::default(),
         }
     }
@@ -82,10 +78,6 @@ impl Default for Station {
 
 fn default_station_start_scanning() -> char {
     's'
-}
-
-fn default_station_toggle_connect() -> char {
-    ' '
 }
 
 #[derive(Deserialize, Debug)]

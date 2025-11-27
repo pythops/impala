@@ -712,12 +712,7 @@ impl Station {
                 if frame.area().width <= 130 {
                     vec![
                         Line::from(vec![
-                            Span::from(if config.station.toggle_connect == ' ' {
-                                "󱁐  or ↵ ".to_string()
-                            } else {
-                                config.station.toggle_connect.to_string()
-                            })
-                            .bold(),
+                            Span::from("󱁐  or ↵ ").bold(),
                             Span::from(" Dis/connect"),
                             Span::from(" | "),
                             Span::from(config.station.known_network.show_all.to_string()).bold(),
@@ -758,12 +753,7 @@ impl Station {
                         Span::from("j,").bold(),
                         Span::from("  Down"),
                         Span::from(" | "),
-                        Span::from(if config.station.toggle_connect == ' ' {
-                            "󱁐  or ↵ ".to_string()
-                        } else {
-                            config.station.toggle_connect.to_string()
-                        })
-                        .bold(),
+                        Span::from("󱁐  or ↵ ").bold(),
                         Span::from(" Dis/connect"),
                         Span::from(" | "),
                         Span::from(config.station.known_network.show_all.to_string()).bold(),
