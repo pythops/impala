@@ -9,7 +9,7 @@
 ## ✨ Features
 
 - WPA Enterprise (802.1X) Support
-- Station & Access Point Modes:
+- Station & Access Point Modes
 - QR Code Network Sharing
 
 ## 💡 Prerequisites
@@ -89,7 +89,7 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 `s`: Start scanning.
 
-`Space`: Connect/Disconnect the network.
+`Space or Enter`: Connect/Disconnect the network.
 
 ### Known Networks
 
@@ -98,6 +98,8 @@ This will produce an executable file at `target/release/impala` that you can cop
 `d`: Remove the network from the known networks list.
 
 `a`: Show all the known networks.
+
+`p`: Share via QR Code.
 
 ### Access Point
 
