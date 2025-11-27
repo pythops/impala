@@ -1,8 +1,9 @@
-## TBA
+## 0.6.0 - 2025-11-27
 
 - Show all the configured networks
 - Encode network names correctly
 - Share network with QR code
+- Breaking change: remove config for connect. set to space or enter.
 
 ## 0.5.0 - 2025-11-21
 
