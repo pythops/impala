@@ -2,6 +2,7 @@
 
 - Show all the configured networks
 - Encode network names correctly
+- Share network with QR code
 
 ## 0.5.0 - 2025-11-21
 

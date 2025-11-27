@@ -12,8 +12,9 @@ use ratatui::{
 
 use tui_input::backend::crossterm::EventHandler;
 
-use crate::mode::station::auth::entreprise::{
-    ERROR_PADDING, UserInputField, iwd_network_name, pad_string,
+use crate::{
+    iwd_network_name,
+    mode::station::auth::entreprise::{ERROR_PADDING, UserInputField, pad_string},
 };
 
 #[derive(Debug, Clone, PartialEq, Default, strum_macros::Display)]

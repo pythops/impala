@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 pub mod auth;
 pub mod known_network;
 pub mod network;
+pub mod share;
 
 use std::sync::Arc;
 
@@ -25,13 +26,13 @@ use crate::{
     config::Config,
     device::Device,
     event::Event,
-    mode::station::known_network::KnownNetwork,
+    mode::station::{known_network::KnownNetwork, share::Share},
     notification::{Notification, NotificationLevel},
 };
 
 use network::Network;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Station {
     pub session: Arc<Session>,
     pub state: State,
@@ -44,6 +45,7 @@ pub struct Station {
     pub new_networks_state: TableState,
     pub diagnostic: Option<ActiveStationDiagnostics>,
     pub show_unavailable_known_networks: bool,
+    pub share: Option<Share>,
 }
 
 impl Station {
@@ -148,6 +150,7 @@ impl Station {
             new_networks_state,
             diagnostic,
             show_unavailable_known_networks: false,
+            share: None,
         })
     }
 
@@ -706,7 +709,7 @@ impl Station {
                 Span::from(" Nav"),
             ])],
             FocusedBlock::KnownNetworks => {
-                if frame.area().width <= 120 {
+                if frame.area().width <= 130 {
                     vec![
                         Line::from(vec![
                             Span::from(if config.station.toggle_connect == ' ' {
@@ -723,9 +726,8 @@ impl Station {
                             Span::from(config.station.known_network.remove.to_string()).bold(),
                             Span::from(" Remove"),
                             Span::from(" | "),
-                            Span::from(config.station.known_network.toggle_autoconnect.to_string())
-                                .bold(),
-                            Span::from(" Autoconnect"),
+                            Span::from(config.station.known_network.share.to_string()).bold(),
+                            Span::from(" Share"),
                             Span::from(" | "),
                             Span::from(config.station.start_scanning.to_string()).bold(),
                             Span::from(" Scan"),
@@ -737,11 +739,15 @@ impl Station {
                             Span::from("j,").bold(),
                             Span::from("  Down"),
                             Span::from(" | "),
+                            Span::from("⇄").bold(),
+                            Span::from(" Nav"),
+                            Span::from(" | "),
                             Span::from("ctrl+r").bold(),
                             Span::from(" Switch Mode"),
                             Span::from(" | "),
-                            Span::from("⇄").bold(),
-                            Span::from(" Nav"),
+                            Span::from(config.station.known_network.toggle_autoconnect.to_string())
+                                .bold(),
+                            Span::from(" Autoconnect"),
                         ]),
                     ]
                 } else {
@@ -772,6 +778,9 @@ impl Station {
                         Span::from(" | "),
                         Span::from(config.station.start_scanning.to_string()).bold(),
                         Span::from(" Scan"),
+                        Span::from(" | "),
+                        Span::from(config.station.known_network.share.to_string()).bold(),
+                        Span::from(" Share"),
                         Span::from(" | "),
                         Span::from("ctrl+r").bold(),
                         Span::from(" Switch Mode"),
@@ -866,5 +875,10 @@ impl Station {
         let help_message = Paragraph::new(help_message).centered().blue();
 
         frame.render_widget(help_message, help_block);
+
+        // Share
+        if let Some(share) = &self.share {
+            share.render(frame);
+        }
     }
 }

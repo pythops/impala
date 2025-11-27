@@ -33,6 +33,8 @@ strum = { version = "0.27.2", features = ["derive"] }
 strum_macros = "0.27"
 libc = "0.2"
 hex = "0.4.3"
+tui-qrcode = "0.1.3"
+qrcode = "0.14.1"
 
 [profile.release]
 strip = true

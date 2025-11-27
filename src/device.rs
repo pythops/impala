@@ -17,7 +17,7 @@ use crate::{
     mode::{ap::AccessPoint, station::Station},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Device {
     device: iwdDevice,
     session: Arc<Session>,

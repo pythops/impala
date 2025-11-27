@@ -12,7 +12,10 @@ use ratatui::{
 
 use tui_input::backend::crossterm::EventHandler;
 
-use crate::mode::station::auth::entreprise::{ERROR_PADDING, UserInputField, iwd_network_name};
+use crate::{
+    iwd_network_name,
+    mode::station::auth::entreprise::{ERROR_PADDING, UserInputField},
+};
 
 fn pad_string(input: &str, length: usize) -> String {
     let current_length = input.chars().count();

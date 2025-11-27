@@ -94,6 +94,7 @@ pub struct KnownNetwork {
     pub remove: char,
     pub toggle_autoconnect: char,
     pub show_all: char,
+    pub share: char,
 }
 
 impl Default for KnownNetwork {
@@ -102,6 +103,7 @@ impl Default for KnownNetwork {
             remove: 'd',
             toggle_autoconnect: 't',
             show_all: 'a',
+            share: 'p',
         }
     }
 }

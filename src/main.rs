@@ -177,6 +177,7 @@ You do not have the required permissions. Ensure you are part of the appropriate
                 app.auth.init_request_username_and_password(network_name);
                 app.focused_block = impala::app::FocusedBlock::RequestUsernameAndPassword
             }
+
             _ => {}
         }
     }

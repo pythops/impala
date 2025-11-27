@@ -6,7 +6,8 @@ use crate::config::Config;
 use crate::device::Device;
 use crate::event::Event;
 use crate::mode::ap::APFocusedSection;
-use crate::notification::Notification;
+use crate::mode::station::share::Share;
+use crate::notification::{self, Notification};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use iwdrs::modes::Mode;
@@ -316,6 +317,12 @@ pub async fn handle_key_events(
                             app.focused_block = FocusedBlock::Device;
                         }
                     }
+                    FocusedBlock::ShareNetwork => {
+                        if key_event.code == KeyCode::Esc {
+                            station.share = None;
+                            app.focused_block = FocusedBlock::KnownNetworks;
+                        }
+                    }
                     _ => {
                         match key_event.code {
                             KeyCode::Char('q') => {
@@ -380,6 +387,51 @@ pub async fn handle_key_events(
 
                                 FocusedBlock::KnownNetworks => {
                                     match key_event.code {
+                                        // Share
+                                        KeyCode::Char(c)
+                                            if c == config.station.known_network.share =>
+                                        {
+                                            if unsafe { libc::geteuid() } != 0 {
+                                                let _ = Notification::send(
+                                                    "impala must be run as root to share networks"
+                                                        .to_string(),
+                                                    notification::NotificationLevel::Info,
+                                                    &sender,
+                                                );
+                                                return Ok(());
+                                            }
+
+                                            if let Some(net_index) =
+                                                station.known_networks_state.selected()
+                                            {
+                                                if net_index > station.known_networks.len() - 1 {
+                                                    let index = net_index.saturating_sub(
+                                                        station.known_networks.len(),
+                                                    );
+                                                    let network =
+                                                        &station.unavailable_known_networks[index];
+                                                    if network.network_type == NetworkType::Psk
+                                                        && let Ok(share) =
+                                                            Share::new(network.name.clone())
+                                                    {
+                                                        station.share = Some(share);
+                                                        app.focused_block =
+                                                            FocusedBlock::ShareNetwork;
+                                                    }
+                                                } else {
+                                                    let (network, _) =
+                                                        &station.known_networks[net_index];
+                                                    if network.network_type == NetworkType::Psk
+                                                        && let Ok(share) =
+                                                            Share::new(network.name.clone())
+                                                    {
+                                                        station.share = Some(share);
+                                                        app.focused_block =
+                                                            FocusedBlock::ShareNetwork;
+                                                    }
+                                                }
+                                            }
+                                        }
                                         // Remove a known network
                                         KeyCode::Char(c)
                                             if c == config.station.known_network.remove =>

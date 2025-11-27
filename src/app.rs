@@ -23,9 +23,9 @@ pub enum FocusedBlock {
     RequestKeyPasshphrase,
     RequestPassword,
     RequestUsernameAndPassword,
+    ShareNetwork,
 }
 
-#[derive(Debug)]
 pub struct App {
     pub running: bool,
     pub focused_block: FocusedBlock,
