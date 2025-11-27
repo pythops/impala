@@ -6,6 +6,12 @@
 
 ![](https://github.com/user-attachments/assets/55c800ff-d0aa-4454-aa6b-3990833ce530)
 
+## ✨ Features
+
+- WPA Enterprise (802.1X) Support
+- Station & Access Point Modes:
+- QR Code Network Sharing
+
 ## 💡 Prerequisites
 
 - A Linux based OS
@@ -119,11 +125,12 @@ stop = 'x'
 
 [station]
 toggle_scanning = "s"
-toggle_connect = " "
 
 [station.known_network]
-toggle_autoconnect = "a"
+toggle_autoconnect = "t"
 remove = "d"
+show_all = "a"
+share = "p"
 ```
 
 ## ⚖️ License
