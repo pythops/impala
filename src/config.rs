@@ -111,11 +111,15 @@ fn default_station_remove_known_network() -> char {
 #[derive(Deserialize, Debug)]
 pub struct NewNetwork {
     pub show_all: char,
+    pub add_hidden: char,
 }
 
 impl Default for NewNetwork {
     fn default() -> Self {
-        Self { show_all: 'a' }
+        Self {
+            show_all: 'a',
+            add_hidden: 'h',
+        }
     }
 }
 

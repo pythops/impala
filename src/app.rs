@@ -24,6 +24,7 @@ pub enum FocusedBlock {
     RequestPassword,
     RequestUsernameAndPassword,
     ShareNetwork,
+    AddHiddenNetworkSsid,
 }
 
 pub struct App {

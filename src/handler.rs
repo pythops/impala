@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use std::sync::Arc;
 
 use crate::app::{App, FocusedBlock};
@@ -7,12 +7,13 @@ use crate::device::Device;
 use crate::event::Event;
 use crate::mode::ap::APFocusedSection;
 use crate::mode::station::share::Share;
-use crate::notification::{self, Notification};
+use crate::notification::{self, Notification, NotificationLevel};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use iwdrs::modes::Mode;
 use iwdrs::network::NetworkType;
 use tokio::sync::mpsc::UnboundedSender;
+use tui_input::Input;
 use tui_input::backend::crossterm::EventHandler;
 
 pub async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Result<()> {
@@ -348,6 +349,56 @@ pub async fn handle_key_events(
                             app.focused_block = FocusedBlock::KnownNetworks;
                         }
                     }
+                    FocusedBlock::AddHiddenNetworkSsid => match key_event.code {
+                        KeyCode::Enter => {
+                            let ssid = station.hidden_ssid.value().trim().to_string();
+                            if ssid.is_empty() {
+                                let _ = Notification::send(
+                                    "SSID cannot be empty".to_string(),
+                                    NotificationLevel::Info,
+                                    &sender,
+                                );
+                                return Ok(());
+                            }
+
+                            // Set the network name for auth
+                            app.network_name_requiring_auth = Some(ssid.clone());
+
+                            // Connect to the hidden network
+                            let stations = station.session.stations().await?;
+                            let iwd_station = stations
+                                .into_iter()
+                                .next()
+                                .ok_or_else(|| anyhow!("No stations available"))?;
+                            tokio::spawn(async move {
+                                match iwd_station.connect_hidden_network(ssid.clone()).await {
+                                    Ok(()) => {
+                                        let _ = Notification::send(
+                                            format!("Connected to hidden network: {}", ssid),
+                                            NotificationLevel::Info,
+                                            &sender,
+                                        );
+                                    }
+                                    Err(e) => {
+                                        let _ = Notification::send(
+                                            e.to_string(),
+                                            NotificationLevel::Error,
+                                            &sender,
+                                        );
+                                    }
+                                }
+                            });
+                            app.focused_block = FocusedBlock::NewNetworks;
+                        }
+                        KeyCode::Esc => {
+                            app.focused_block = FocusedBlock::NewNetworks;
+                        }
+                        _ => {
+                            station
+                                .hidden_ssid
+                                .handle_event(&crossterm::event::Event::Key(key_event));
+                        }
+                    },
                     _ => {
                         match key_event.code {
                             KeyCode::Char('q') => {
@@ -563,6 +614,12 @@ pub async fn handle_key_events(
                                     {
                                         station.show_hidden_networks =
                                             !station.show_hidden_networks;
+                                    }
+                                    KeyCode::Char(c)
+                                        if c == config.station.new_network.add_hidden =>
+                                    {
+                                        app.focused_block = FocusedBlock::AddHiddenNetworkSsid;
+                                        station.hidden_ssid = Input::default();
                                     }
                                     KeyCode::Enter | KeyCode::Char(' ') => {
                                         toggle_connect(app, sender).await?

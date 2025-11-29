@@ -15,12 +15,13 @@ use iwdrs::{
 };
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Flex, Layout},
+    layout::{Alignment, Constraint, Direction, Flex, Layout, Rect},
     style::{Color, Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Padding, Paragraph, Row, Table, TableState},
+    widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Row, Table, TableState},
 };
 use tokio::sync::mpsc::UnboundedSender;
+use tui_input::Input;
 
 use crate::{
     app::FocusedBlock,
@@ -49,6 +50,7 @@ pub struct Station {
     pub show_unavailable_known_networks: bool,
     pub show_hidden_networks: bool,
     pub share: Option<Share>,
+    pub hidden_ssid: Input,
 }
 
 impl Station {
@@ -161,6 +163,7 @@ impl Station {
             show_unavailable_known_networks: false,
             show_hidden_networks: false,
             share: None,
+            hidden_ssid: Input::default(),
         })
     }
 
@@ -867,6 +870,9 @@ impl Station {
                         Span::from(config.station.new_network.show_all.to_string()).bold(),
                         Span::from(" Show All"),
                         Span::from(" | "),
+                        Span::from(config.station.new_network.add_hidden.to_string()).bold(),
+                        Span::from(" Add Hidden"),
+                        Span::from(" | "),
                         Span::from(config.station.start_scanning.to_string()).bold(),
                         Span::from(" Scan"),
                         Span::from(" | "),
@@ -907,6 +913,13 @@ impl Station {
                 Span::from("⇄").bold(),
                 Span::from(" Nav"),
             ])],
+            FocusedBlock::AddHiddenNetworkSsid => vec![Line::from(vec![
+                Span::from(" ↵ ").bold(),
+                Span::from(" Connect"),
+                Span::from(" | "),
+                Span::from("󱊷 ").bold(),
+                Span::from(" Cancel"),
+            ])],
             _ => vec![Line::from(vec![
                 Span::from("󱊷 ").bold(),
                 Span::from(" Discard"),
@@ -921,5 +934,96 @@ impl Station {
         if let Some(share) = &self.share {
             share.render(frame);
         }
+
+        // Hidden network SSID input
+        if focused_block == FocusedBlock::AddHiddenNetworkSsid {
+            self.render_hidden_ssid_input(frame);
+        }
+    }
+
+    fn calculate_popup_area(&self, frame_area: Rect) -> Rect {
+        let popup_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(8),
+                Constraint::Fill(1),
+            ])
+            .flex(ratatui::layout::Flex::SpaceBetween)
+            .split(frame_area);
+
+        Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(80),
+                Constraint::Fill(1),
+            ])
+            .flex(ratatui::layout::Flex::SpaceBetween)
+            .split(popup_layout[1])[1]
+    }
+
+    fn render_hidden_ssid_input(&self, frame: &mut Frame) {
+        let area = self.calculate_popup_area(frame.area());
+
+        let (text_area, ssid_area, _empty_area) = {
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(1),
+                    Constraint::Length(3),
+                    Constraint::Length(1),
+                    Constraint::Length(1),
+                ])
+                .split(area);
+
+            let area1 = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Length(1),
+                    Constraint::Fill(1),
+                    Constraint::Length(1),
+                ])
+                .flex(ratatui::layout::Flex::Center)
+                .split(chunks[1]);
+
+            let area2 = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Percentage(20),
+                    Constraint::Fill(1),
+                    Constraint::Length(5),
+                    Constraint::Percentage(20),
+                ])
+                .flex(ratatui::layout::Flex::Center)
+                .split(chunks[2]);
+
+            (area1[1], area2[1], area2[2])
+        };
+
+        let text = Line::from(vec![Span::raw("Enter the SSID of the hidden network")]);
+
+        let text = Paragraph::new(text.centered())
+            .alignment(Alignment::Center)
+            .style(Style::default().fg(Color::White))
+            .block(Block::new().padding(Padding::uniform(1)));
+
+        let ssid = Paragraph::new(self.hidden_ssid.value())
+            .alignment(Alignment::Center)
+            .style(Style::default().fg(Color::White))
+            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+
+        frame.render_widget(Clear, area);
+
+        frame.render_widget(
+            Block::new()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Thick)
+                .style(Style::default().green())
+                .border_style(Style::default().fg(Color::Green)),
+            area,
+        );
+        frame.render_widget(text, text_area);
+        frame.render_widget(ssid, ssid_area);
     }
 }
