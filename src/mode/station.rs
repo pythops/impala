@@ -9,6 +9,7 @@ use std::sync::Arc;
 use futures::future::join_all;
 use iwdrs::{
     error::{IWDError, station::ScanError},
+    hidden_network::HiddenNetwork,
     session::Session,
     station::{State, diagnostics::ActiveStationDiagnostics},
 };
@@ -39,12 +40,14 @@ pub struct Station {
     pub is_scanning: bool,
     pub connected_network: Option<Network>,
     pub new_networks: Vec<(Network, i16)>,
+    pub new_hidden_networks: Vec<HiddenNetwork>,
     pub known_networks: Vec<(Network, i16)>,
     pub unavailable_known_networks: Vec<KnownNetwork>,
     pub known_networks_state: TableState,
     pub new_networks_state: TableState,
     pub diagnostic: Option<ActiveStationDiagnostics>,
     pub show_unavailable_known_networks: bool,
+    pub show_hidden_networks: bool,
     pub share: Option<Share>,
 }
 
@@ -93,6 +96,11 @@ impl Station {
             .into_iter()
             .filter(|(net, _signal)| net.known_network.is_none())
             .collect();
+
+        let new_hidden_networks = iwd_station
+            .get_hidden_networks()
+            .await
+            .unwrap_or(Vec::new());
 
         let known_networks: Vec<(Network, i16)> = networks
             .into_iter()
@@ -144,14 +152,22 @@ impl Station {
             is_scanning,
             connected_network,
             new_networks,
+            new_hidden_networks,
             known_networks,
             unavailable_known_networks,
             known_networks_state,
             new_networks_state,
             diagnostic,
             show_unavailable_known_networks: false,
+            show_hidden_networks: false,
             share: None,
         })
+    }
+
+    pub async fn connect_hidden_network(&self, ssid: String) -> Result<()> {
+        let iwd_station = self.session.stations().await?.pop().unwrap();
+        iwd_station.connect_hidden_network(ssid).await?;
+        Ok(())
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
@@ -242,6 +258,11 @@ impl Station {
             self.known_networks_state = known_networks_state;
             self.known_networks = known_networks;
         }
+
+        self.new_hidden_networks = iwd_station
+            .get_hidden_networks()
+            .await
+            .unwrap_or(Vec::new());
 
         let available_networks_names: Vec<String> = self
             .known_networks
@@ -598,7 +619,7 @@ impl Station {
         //
         // New networks
         //
-        let rows: Vec<Row> = self
+        let mut rows: Vec<Row> = self
             .new_networks
             .iter()
             .map(|(net, signal)| {
@@ -624,6 +645,34 @@ impl Station {
                 ])
             })
             .collect();
+
+        if self.show_hidden_networks {
+            self.new_hidden_networks.iter().for_each(|net| {
+                rows.push(
+                    Row::new(vec![
+                        Line::from(net.address.clone()).centered(),
+                        Line::from(net.network_type.to_string().clone()).centered(),
+                        Line::from({
+                            let signal = {
+                                if net.signal_strength / 100 >= -50 {
+                                    100
+                                } else {
+                                    2 * (100 + net.signal_strength / 100)
+                                }
+                            };
+                            match signal {
+                                n if n >= 75 => format!("{signal:3}% 󰤨"),
+                                n if (50..75).contains(&n) => format!("{signal:3}% 󰤥"),
+                                n if (25..50).contains(&n) => format!("{signal:3}% 󰤢"),
+                                _ => format!("{signal:3}% 󰤟"),
+                            }
+                        })
+                        .centered(),
+                    ])
+                    .dark_gray(),
+                )
+            })
+        };
 
         let widths = [
             Constraint::Length(25),
@@ -789,7 +838,6 @@ impl Station {
                             Span::from(" | "),
                             Span::from(config.station.start_scanning.to_string()).bold(),
                             Span::from(" Scan"),
-                            Span::from(" | "),
                         ]),
                         Line::from(vec![
                             Span::from("k,").bold(),
@@ -815,6 +863,9 @@ impl Station {
                         Span::from(" | "),
                         Span::from("󱁐  or ↵ ").bold(),
                         Span::from(" Connect"),
+                        Span::from(" | "),
+                        Span::from(config.station.new_network.show_all.to_string()).bold(),
+                        Span::from(" Show All"),
                         Span::from(" | "),
                         Span::from(config.station.start_scanning.to_string()).bold(),
                         Span::from(" Scan"),
