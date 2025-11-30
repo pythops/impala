@@ -135,6 +135,12 @@ show_all = "a"
 share = "p"
 ```
 
+## Contributing
+
+- No AI slop.
+- Only submit a pull request after having a prior issue or discussion.
+- Keep PRs small and focused.
+
 ## ⚖️ License
 
 GPLv3
