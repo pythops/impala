@@ -65,6 +65,9 @@ pub struct Station {
 
     #[serde(default)]
     pub known_network: KnownNetwork,
+
+    #[serde(default)]
+    pub new_network: NewNetwork,
 }
 
 impl Default for Station {
@@ -72,6 +75,7 @@ impl Default for Station {
         Self {
             start_scanning: 's',
             known_network: KnownNetwork::default(),
+            new_network: NewNetwork::default(),
         }
     }
 }
@@ -102,6 +106,17 @@ impl Default for KnownNetwork {
 
 fn default_station_remove_known_network() -> char {
     'd'
+}
+
+#[derive(Deserialize, Debug)]
+pub struct NewNetwork {
+    pub show_all: char,
+}
+
+impl Default for NewNetwork {
+    fn default() -> Self {
+        Self { show_all: 'a' }
+    }
 }
 
 // Access Point

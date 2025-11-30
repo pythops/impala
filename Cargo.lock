@@ -1018,9 +1018,9 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "iwdrs"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7000a7d6673878c10c4438a6b128a002e42be52eb62a6656c46a6f9d2b2323d"
+checksum = "29ed486c288e4313b906a7cf013385d275582dc31117d96a628738c7f1b27c40"
 dependencies = [
  "futures-lite",
  "strum 0.27.2",

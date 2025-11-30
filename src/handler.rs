@@ -20,15 +20,40 @@ pub async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Re
         match app.focused_block {
             FocusedBlock::NewNetworks => {
                 if let Some(net_index) = station.new_networks_state.selected() {
-                    let (net, _) = station.new_networks[net_index].clone();
+                    if net_index < station.new_networks.len() {
+                        let (net, _) = station.new_networks[net_index].clone();
 
-                    if net.network_type == NetworkType::Eap {
-                        sender.send(Event::ConfigureNewEapNetwork(net.name.clone()))?;
-                        return Ok(());
+                        if net.network_type == NetworkType::Eap {
+                            sender.send(Event::ConfigureNewEapNetwork(net.name.clone()))?;
+                            return Ok(());
+                        }
+                        tokio::spawn(async move {
+                            let _ = net.connect(sender.clone()).await;
+                        });
+                    } else {
+                        let net = station.new_hidden_networks
+                            [net_index.saturating_sub(station.new_networks.len())]
+                        .clone();
+
+                        if net.network_type == NetworkType::Eap {
+                            sender.send(Event::ConfigureNewEapNetwork(net.address.clone()))?;
+                            return Ok(());
+                        }
+                        tokio::spawn({
+                            let iwd_station =
+                                station.session.stations().await.unwrap().pop().unwrap();
+                            let ssid = net.address.clone();
+                            async move {
+                                if let Err(e) = iwd_station.connect_hidden_network(ssid).await {
+                                    let _ = Notification::send(
+                                        e.to_string(),
+                                        notification::NotificationLevel::Error,
+                                        &sender,
+                                    );
+                                }
+                            }
+                        });
                     }
-                    tokio::spawn(async move {
-                        let _ = net.connect(sender.clone()).await;
-                    });
                 }
             }
             FocusedBlock::KnownNetworks => match &station.connected_network {
@@ -532,6 +557,13 @@ pub async fn handle_key_events(
                                     }
                                 }
                                 FocusedBlock::NewNetworks => match key_event.code {
+                                    // Show / Hide unavailable networks
+                                    KeyCode::Char(c)
+                                        if c == config.station.new_network.show_all =>
+                                    {
+                                        station.show_hidden_networks =
+                                            !station.show_hidden_networks;
+                                    }
                                     KeyCode::Enter | KeyCode::Char(' ') => {
                                         toggle_connect(app, sender).await?
                                     }
@@ -539,11 +571,14 @@ pub async fn handle_key_events(
                                         if !station.new_networks.is_empty() {
                                             let i = match station.new_networks_state.selected() {
                                                 Some(i) => {
-                                                    if i < station.new_networks.len() - 1 {
-                                                        i + 1
+                                                    let limit = if station.show_hidden_networks {
+                                                        station.new_networks.len()
+                                                            + station.new_hidden_networks.len()
+                                                            - 1
                                                     } else {
-                                                        i
-                                                    }
+                                                        station.new_networks.len() - 1
+                                                    };
+                                                    if i < limit { i + 1 } else { i }
                                                 }
                                                 None => 0,
                                             };
