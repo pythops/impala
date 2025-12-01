@@ -89,10 +89,10 @@ impl Psk {
             let area2 = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints([
-                    Constraint::Percentage(20),
+                    Constraint::Length(2),
                     Constraint::Fill(1),
                     Constraint::Length(5),
-                    Constraint::Percentage(20),
+                    Constraint::Length(2),
                 ])
                 .flex(ratatui::layout::Flex::Center)
                 .split(chunks[2]);
