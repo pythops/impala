@@ -113,14 +113,16 @@ impl Psk {
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::White))
             .block(Block::new().padding(Padding::uniform(1)));
+            
+        let passphrase_str = if self.show_password {
+            self.passphrase.value().to_string()
+        } else {
+            "*".repeat(self.passphrase.value().len())
+        };
 
-        let passkey = Paragraph::new({
-            if self.show_password {
-                self.passphrase.value().to_string()
-            } else {
-                "*".repeat(self.passphrase.value().len())
-            }
-        })
+        let pass_len = passphrase_str.len();
+        
+        let passkey = Paragraph::new(passphrase_str)
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::White))
         .block(Block::new().style(Style::default().bg(Color::DarkGray)));
@@ -143,6 +145,24 @@ impl Psk {
         );
         frame.render_widget(text, text_area);
         frame.render_widget(passkey, passkey_area);
+
+        let inner_width = passkey_area.width.saturating_sub(2) as usize;
+        let pad_left = if inner_width > pass_len {
+            (inner_width - pass_len) / 2
+        } else {
+            0
+        };
+
+        let visual_cursor = self
+            .passphrase
+            .visual_cursor()
+            .min(pass_len);
+
+        let x_in_inner = pad_left + visual_cursor;
+
+        let cursor_x = passkey_area.x + 1 + x_in_inner as u16;
+        frame.set_cursor_position((cursor_x, passkey_area.y));
+
         frame.render_widget(show_password_icon, show_password_area);
     }
 }
