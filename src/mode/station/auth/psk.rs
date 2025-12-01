@@ -113,7 +113,7 @@ impl Psk {
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::White))
             .block(Block::new().padding(Padding::uniform(1)));
-            
+
         let passphrase_str = if self.show_password {
             self.passphrase.value().to_string()
         } else {
@@ -121,11 +121,11 @@ impl Psk {
         };
 
         let pass_len = passphrase_str.len();
-        
+
         let passkey = Paragraph::new(passphrase_str)
-        .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::White))
-        .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+            .alignment(Alignment::Center)
+            .style(Style::default().fg(Color::White))
+            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
 
         let show_password_icon = if self.show_password {
             Text::from("󰈈 ").centered()
@@ -148,15 +148,12 @@ impl Psk {
 
         let inner_width = passkey_area.width.saturating_sub(2) as usize;
         let pad_left = if inner_width > pass_len {
-            (inner_width - pass_len) / 2
+            inner_width.saturating_sub(pass_len) / 2
         } else {
             0
         };
 
-        let visual_cursor = self
-            .passphrase
-            .visual_cursor()
-            .min(pass_len);
+        let visual_cursor = self.passphrase.visual_cursor().min(pass_len);
 
         let x_in_inner = pad_left + visual_cursor;
 
