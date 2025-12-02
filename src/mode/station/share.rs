@@ -1,13 +1,13 @@
 use anyhow::Result;
 use qrcode::QrCode;
-use std::fs;
+use std::{cmp, fs};
 use tui_qrcode::{Colors, QrCodeWidget};
 
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Flex, Layout, Rect},
-    style::{Style, Stylize},
-    text::Text,
+    style::{Color, Style, Stylize},
+    text::{Line, Span, Text},
     widgets::{Block, BorderType, Borders, Clear},
 };
 
@@ -17,6 +17,7 @@ use crate::iwd_network_name;
 pub struct Share {
     pub qr_code: QrCode,
     pub network_name: String,
+    pub passphrase: String,
 }
 
 impl Share {
@@ -34,6 +35,7 @@ impl Share {
             Ok(Self {
                 qr_code,
                 network_name,
+                passphrase: passphrase.to_string(),
             })
         } else {
             unreachable!()
@@ -45,11 +47,13 @@ impl Share {
         let sim_area = Rect::new(0, 0, 50, 50);
         let size = widget.size(sim_area);
 
+        let block_width = cmp::max(size.width as usize, self.passphrase.len() + 12) + 6;
+
         let block = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Fill(1),
-                Constraint::Length(size.height + 8),
+                Constraint::Length(size.height + 12),
                 Constraint::Fill(1),
             ])
             .flex(Flex::SpaceBetween)
@@ -59,21 +63,25 @@ impl Share {
             .direction(Direction::Horizontal)
             .constraints([
                 Constraint::Fill(1),
-                Constraint::Length(size.width + 6),
+                Constraint::Length(block_width as u16),
                 Constraint::Fill(1),
             ])
             .flex(Flex::SpaceBetween)
             .split(block)[1];
 
-        let (title_block, qr_block) = {
+        let (title_block, mut qr_block, passphrase_block) = {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([Constraint::Length(3), Constraint::Fill(1)])
+                .constraints([
+                    Constraint::Length(3),
+                    Constraint::Fill(1),
+                    Constraint::Length(3),
+                ])
                 .margin(3)
                 .flex(Flex::SpaceBetween)
                 .split(block);
 
-            (chunks[0], chunks[1])
+            (chunks[0], chunks[1], chunks[2])
         };
 
         frame.render_widget(Clear, block);
@@ -88,6 +96,29 @@ impl Share {
             Text::from(self.network_name.clone()).centered().bold(),
             title_block,
         );
-        frame.render_widget(widget, qr_block)
+
+        if (size.width as usize) < block_width {
+            qr_block = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Fill(1),
+                    Constraint::Length(size.width),
+                    Constraint::Fill(1),
+                ])
+                .flex(Flex::SpaceBetween)
+                .split(qr_block)[1];
+        }
+
+        frame.render_widget(widget, qr_block);
+
+        let passphrase = Text::from(vec![
+            Line::from(""),
+            Line::from(vec![
+                Span::from("Passphrase: "),
+                Span::from(&self.passphrase).bold().bg(Color::DarkGray),
+            ])
+            .centered(),
+        ]);
+        frame.render_widget(passphrase, passphrase_block);
     }
 }
