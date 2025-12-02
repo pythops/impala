@@ -19,20 +19,18 @@ jobs:
       - name: Install the dependencies
         run: |
           sudo apt update
-          sudo apt install -y musl-tools podman binutils-aarch64-linux-gnu musl-tools
+          sudo apt install -y podman binutils-aarch64-linux-gnu musl-tools
           cargo binstall --no-confirm cross
 
       - name: Build for x86_64
         run: |
-          CROSS_CONTAINER_ENGINE=podman cross build --target=x86_64-unknown-linux-gnu --release
-          cp target/x86_64-unknown-linux-gnu/release/impala impala-x86_64-unknown-linux-gnu
-          strip impala-x86_64-unknown-linux-gnu
+          CROSS_CONTAINER_ENGINE=podman cross build --target=x86_64-unknown-linux-musl --release
+          cp target/x86_64-unknown-linux-musl/release/impala impala-x86_64-unknown-linux-musl
 
       - name: Build for arm64
         run: |
-          CROSS_CONTAINER_ENGINE=podman cross build --target=aarch64-unknown-linux-gnu --release
-          cp target/aarch64-unknown-linux-gnu/release/impala impala-aarch64-unknown-linux-gnu
-          aarch64-linux-gnu-strip impala-aarch64-unknown-linux-gnu
+          CROSS_CONTAINER_ENGINE=podman cross build --target=aarch64-unknown-linux-musl --release
+          cp target/aarch64-unknown-linux-musl/release/impala impala-aarch64-unknown-linux-musl
 
       - name: Upload Binary
         uses: softprops/action-gh-release@v2
