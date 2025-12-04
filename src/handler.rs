@@ -170,13 +170,13 @@ pub async fn handle_key_events(
                 }
             }
 
-            KeyCode::Char('j') => {
+            KeyCode::Char('j') | KeyCode::Down => {
                 if app.reset.selected_mode == Mode::Station {
                     app.reset.selected_mode = Mode::Ap;
                 }
             }
 
-            KeyCode::Char('k') => {
+            KeyCode::Char('k') | KeyCode::Up => {
                 if app.reset.selected_mode == Mode::Ap {
                     app.reset.selected_mode = Mode::Station;
                 }
