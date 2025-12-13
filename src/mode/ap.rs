@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result};
 use std::sync::{Arc, atomic::AtomicBool};
 
 use iwdrs::session::Session;
@@ -49,11 +49,10 @@ impl AccessPoint {
     pub async fn new(session: Arc<Session>) -> Result<Self> {
         let iwd_access_point = session
             .access_points()
-            .await
-            .unwrap()
+            .await?
             .pop()
-            .ok_or(anyhow!("no ap found"))?;
-        let iwd_access_point_diagnostic = session.access_points_diagnostics().await.unwrap().pop();
+            .context("no ap found")?;
+        let iwd_access_point_diagnostic = session.access_points_diagnostics().await?.pop();
 
         let has_started = iwd_access_point.has_started().await?;
         let name = iwd_access_point.name().await?;
@@ -217,13 +216,13 @@ impl AccessPoint {
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
-        let iwd_access_point = self.session.access_points().await.unwrap().pop().unwrap();
-        let iwd_access_point_diagnostic = self
+        let iwd_access_point = self
             .session
-            .access_points_diagnostics()
-            .await
-            .unwrap()
-            .pop();
+            .access_points()
+            .await?
+            .pop()
+            .context("No AP found")?;
+        let iwd_access_point_diagnostic = self.session.access_points_diagnostics().await?.pop();
 
         self.has_started = iwd_access_point.has_started().await?;
         self.name = iwd_access_point.name().await?;
@@ -247,7 +246,12 @@ impl AccessPoint {
     }
 
     pub async fn scan(&self, sender: UnboundedSender<Event>) -> Result<()> {
-        let iwd_access_point = self.session.access_points().await.unwrap().pop().unwrap();
+        let iwd_access_point = self
+            .session
+            .access_points()
+            .await?
+            .pop()
+            .context("No AP found")?;
         match iwd_access_point.scan().await {
             Ok(()) => Notification::send(
                 "Start Scanning".to_string(),
@@ -261,7 +265,12 @@ impl AccessPoint {
     }
 
     pub async fn start(&self, sender: UnboundedSender<Event>) -> Result<()> {
-        let iwd_access_point = self.session.access_points().await.unwrap().pop().unwrap();
+        let iwd_access_point = self
+            .session
+            .access_points()
+            .await?
+            .pop()
+            .context("No AP found")?;
         match iwd_access_point
             .start(self.ssid.value(), self.psk.value())
             .await
@@ -280,7 +289,12 @@ impl AccessPoint {
     }
 
     pub async fn stop(&self, sender: UnboundedSender<Event>) -> Result<()> {
-        let iwd_access_point = self.session.access_points().await.unwrap().pop().unwrap();
+        let iwd_access_point = self
+            .session
+            .access_points()
+            .await?
+            .pop()
+            .context("No AP found")?;
         match iwd_access_point.stop().await {
             Ok(()) => {
                 Notification::send("AP Stopped".to_string(), NotificationLevel::Info, &sender)?

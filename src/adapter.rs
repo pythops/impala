@@ -28,8 +28,7 @@ impl Adapter {
     pub async fn new(session: Arc<Session>, config: Arc<Config>) -> Result<Self> {
         let adapter = session
             .adapters()
-            .await
-            .unwrap()
+            .await?
             .pop()
             .context("No adapter found")?;
 

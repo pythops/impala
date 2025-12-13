@@ -1,3 +1,4 @@
+use anyhow::Context;
 use anyhow::Result;
 use std::sync::Arc;
 
@@ -31,7 +32,7 @@ pub struct Device {
 
 impl Device {
     pub async fn new(session: Arc<Session>) -> Result<Self> {
-        let device = session.devices().await.unwrap().pop().unwrap();
+        let device = session.devices().await?.pop().context("No device found")?;
         let name = device.name().await?;
         let address = device.address().await?;
         let mode = device.get_mode().await?;

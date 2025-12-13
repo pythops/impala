@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result};
 pub mod auth;
 pub mod known_network;
 pub mod network;
@@ -55,12 +55,11 @@ impl Station {
     pub async fn new(session: Arc<Session>) -> Result<Self> {
         let iwd_station = session
             .stations()
-            .await
-            .unwrap()
+            .await?
             .pop()
-            .ok_or(anyhow!("no station found"))?;
+            .context("no station found")?;
 
-        let iwd_station_diagnostic = session.stations_diagnostics().await.unwrap().pop();
+        let iwd_station_diagnostic = session.stations_diagnostics().await?.pop();
 
         let state = iwd_station.state().await?;
         let connected_network = {
@@ -165,13 +164,23 @@ impl Station {
     }
 
     pub async fn connect_hidden_network(&self, ssid: String) -> Result<()> {
-        let iwd_station = self.session.stations().await?.pop().unwrap();
+        let iwd_station = self
+            .session
+            .stations()
+            .await?
+            .pop()
+            .context("No station found")?;
         iwd_station.connect_hidden_network(ssid).await?;
         Ok(())
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
-        let iwd_station = self.session.stations().await.unwrap().pop().unwrap();
+        let iwd_station = self
+            .session
+            .stations()
+            .await?
+            .pop()
+            .context("No station found")?;
 
         self.state = iwd_station.state().await?;
         self.is_scanning = iwd_station.is_scanning().await?;
