@@ -525,13 +525,13 @@ pub async fn handle_key_events(
                                                             let limit = if station
                                                                 .show_unavailable_known_networks
                                                             {
-                                                                station.new_networks.len()
+                                                                station.known_networks.len()
                                                                     + station
                                                                         .unavailable_known_networks
                                                                         .len()
                                                                     - 1
                                                             } else {
-                                                                station.new_networks.len() - 1
+                                                                station.known_networks.len() - 1
                                                             };
 
                                                             if i < limit { i + 1 } else { i }
