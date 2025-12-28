@@ -63,51 +63,12 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 ## 🪄 Usage
 
-### Global
+```
+$ impala
 
-`Tab` or `Shift + Tab`: Switch between different sections.
+```
 
-`j` or `Down` : Scroll down.
-
-`k` or `Up`: Scroll up.
-
-`ctrl+r`: Switch adapter mode.
-
-`?`: Show help.
-
-`esc`: Dismiss the different pop-ups.
-
-`q` or `ctrl+c`: Quit the app. (Note: `<Esc>` can also quit if `esc_quit = true` is set in config)
-
-### Device
-
-`i`: Show device information.
-
-`o`: Toggle device power.
-
-### Station
-
-`s`: Start scanning.
-
-`Space or Enter`: Connect/Disconnect the network.
-
-### Known Networks
-
-`t`: Enable/Disable auto-connect.
-
-`d`: Remove the network from the known networks list.
-
-`a`: Show all the known networks.
-
-`p`: Share via QR Code.
-
-### Access Point
-
-`n`: Start a new access point.
-
-`x`: Stop the running access point.
-
-## Custom keybindings
+## 🛠️Custom keybindings
 
 Keybindings can be customized in the config file `$HOME/.config/impala/config.toml`
 
@@ -133,6 +94,10 @@ toggle_autoconnect = "t"
 remove = "d"
 show_all = "a"
 share = "p"
+
+[station.new_network]
+show_all = "a"
+connect_hidden = ""
 ```
 
 ## Contributing

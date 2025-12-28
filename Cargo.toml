@@ -40,3 +40,4 @@ qrcode = "0.14.1"
 strip = true
 lto = "fat"
 codegen-units = 1
+opt-level = 3

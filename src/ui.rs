@@ -70,6 +70,12 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             req.render(frame);
         }
 
+        if let Some(station) = &app.device.station
+            && let Some(conn) = &station.connct_hidden_network
+        {
+            conn.render(frame);
+        }
+
         // Notifications
         for (index, notification) in app.notifications.iter().enumerate() {
             notification.render(index, frame);

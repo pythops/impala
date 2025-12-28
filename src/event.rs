@@ -23,6 +23,7 @@ pub enum Event {
     AuthReqKeyPassphrase(String),
     AuthReqUsernameAndPassword(String),
     UsernameAndPasswordSubmit,
+    ConnectToHiddenNetwork(String),
 }
 
 #[allow(dead_code)]

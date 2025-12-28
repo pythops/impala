@@ -178,6 +178,29 @@ You do not have the required permissions. Ensure you are part of the appropriate
                 app.focused_block = impala::app::FocusedBlock::RequestUsernameAndPassword
             }
 
+            Event::ConnectToHiddenNetwork(ssid) => {
+                if app.device.mode == Mode::Station
+                    && let Some(station) = &mut app.device.station
+                {
+                    tokio::spawn({
+                        let iwd_station = station.session.stations().await.unwrap().pop().unwrap();
+                        let sender = tui.events.sender.clone();
+                        async move {
+                            if let Err(e) = iwd_station.connect_hidden_network(ssid).await {
+                                let _ = Notification::send(
+                                    e.to_string(),
+                                    notification::NotificationLevel::Error,
+                                    &sender,
+                                );
+                            }
+                        }
+                    });
+
+                    app.focused_block = impala::app::FocusedBlock::NewNetworks;
+                    station.connct_hidden_network = None;
+                }
+            }
+
             _ => {}
         }
     }

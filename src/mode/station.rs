@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 pub mod auth;
+pub mod hidden_network;
 pub mod known_network;
 pub mod network;
 pub mod share;
@@ -49,6 +50,7 @@ pub struct Station {
     pub show_unavailable_known_networks: bool,
     pub show_hidden_networks: bool,
     pub share: Option<Share>,
+    pub connct_hidden_network: Option<hidden_network::ConnectHiddenNetwork>,
 }
 
 impl Station {
@@ -160,6 +162,7 @@ impl Station {
             show_unavailable_known_networks: false,
             show_hidden_networks: false,
             share: None,
+            connct_hidden_network: None,
         })
     }
 
@@ -839,7 +842,7 @@ impl Station {
                 }
             }
             FocusedBlock::NewNetworks => {
-                if frame.area().width < 80 {
+                if frame.area().width < 108 {
                     vec![
                         Line::from(vec![
                             Span::from("󱁐  or ↵ ").bold(),
@@ -847,6 +850,10 @@ impl Station {
                             Span::from(" | "),
                             Span::from(config.station.start_scanning.to_string()).bold(),
                             Span::from(" Scan"),
+                            Span::from(" | "),
+                            Span::from(config.station.new_network.connect_hidden.to_string())
+                                .bold(),
+                            Span::from(" Connect Hidden"),
                         ]),
                         Line::from(vec![
                             Span::from("k,").bold(),
@@ -872,6 +879,9 @@ impl Station {
                         Span::from(" | "),
                         Span::from("󱁐  or ↵ ").bold(),
                         Span::from(" Connect"),
+                        Span::from(" | "),
+                        Span::from(config.station.new_network.connect_hidden.to_string()).bold(),
+                        Span::from(" Connect Hidden"),
                         Span::from(" | "),
                         Span::from(config.station.new_network.show_all.to_string()).bold(),
                         Span::from(" Show All"),
@@ -916,6 +926,15 @@ impl Station {
                 Span::from("⇄").bold(),
                 Span::from(" Nav"),
             ])],
+            FocusedBlock::ConnectHiddenNetwork => {
+                vec![Line::from(vec![
+                    Span::from(" ↵ ").bold(),
+                    Span::from(" Connect"),
+                    Span::from(" | "),
+                    Span::from("󱊷 ").bold(),
+                    Span::from(" Discard"),
+                ])]
+            }
             _ => vec![Line::from(vec![
                 Span::from("󱊷 ").bold(),
                 Span::from(" Discard"),

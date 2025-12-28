@@ -6,6 +6,7 @@ use crate::config::Config;
 use crate::device::Device;
 use crate::event::Event;
 use crate::mode::ap::APFocusedSection;
+use crate::mode::station::hidden_network::ConnectHiddenNetwork;
 use crate::mode::station::share::Share;
 use crate::notification::{self, Notification};
 
@@ -348,6 +349,18 @@ pub async fn handle_key_events(
                             app.focused_block = FocusedBlock::KnownNetworks;
                         }
                     }
+                    FocusedBlock::ConnectHiddenNetwork => match key_event.code {
+                        KeyCode::Esc => {
+                            app.focused_block = FocusedBlock::NewNetworks;
+                            station.connct_hidden_network = None;
+                        }
+
+                        _ => {
+                            if let Some(conn) = &mut station.connct_hidden_network {
+                                conn.handle_key_events(key_event, sender);
+                            }
+                        }
+                    },
                     _ => {
                         match key_event.code {
                             KeyCode::Char('q') => {
@@ -557,6 +570,13 @@ pub async fn handle_key_events(
                                     }
                                 }
                                 FocusedBlock::NewNetworks => match key_event.code {
+                                    // Connect to hidden network
+                                    KeyCode::Char('n') => {
+                                        station.connct_hidden_network =
+                                            Some(ConnectHiddenNetwork::new());
+                                        app.focused_block = FocusedBlock::ConnectHiddenNetwork;
+                                    }
+
                                     // Show / Hide unavailable networks
                                     KeyCode::Char(c)
                                         if c == config.station.new_network.show_all =>
