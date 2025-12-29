@@ -27,6 +27,8 @@ jobs:
           CROSS_CONTAINER_ENGINE=podman cross build --target=x86_64-unknown-linux-musl --release
           cp target/x86_64-unknown-linux-musl/release/impala impala-x86_64-unknown-linux-musl
 
+      - run: cargo clean
+
       - name: Build for arm64
         run: |
           CROSS_CONTAINER_ENGINE=podman cross build --target=aarch64-unknown-linux-musl --release

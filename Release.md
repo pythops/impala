@@ -1,3 +1,10 @@
+## v0.7.0 - 2025-12-29
+
+- Support hidden networks
+- Static binaries
+- fix scroll on known networks
+- Show passphrase when sharing network
+
 ## 0.6.0 - 2025-11-27
 
 - Show all the configured networks
