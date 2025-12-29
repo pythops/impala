@@ -11,6 +11,7 @@
 - WPA Enterprise (802.1X) Support
 - Station & Access Point Modes
 - QR Code Network Sharing
+- Support hidden networks
 
 ## 💡 Prerequisites
 
@@ -63,9 +64,8 @@ This will produce an executable file at `target/release/impala` that you can cop
 
 ## 🪄 Usage
 
-```
+```bash
 $ impala
-
 ```
 
 ## 🛠️Custom keybindings
