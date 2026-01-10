@@ -117,7 +117,7 @@ impl TTLS {
     }
 
     pub fn validate_phase2_identity(&mut self) {
-        self.identity.error = None;
+        self.phase2_identity.error = None;
         if self.phase2_identity.value().is_empty() {
             self.phase2_identity.error = Some("Required field.".to_string());
         }
