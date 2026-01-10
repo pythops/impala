@@ -1,3 +1,7 @@
+## v0.7.1 - 2026-01-10
+
+- fix ttls validation
+
 ## v0.7.0 - 2025-12-29
 
 - Support hidden networks
