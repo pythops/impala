@@ -1,3 +1,7 @@
+## v0.7.2 - 2026-01-11
+
+- bump dependencies
+
 ## v0.7.1 - 2026-01-10
 
 - fix ttls validation
