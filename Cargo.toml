@@ -14,8 +14,8 @@ async-channel = "2"
 crossterm = { version = "0.29", default-features = false, features = [
     "event-stream",
 ] }
-ratatui = "0.29"
-tui-input = { version = "0.14", features = [
+ratatui = "0.30"
+tui-input = { version = "0.15", features = [
     "crossterm",
 ], default-features = false }
 tokio = { version = "1", features = ["full"] }
@@ -33,7 +33,7 @@ strum = { version = "0.27.2", features = ["derive"] }
 strum_macros = "0.27"
 libc = "0.2"
 hex = "0.4.3"
-tui-qrcode = "0.1.3"
+tui-qrcode = "0.2.2"
 qrcode = "0.14.1"
 
 [profile.release]

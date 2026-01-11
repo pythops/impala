@@ -7,7 +7,7 @@ use iwdrs::{adapter::Adapter as iwdAdapter, session::Session};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Flex, Layout},
-    style::{Color, Style, Stylize},
+    style::{Color, Style},
     widgets::{Block, BorderType, Borders, Cell, Clear, Padding, Row, Table},
 };
 

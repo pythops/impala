@@ -2,7 +2,7 @@ use iwdrs::modes::Mode;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Style, Stylize},
+    style::{Color, Style},
     text::Text,
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
 };
