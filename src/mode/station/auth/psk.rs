@@ -20,7 +20,7 @@ impl Default for Psk {
     fn default() -> Self {
         Self {
             passphrase: Input::default(),
-            show_password: true,
+            show_password: false,
         }
     }
 }
