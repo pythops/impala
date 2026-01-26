@@ -151,7 +151,7 @@ You do not have the required permissions. Ensure you are part of the appropriate
             Event::ConfigureNewEapNetwork(network_name) => {
                 if unsafe { libc::geteuid() } != 0 {
                     let _ = Notification::send(
-                        "impala must be run as root to configure WPA Entreprise networks"
+                        "impala must be run as root to configure WPA Enterprise networks"
                             .to_string(),
                         notification::NotificationLevel::Info,
                         &tui.events.sender.clone(),
