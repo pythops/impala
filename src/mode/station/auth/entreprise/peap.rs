@@ -260,8 +260,8 @@ EAP-Identity={}
         text.push_str(
             format!(
                 "EAP-PEAP-Phase2-Method={}
-EAP-TTLS-Phase2-Identity={}
-EAP-TTLS-Phase2-Password={}
+EAP-PEAP-Phase2-Identity={}
+EAP-PEAP-Phase2-Password={}
 ",
                 self.phase2_method,
                 self.phase2_identity.value(),
