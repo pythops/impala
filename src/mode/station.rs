@@ -30,6 +30,7 @@ use crate::{
     event::Event,
     mode::station::{known_network::KnownNetwork, share::Share},
     notification::{Notification, NotificationLevel},
+    spinner::Spinner,
 };
 
 use network::Network;
@@ -40,6 +41,9 @@ pub struct Station {
     pub state: State,
     pub is_scanning: bool,
     pub connected_network: Option<Network>,
+    pub connecting_network: Option<String>,
+    pub connecting_grace_ticks: u8,
+    pub spinner: Spinner,
     pub new_networks: Vec<(Network, i16)>,
     pub new_hidden_networks: Vec<HiddenNetwork>,
     pub known_networks: Vec<(Network, i16)>,
@@ -152,6 +156,9 @@ impl Station {
             state,
             is_scanning,
             connected_network,
+            connecting_network: None,
+            connecting_grace_ticks: 0,
+            spinner: Spinner::default(),
             new_networks,
             new_hidden_networks,
             known_networks,
@@ -300,6 +307,30 @@ impl Station {
         self.unavailable_known_networks = unavailable_known_networks;
 
         self.connected_network = connected_network;
+
+        // Keep a small "connecting" indicator around while we connect.
+        if let Some(target) = self.connecting_network.as_deref() {
+            let now_connected = self
+                .connected_network
+                .as_ref()
+                .is_some_and(|n| n.name == target);
+
+            if now_connected {
+                self.connecting_network = None;
+                self.connecting_grace_ticks = 0;
+                self.spinner.reset();
+            } else if matches!(self.state, State::Connecting) {
+                self.connecting_grace_ticks = 0;
+                self.spinner.update();
+            } else if self.connecting_grace_ticks > 0 {
+                self.connecting_grace_ticks = self.connecting_grace_ticks.saturating_sub(1);
+                self.spinner.update();
+            } else {
+                // Connection attempt finished (success is handled above) or never started.
+                self.connecting_network = None;
+                self.spinner.reset();
+            }
+        }
 
         let iwd_station_diagnostic = self.session.stations_diagnostics().await.unwrap().pop();
         self.diagnostic = if let Some(diagnostic) = iwd_station_diagnostic {
@@ -510,6 +541,21 @@ impl Station {
                         ];
 
                         Row::new(row)
+                    } else if self
+                        .connecting_network
+                        .as_deref()
+                        .is_some_and(|n| n == net.name)
+                    {
+                        let row = vec![
+                            Line::from(format!("{} ", self.spinner.draw())).centered(),
+                            Line::from(net.name.clone()).centered(),
+                            Line::from(net.network_type.to_string()).centered(),
+                            Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
+                            Line::from(if net.is_autoconnect { "Yes" } else { "No" }).centered(),
+                            Line::from(signal).centered(),
+                        ];
+
+                        Row::new(row)
                     } else {
                         let row = vec![
                             Line::from(""),
@@ -523,6 +569,23 @@ impl Station {
                         Row::new(row)
                     }
                 } else {
+                    if self
+                        .connecting_network
+                        .as_deref()
+                        .is_some_and(|n| n == net.name)
+                    {
+                        let row = vec![
+                            Line::from(format!("{} ", self.spinner.draw())).centered(),
+                            Line::from(net.name.clone()).centered(),
+                            Line::from(net.network_type.to_string()).centered(),
+                            Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
+                            Line::from(if net.is_autoconnect { "Yes" } else { "No" }).centered(),
+                            Line::from(signal).centered(),
+                        ];
+
+                        return Row::new(row);
+                    }
+
                     let row = vec![
                         Line::from("").centered(),
                         Line::from(net.name.clone()).centered(),
@@ -635,8 +698,18 @@ impl Station {
             .new_networks
             .iter()
             .map(|(net, signal)| {
+                let name = if self
+                    .connecting_network
+                    .as_deref()
+                    .is_some_and(|n| n == net.name)
+                {
+                    format!("{} {}", net.name, self.spinner.draw())
+                } else {
+                    net.name.clone()
+                };
+
                 Row::new(vec![
-                    Line::from(net.name.clone()).centered(),
+                    Line::from(name).centered(),
                     Line::from(net.network_type.to_string().clone()).centered(),
                     Line::from({
                         let signal = {

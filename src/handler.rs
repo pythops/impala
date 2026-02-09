@@ -28,6 +28,8 @@ pub async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Re
                             sender.send(Event::ConfigureNewEapNetwork(net.name.clone()))?;
                             return Ok(());
                         }
+                        station.connecting_network = Some(net.name.clone());
+                        station.connecting_grace_ticks = 2;
                         tokio::spawn(async move {
                             let _ = net.connect(sender.clone()).await;
                         });
@@ -40,6 +42,8 @@ pub async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Re
                             sender.send(Event::ConfigureNewEapNetwork(net.address.clone()))?;
                             return Ok(());
                         }
+                        station.connecting_network = Some(net.address.clone());
+                        station.connecting_grace_ticks = 2;
                         tokio::spawn({
                             let iwd_station =
                                 station.session.stations().await.unwrap().pop().unwrap();
@@ -78,6 +82,8 @@ pub async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Re
                             if let Some(index) = net_index {
                                 let (net, _) = station.known_networks[index].clone();
                                 station.disconnect(sender.clone()).await?;
+                                station.connecting_network = Some(net.name.clone());
+                                station.connecting_grace_ticks = 2;
                                 tokio::spawn(async move {
                                     let _ = net.connect(sender.clone()).await;
                                 });
@@ -99,6 +105,8 @@ pub async fn toggle_connect(app: &mut App, sender: UnboundedSender<Event>) -> Re
 
                         if let Some(index) = net_index {
                             let (net, _) = station.known_networks[index].clone();
+                            station.connecting_network = Some(net.name.clone());
+                            station.connecting_grace_ticks = 2;
                             tokio::spawn(async move {
                                 let _ = net.connect(sender.clone()).await;
                             });
