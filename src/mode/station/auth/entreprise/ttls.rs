@@ -21,9 +21,13 @@ use crate::{
 enum Phase2Method {
     #[default]
     MSCHAPV2,
+    #[strum(serialize = "Tunneled-CHAP")]
     TunneledCHAP,
+    #[strum(serialize = "Tunneled-MSCHAP")]
     TunneledMSCHAP,
+    #[strum(serialize = "Tunneled-MSCHAPv2")]
     TunneledMSCHAPv2,
+    #[strum(serialize = "Tunneled-PAP")]
     TunneledPAP,
 }
 
