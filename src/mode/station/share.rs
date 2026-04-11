@@ -20,6 +20,16 @@ pub struct Share {
     pub passphrase: String,
 }
 
+// https://github.com/zxing/zxing/wiki/Barcode-Contents#wi-fi-network-config-android-ios-11
+fn get_escaped_wifi_value(value: &str) -> String {
+    value
+        .replace('\\', r"\\")
+        .replace(';', r"\;")
+        .replace(',', r"\,")
+        .replace('"', r#"\""#)
+        .replace(':', r"\:")
+}
+
 impl Share {
     pub fn new(network_name: String) -> Result<Self> {
         let encoded_network_name = iwd_network_name(&network_name);
@@ -30,7 +40,11 @@ impl Share {
             .find(|&line| line.starts_with("Passphrase="))
             && let Some((_, passphrase)) = line.split_once('=')
         {
-            let message = format!("WIFI:T:WPA;S:{network_name};P:{passphrase};;");
+            let message = format!(
+                "WIFI:T:WPA;S:{};P:{};;",
+                get_escaped_wifi_value(&network_name),
+                get_escaped_wifi_value(passphrase),
+            );
             let qr_code = QrCode::new(message)?;
             Ok(Self {
                 qr_code,
