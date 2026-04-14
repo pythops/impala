@@ -766,7 +766,7 @@ impl Station {
                 Span::from("ctrl+r").bold(),
                 Span::from(" Switch Mode"),
                 Span::from(" | "),
-                Span::from("⇄").bold(),
+                Span::from("tab").bold(),
                 Span::from(" Nav"),
             ])],
             FocusedBlock::KnownNetworks => {
@@ -795,7 +795,7 @@ impl Station {
                             Span::from("j,").bold(),
                             Span::from("  Down"),
                             Span::from(" | "),
-                            Span::from("⇄").bold(),
+                            Span::from("tab").bold(),
                             Span::from(" Nav"),
                             Span::from(" | "),
                             Span::from("ctrl+r").bold(),
@@ -836,7 +836,7 @@ impl Station {
                         Span::from("ctrl+r").bold(),
                         Span::from(" Switch Mode"),
                         Span::from(" | "),
-                        Span::from("⇄").bold(),
+                        Span::from("tab").bold(),
                         Span::from(" Nav"),
                     ])]
                 }
@@ -865,7 +865,7 @@ impl Station {
                             Span::from("ctrl+r").bold(),
                             Span::from(" Switch Mode"),
                             Span::from(" | "),
-                            Span::from("⇄").bold(),
+                            Span::from("tab").bold(),
                             Span::from(" Nav"),
                         ]),
                     ]
@@ -892,7 +892,7 @@ impl Station {
                         Span::from("ctrl+r").bold(),
                         Span::from(" Switch Mode"),
                         Span::from(" | "),
-                        Span::from("⇄").bold(),
+                        Span::from("tab").bold(),
                         Span::from(" Nav"),
                     ])]
                 }
@@ -907,7 +907,7 @@ impl Station {
                 Span::from(" ↵ ").bold(),
                 Span::from(" Apply"),
                 Span::from(" | "),
-                Span::from("⇄").bold(),
+                Span::from("tab").bold(),
                 Span::from(" Hide/Show password"),
                 Span::from(" | "),
                 Span::from("󱊷 ").bold(),
@@ -923,7 +923,7 @@ impl Station {
                 Span::from("󱊷 ").bold(),
                 Span::from(" Discard"),
                 Span::from(" | "),
-                Span::from("⇄").bold(),
+                Span::from("tab").bold(),
                 Span::from(" Nav"),
             ])],
             FocusedBlock::ConnectHiddenNetwork => {
