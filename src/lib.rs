@@ -26,6 +26,8 @@ pub mod reset;
 
 pub mod agent;
 
+pub mod symbols;
+
 pub fn iwd_network_name(name: &str) -> String {
     match name
         .chars()
