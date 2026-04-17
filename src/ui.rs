@@ -23,6 +23,9 @@ pub fn render(app: &mut App, frame: &mut Frame) {
                 Mode::Ap => {
                     if let Some(ap) = &mut app.device.ap {
                         ap.render(frame, app.focused_block, &device, app.config.clone());
+                        if app.focused_block == FocusedBlock::AccessPointInput {
+                            ap.render_input(frame);
+                        }
                     }
                 }
             }
