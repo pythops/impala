@@ -634,7 +634,7 @@ pub async fn handle_key_events(
                     FocusedBlock::AccessPointInput => match key_event.code {
                         KeyCode::Enter => {
                             ap.start(sender.clone()).await?;
-                            app.focused_block = FocusedBlock::Device;
+                            app.focused_block = FocusedBlock::AccessPoint;
                         }
 
                         KeyCode::Esc => {
@@ -708,6 +708,20 @@ pub async fn handle_key_events(
 
                                 _ => {}
                             },
+
+                            KeyCode::Char(c) if c == config.ap.start => {
+                                if app.focused_block == FocusedBlock::AccessPoint {
+                                    ap.ap_start
+                                        .store(true, std::sync::atomic::Ordering::Relaxed);
+                                    app.focused_block = FocusedBlock::AccessPointInput;
+                                }
+                            }
+
+                            KeyCode::Char(c) if c == config.ap.stop => {
+                                if app.focused_block == FocusedBlock::AccessPoint {
+                                    ap.stop(sender.clone()).await?;
+                                }
+                            }
 
                             _ => {
                                 if app.focused_block == FocusedBlock::Device {
