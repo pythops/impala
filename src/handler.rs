@@ -165,22 +165,16 @@ pub async fn handle_key_events(
             KeyCode::Esc if app.config.esc_quit => {
                 app.quit();
             }
-            KeyCode::Char('c' | 'C') => {
-                if key_event.modifiers == KeyModifiers::CONTROL {
-                    app.quit();
-                }
+            KeyCode::Char('c' | 'C') if key_event.modifiers == KeyModifiers::CONTROL => {
+                app.quit();
             }
 
-            KeyCode::Char('j') | KeyCode::Down => {
-                if app.reset.selected_mode == Mode::Station {
-                    app.reset.selected_mode = Mode::Ap;
-                }
+            KeyCode::Char('j') | KeyCode::Down if app.reset.selected_mode == Mode::Station => {
+                app.reset.selected_mode = Mode::Ap;
             }
 
-            KeyCode::Char('k') | KeyCode::Up => {
-                if app.reset.selected_mode == Mode::Ap {
-                    app.reset.selected_mode = Mode::Station;
-                }
+            KeyCode::Char('k') | KeyCode::Up if app.reset.selected_mode == Mode::Ap => {
+                app.reset.selected_mode = Mode::Station;
             }
 
             KeyCode::Enter => {
@@ -194,10 +188,8 @@ pub async fn handle_key_events(
 
     if !app.device.is_powered {
         match app.focused_block {
-            FocusedBlock::AdapterInfos => {
-                if key_event.code == KeyCode::Esc {
-                    app.focused_block = FocusedBlock::Device;
-                }
+            FocusedBlock::AdapterInfos if key_event.code == KeyCode::Esc => {
+                app.focused_block = FocusedBlock::Device;
             }
 
             FocusedBlock::Device => match key_event.code {
@@ -208,10 +200,8 @@ pub async fn handle_key_events(
                     app.quit();
                 }
 
-                KeyCode::Char('c' | 'C') => {
-                    if key_event.modifiers == KeyModifiers::CONTROL {
-                        app.quit();
-                    }
+                KeyCode::Char('c' | 'C') if key_event.modifiers == KeyModifiers::CONTROL => {
+                    app.quit();
                 }
 
                 KeyCode::Char(c) if c == config.device.infos => {
@@ -530,41 +520,39 @@ pub async fn handle_key_events(
                                         }
 
                                         // Scroll down
-                                        KeyCode::Char('j') | KeyCode::Down => {
-                                            if !station.known_networks.is_empty() {
-                                                let i =
-                                                    match station.known_networks_state.selected() {
-                                                        Some(i) => {
-                                                            let limit = if station
-                                                                .show_unavailable_known_networks
-                                                            {
-                                                                station.known_networks.len()
-                                                                    + station
-                                                                        .unavailable_known_networks
-                                                                        .len()
-                                                                    - 1
-                                                            } else {
-                                                                station.known_networks.len() - 1
-                                                            };
-
-                                                            if i < limit { i + 1 } else { i }
-                                                        }
-                                                        None => 0,
+                                        KeyCode::Char('j') | KeyCode::Down
+                                            if !station.known_networks.is_empty() =>
+                                        {
+                                            let i = match station.known_networks_state.selected() {
+                                                Some(i) => {
+                                                    let limit = if station
+                                                        .show_unavailable_known_networks
+                                                    {
+                                                        station.known_networks.len()
+                                                            + station
+                                                                .unavailable_known_networks
+                                                                .len()
+                                                            - 1
+                                                    } else {
+                                                        station.known_networks.len() - 1
                                                     };
 
-                                                station.known_networks_state.select(Some(i));
-                                            }
+                                                    if i < limit { i + 1 } else { i }
+                                                }
+                                                None => 0,
+                                            };
+
+                                            station.known_networks_state.select(Some(i));
                                         }
-                                        KeyCode::Char('k') | KeyCode::Up => {
-                                            if !station.known_networks.is_empty() {
-                                                let i =
-                                                    match station.known_networks_state.selected() {
-                                                        Some(i) => i.saturating_sub(1),
-                                                        None => 0,
-                                                    };
+                                        KeyCode::Char('k') | KeyCode::Up
+                                            if !station.known_networks.is_empty() =>
+                                        {
+                                            let i = match station.known_networks_state.selected() {
+                                                Some(i) => i.saturating_sub(1),
+                                                None => 0,
+                                            };
 
-                                                station.known_networks_state.select(Some(i));
-                                            }
+                                            station.known_networks_state.select(Some(i));
                                         }
                                         _ => {}
                                     }
@@ -587,34 +575,34 @@ pub async fn handle_key_events(
                                     KeyCode::Enter | KeyCode::Char(' ') => {
                                         toggle_connect(app, sender).await?
                                     }
-                                    KeyCode::Char('j') | KeyCode::Down => {
-                                        if !station.new_networks.is_empty() {
-                                            let i = match station.new_networks_state.selected() {
-                                                Some(i) => {
-                                                    let limit = if station.show_hidden_networks {
-                                                        station.new_networks.len()
-                                                            + station.new_hidden_networks.len()
-                                                            - 1
-                                                    } else {
-                                                        station.new_networks.len() - 1
-                                                    };
-                                                    if i < limit { i + 1 } else { i }
-                                                }
-                                                None => 0,
-                                            };
+                                    KeyCode::Char('j') | KeyCode::Down
+                                        if !station.new_networks.is_empty() =>
+                                    {
+                                        let i = match station.new_networks_state.selected() {
+                                            Some(i) => {
+                                                let limit = if station.show_hidden_networks {
+                                                    station.new_networks.len()
+                                                        + station.new_hidden_networks.len()
+                                                        - 1
+                                                } else {
+                                                    station.new_networks.len() - 1
+                                                };
+                                                if i < limit { i + 1 } else { i }
+                                            }
+                                            None => 0,
+                                        };
 
-                                            station.new_networks_state.select(Some(i));
-                                        }
+                                        station.new_networks_state.select(Some(i));
                                     }
-                                    KeyCode::Char('k') | KeyCode::Up => {
-                                        if !station.new_networks.is_empty() {
-                                            let i = match station.new_networks_state.selected() {
-                                                Some(i) => i.saturating_sub(1),
-                                                None => 0,
-                                            };
+                                    KeyCode::Char('k') | KeyCode::Up
+                                        if !station.new_networks.is_empty() =>
+                                    {
+                                        let i = match station.new_networks_state.selected() {
+                                            Some(i) => i.saturating_sub(1),
+                                            None => 0,
+                                        };
 
-                                            station.new_networks_state.select(Some(i));
-                                        }
+                                        station.new_networks_state.select(Some(i));
                                     }
                                     _ => {}
                                 },

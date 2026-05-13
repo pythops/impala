@@ -54,11 +54,10 @@ impl EventHandler {
                   }
                   Some(Ok(evt)) = crossterm_event => {
                     match evt {
-                      CrosstermEvent::Key(key) => {
-                        if key.kind == crossterm::event::KeyEventKind::Press {
+                      CrosstermEvent::Key(key)
+                        if key.kind == crossterm::event::KeyEventKind::Press => {
                           sender_cloned.send(Event::Key(key)).unwrap();
-                        }
-                      },
+                        },
                       CrosstermEvent::Resize(x, y) => {
                         sender_cloned.send(Event::Resize(x, y)).unwrap();
                       },
