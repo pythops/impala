@@ -373,8 +373,7 @@ pub async fn handle_key_events(
                             {
                                 app.reset.enable = true;
                             }
-
-                            KeyCode::Tab => match app.focused_block {
+                            KeyCode::Tab | KeyCode::Char('l') => match app.focused_block {
                                 FocusedBlock::Device => {
                                     app.focused_block = FocusedBlock::KnownNetworks;
                                 }
@@ -386,7 +385,7 @@ pub async fn handle_key_events(
                                 }
                                 _ => {}
                             },
-                            KeyCode::BackTab => match app.focused_block {
+                            KeyCode::BackTab | KeyCode::Char('h') => match app.focused_block {
                                 FocusedBlock::Device => {
                                     app.focused_block = FocusedBlock::NewNetworks;
                                 }
@@ -678,24 +677,26 @@ pub async fn handle_key_events(
                                 app.reset.enable = true;
                             }
 
-                            KeyCode::Tab => match app.focused_block {
-                                FocusedBlock::Device => {
-                                    app.focused_block = FocusedBlock::AccessPoint;
-                                }
-                                FocusedBlock::AccessPoint => {
-                                    if ap.connected_devices.is_empty() {
-                                        app.focused_block = FocusedBlock::Device;
-                                    } else {
-                                        app.focused_block =
-                                            FocusedBlock::AccessPointConnectedDevices;
+                            KeyCode::Tab | KeyCode::Char('h') | KeyCode::Char('l') => {
+                                match app.focused_block {
+                                    FocusedBlock::Device => {
+                                        app.focused_block = FocusedBlock::AccessPoint;
                                     }
-                                }
-                                FocusedBlock::AccessPointConnectedDevices => {
-                                    app.focused_block = FocusedBlock::Device;
-                                }
+                                    FocusedBlock::AccessPoint => {
+                                        if ap.connected_devices.is_empty() {
+                                            app.focused_block = FocusedBlock::Device;
+                                        } else {
+                                            app.focused_block =
+                                                FocusedBlock::AccessPointConnectedDevices;
+                                        }
+                                    }
+                                    FocusedBlock::AccessPointConnectedDevices => {
+                                        app.focused_block = FocusedBlock::Device;
+                                    }
 
-                                _ => {}
-                            },
+                                    _ => {}
+                                }
+                            }
 
                             KeyCode::Char(c) if c == config.ap.start => {
                                 if app.focused_block == FocusedBlock::AccessPoint {
