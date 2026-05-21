@@ -318,7 +318,12 @@ EAP-PEAP-Phase2-Password={}
                         Phase2Method::SIM => self.phase2_method = Phase2Method::GTC,
                         Phase2Method::GTC => self.phase2_method = Phase2Method::MSCHAPV2,
                     },
-                    KeyCode::Char('h') | KeyCode::Left => {}
+
+                    KeyCode::Char('h') | KeyCode::Left => match self.phase2_method {
+                        Phase2Method::MSCHAPV2 => self.phase2_method = Phase2Method::GTC,
+                        Phase2Method::SIM => self.phase2_method = Phase2Method::MSCHAPV2,
+                        Phase2Method::GTC => self.phase2_method = Phase2Method::SIM,
+                    },
                     _ => {}
                 },
                 FocusedInput::Phase2Identity => {

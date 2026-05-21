@@ -323,7 +323,19 @@ EAP-TTLS-Phase2-Password={}
                         }
                         Phase2Method::TunneledPAP => self.phase2_method = Phase2Method::MSCHAPV2,
                     },
-                    KeyCode::Char('h') | KeyCode::Left => {}
+                    KeyCode::Char('h') | KeyCode::Left => match self.phase2_method {
+                        Phase2Method::MSCHAPV2 => self.phase2_method = Phase2Method::TunneledPAP,
+                        Phase2Method::TunneledCHAP => self.phase2_method = Phase2Method::MSCHAPV2,
+                        Phase2Method::TunneledMSCHAP => {
+                            self.phase2_method = Phase2Method::TunneledCHAP
+                        }
+                        Phase2Method::TunneledMSCHAPv2 => {
+                            self.phase2_method = Phase2Method::TunneledMSCHAP
+                        }
+                        Phase2Method::TunneledPAP => {
+                            self.phase2_method = Phase2Method::TunneledMSCHAPv2
+                        }
+                    },
                     _ => {}
                 },
                 FocusedInput::Phase2Identity => {
