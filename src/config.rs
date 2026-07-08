@@ -1,3 +1,4 @@
+use ratatui::style::Color;
 use toml;
 
 use dirs;
@@ -25,6 +26,9 @@ pub struct Config {
 
     #[serde(default)]
     pub ap: AccessPoint,
+
+    #[serde(default)]
+    pub theme: Theme,
 }
 
 fn default_switch_mode() -> char {
@@ -155,6 +159,73 @@ fn default_ap_start() -> char {
 
 fn default_ap_stop() -> char {
     'x'
+}
+
+// Theme
+#[derive(Deserialize, Debug)]
+pub struct Theme {
+    #[serde(default = "default_background")]
+    pub background: Color,
+
+    #[serde(default = "default_border")]
+    pub border: Color,
+
+    #[serde(default = "default_text_color")]
+    pub text_color: Color,
+
+    #[serde(default = "default_hidden_color")]
+    pub hidden_color: Color,
+
+    #[serde(default = "default_info_color")]
+    pub info_color: Color,
+
+    #[serde(default = "default_warning_color")]
+    pub warning_color: Color,
+
+    #[serde(default = "default_error_color")]
+    pub error_color: Color,
+}
+
+fn default_background() -> Color {
+    Color::DarkGray
+}
+
+fn default_border() -> Color {
+    Color::Green
+}
+
+fn default_text_color() -> Color {
+    Color::White
+}
+
+fn default_hidden_color() -> Color {
+    Color::DarkGray
+}
+
+fn default_info_color() -> Color {
+    Color::Green
+}
+
+fn default_warning_color() -> Color {
+    Color::Yellow
+}
+
+fn default_error_color() -> Color {
+    Color::Red
+}
+
+impl Default for Theme {
+    fn default() -> Self {
+        Self {
+            background: default_background(),
+            border: default_border(),
+            text_color: default_text_color(),
+            hidden_color: default_hidden_color(),
+            info_color: default_info_color(),
+            warning_color: default_warning_color(),
+            error_color: default_error_color(),
+        }
+    }
 }
 
 impl Config {

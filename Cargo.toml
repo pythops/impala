@@ -14,7 +14,7 @@ async-channel = "2"
 crossterm = { version = "0.29", default-features = false, features = [
     "event-stream",
 ] }
-ratatui = "0.30"
+ratatui = { version = "0.30", features = ["serde"] }
 tui-input = { version = "0.15", features = [
     "crossterm",
 ], default-features = false }

@@ -1,4 +1,6 @@
+use crate::config::Config;
 use crate::event::Event;
+use std::sync::Arc;
 
 use crossterm::event::{KeyCode, KeyEvent};
 use tokio::sync::mpsc::UnboundedSender;
@@ -6,7 +8,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Margin},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::Text,
     widgets::{Block, BorderType, Borders, Clear},
 };
@@ -66,7 +68,7 @@ impl ConnectHiddenNetwork {
         }
     }
 
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn render(&self, frame: &mut Frame, config: Arc<Config>) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -106,7 +108,9 @@ impl ConnectHiddenNetwork {
 
         let message = Text::from("Enter the SSID of the hidden network").centered();
 
-        let ssid = Text::from(self.ssid.value()).bg(Color::DarkGray).centered();
+        let ssid = Text::from(self.ssid.value())
+            .bg(config.theme.background)
+            .centered();
         let error = Text::from(self.ssid.error.clone().unwrap_or_default())
             .red()
             .centered();
@@ -117,7 +121,7 @@ impl ConnectHiddenNetwork {
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Thick)
-                .border_style(Style::default().fg(Color::Green)),
+                .border_style(Style::default().fg(config.theme.border)),
             area,
         );
         frame.render_widget(

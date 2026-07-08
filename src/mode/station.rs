@@ -17,7 +17,7 @@ use iwdrs::{
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Flex, Layout},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Padding, Paragraph, Row, Table, TableState},
 };
@@ -457,7 +457,7 @@ impl Station {
                     .borders(Borders::ALL)
                     .border_style({
                         if focused_block == FocusedBlock::Device {
-                            Style::default().fg(Color::Green)
+                            Style::default().fg(config.theme.border)
                         } else {
                             Style::default()
                         }
@@ -474,7 +474,9 @@ impl Station {
             .column_spacing(1)
             .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::Device {
-                Style::default().bg(Color::DarkGray).fg(Color::White)
+                Style::default()
+                    .bg(config.theme.background)
+                    .fg(config.theme.text_color)
             } else {
                 Style::default()
             });
@@ -547,7 +549,7 @@ impl Station {
                     Line::from(""),
                     Line::from(""),
                 ])
-                .fg(Color::DarkGray);
+                .fg(config.theme.hidden_color);
 
                 rows.push(row);
             });
@@ -600,7 +602,7 @@ impl Station {
                     .borders(Borders::ALL)
                     .border_style({
                         if focused_block == FocusedBlock::KnownNetworks {
-                            Style::default().fg(Color::Green)
+                            Style::default().fg(config.theme.border)
                         } else {
                             Style::default()
                         }
@@ -617,7 +619,9 @@ impl Station {
             .column_spacing(1)
             .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::KnownNetworks {
-                Style::default().bg(Color::DarkGray).fg(Color::White)
+                Style::default()
+                    .bg(config.theme.background)
+                    .fg(config.theme.text_color)
             } else {
                 Style::default()
             });
@@ -733,7 +737,7 @@ impl Station {
                         })
                         .centered(),
                     ])
-                    .dark_gray(),
+                    .fg(config.theme.hidden_color),
                 )
             })
         };
@@ -776,7 +780,7 @@ impl Station {
                     .borders(Borders::ALL)
                     .border_style({
                         if focused_block == FocusedBlock::NewNetworks {
-                            Style::default().fg(Color::Green)
+                            Style::default().fg(config.theme.border)
                         } else {
                             Style::default()
                         }
@@ -793,7 +797,9 @@ impl Station {
             .column_spacing(1)
             .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::NewNetworks {
-                Style::default().bg(Color::DarkGray).fg(Color::White)
+                Style::default()
+                    .bg(config.theme.background)
+                    .fg(config.theme.text_color)
             } else {
                 Style::default()
             });
@@ -1006,7 +1012,7 @@ impl Station {
 
         // Share
         if let Some(share) = &self.share {
-            share.render(frame);
+            share.render(frame, config.clone());
         }
     }
 }

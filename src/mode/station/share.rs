@@ -1,17 +1,17 @@
 use anyhow::Result;
 use qrcode::QrCode;
-use std::{cmp, fs};
+use std::{cmp, fs, sync::Arc};
 use tui_qrcode::{Colors, QrCodeWidget};
 
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Flex, Layout, Rect},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::{Line, Span, Text},
     widgets::{Block, BorderType, Borders, Clear},
 };
 
-use crate::iwd_network_name;
+use crate::{config::Config, iwd_network_name};
 
 #[derive(Clone)]
 pub struct Share {
@@ -56,7 +56,7 @@ impl Share {
         }
     }
 
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn render(&self, frame: &mut Frame, config: Arc<Config>) {
         let widget = QrCodeWidget::new(self.qr_code.clone()).colors(Colors::Inverted);
         let sim_area = Rect::new(0, 0, 50, 50);
         let size = widget.size(sim_area);
@@ -103,7 +103,7 @@ impl Share {
             Block::new()
                 .borders(Borders::all())
                 .border_type(BorderType::Thick)
-                .border_style(Style::new().green()),
+                .border_style(Style::new().fg(config.theme.border)),
             block,
         );
         frame.render_widget(
@@ -129,7 +129,9 @@ impl Share {
             Line::from(""),
             Line::from(vec![
                 Span::from("Passphrase: "),
-                Span::from(&self.passphrase).bold().bg(Color::DarkGray),
+                Span::from(&self.passphrase)
+                    .bold()
+                    .bg(config.theme.background),
             ])
             .centered(),
         ]);

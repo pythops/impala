@@ -7,7 +7,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Flex, Layout},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::{Line, Span, Text},
     widgets::{
         Block, BorderType, Borders, Clear, List, Padding, Paragraph, Row, Table, TableState,
@@ -96,7 +96,7 @@ impl AccessPoint {
         })
     }
 
-    pub fn render_input(&self, frame: &mut Frame) {
+    pub fn render_input(&self, frame: &mut Frame, config: Arc<Config>) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
@@ -180,23 +180,23 @@ impl AccessPoint {
 
         let ssid_msg = Paragraph::new(ssid_text)
             .alignment(Alignment::Left)
-            .style(Style::default().fg(Color::White))
+            .style(Style::default().fg(config.theme.text_color))
             .block(Block::new().padding(Padding::left(2)));
 
         let ssid_input = Paragraph::new(self.ssid.value())
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
-            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+            .style(Style::default().fg(config.theme.text_color))
+            .block(Block::new().style(Style::default().bg(config.theme.background)));
 
         let psk_msg = Paragraph::new(psk_text)
             .alignment(Alignment::Left)
-            .style(Style::default().fg(Color::White))
+            .style(Style::default().fg(config.theme.text_color))
             .block(Block::new().padding(Padding::left(2)));
 
         let psk_input = Paragraph::new(self.psk.value())
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
-            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+            .style(Style::default().fg(config.theme.text_color))
+            .block(Block::new().style(Style::default().bg(config.theme.background)));
 
         frame.render_widget(Clear, area);
 
@@ -204,8 +204,7 @@ impl AccessPoint {
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Thick)
-                .style(Style::default().green())
-                .border_style(Style::default().fg(Color::Green)),
+                .style(Style::default().fg(config.theme.border)),
             area,
         );
         frame.render_widget(ssid_msg, ssid_msg_area);
@@ -391,7 +390,7 @@ impl AccessPoint {
                     .padding(Padding::horizontal(1))
                     .border_style({
                         if focused_block == FocusedBlock::Device {
-                            Style::default().fg(Color::Green)
+                            Style::default().fg(config.theme.border)
                         } else {
                             Style::default()
                         }
@@ -407,7 +406,9 @@ impl AccessPoint {
             .column_spacing(2)
             .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::Device {
-                Style::default().bg(Color::DarkGray).fg(Color::White)
+                Style::default()
+                    .bg(config.theme.background)
+                    .fg(config.theme.text_color)
             } else {
                 Style::default()
             });
@@ -495,7 +496,7 @@ impl AccessPoint {
                     .borders(Borders::ALL)
                     .border_style({
                         if focused_block == FocusedBlock::AccessPoint {
-                            Style::default().fg(Color::Green)
+                            Style::default().fg(config.theme.border)
                         } else {
                             Style::default()
                         }
@@ -512,7 +513,9 @@ impl AccessPoint {
             .column_spacing(2)
             .flex(Flex::SpaceAround)
             .row_highlight_style(if focused_block == FocusedBlock::AccessPoint {
-                Style::default().bg(Color::DarkGray).fg(Color::White)
+                Style::default()
+                    .bg(config.theme.background)
+                    .fg(config.theme.text_color)
             } else {
                 Style::default()
             });
@@ -540,7 +543,7 @@ impl AccessPoint {
                     .borders(Borders::ALL)
                     .border_style({
                         if focused_block == FocusedBlock::AccessPointConnectedDevices {
-                            Style::default().fg(Color::Green)
+                            Style::default().fg(config.theme.border)
                         } else {
                             Style::default()
                         }

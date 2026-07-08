@@ -2,13 +2,14 @@ use anyhow::Result;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Text},
     widgets::{Block, BorderType, Borders, Clear, Paragraph, Wrap},
 };
+use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::event::Event;
+use crate::{config::Config, event::Event};
 
 #[derive(Debug, Clone)]
 pub struct Notification {
@@ -25,11 +26,11 @@ pub enum NotificationLevel {
 }
 
 impl Notification {
-    pub fn render(&self, index: usize, frame: &mut Frame) {
+    pub fn render(&self, index: usize, frame: &mut Frame, config: Arc<Config>) {
         let (color, title) = match self.level {
-            NotificationLevel::Info => (Color::Green, "Info"),
-            NotificationLevel::Warning => (Color::Yellow, "Warning"),
-            NotificationLevel::Error => (Color::Red, "Error"),
+            NotificationLevel::Info => (config.theme.info_color, "Info"),
+            NotificationLevel::Warning => (config.theme.warning_color, "Warning"),
+            NotificationLevel::Error => (config.theme.error_color, "Error"),
         };
 
         let mut text = Text::from(vec![

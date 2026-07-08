@@ -7,7 +7,7 @@ use iwdrs::{device::Device as iwdDevice, modes::Mode, session::Session};
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Flex, Layout},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Padding, Row, Table, TableState},
 };
@@ -147,13 +147,17 @@ impl Device {
                     .title(" Device ")
                     .title_style(Style::default().bold())
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::Green))
+                    .border_style(Style::default().fg(config.theme.border))
                     .border_type(BorderType::Thick)
                     .padding(Padding::horizontal(1)),
             )
             .column_spacing(1)
             .flex(Flex::SpaceAround)
-            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
+            .row_highlight_style(
+                Style::default()
+                    .bg(config.theme.background)
+                    .fg(config.theme.text_color),
+            );
 
         let mut device_state = TableState::default().with_selected(0);
         frame.render_stateful_widget(device_table, device_block, &mut device_state);

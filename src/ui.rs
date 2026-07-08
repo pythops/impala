@@ -7,7 +7,7 @@ use crate::app::{App, FocusedBlock};
 
 pub fn render(app: &mut App, frame: &mut Frame) {
     if app.reset.enable {
-        app.reset.render(frame);
+        app.reset.render(frame, app.config.clone());
     } else {
         if !app.device.is_powered {
             app.device
@@ -24,7 +24,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
                     if let Some(ap) = &mut app.device.ap {
                         ap.render(frame, app.focused_block, &device, app.config.clone());
                         if app.focused_block == FocusedBlock::AccessPointInput {
-                            ap.render_input(frame);
+                            ap.render_input(frame, app.config.clone());
                         }
                     }
                 }
@@ -34,11 +34,12 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         if app.focused_block == FocusedBlock::WpaEntrepriseAuth
             && let Some(eap) = &mut app.auth.eap
         {
-            eap.render(frame);
+            eap.render(frame, app.config.clone());
         }
 
         if app.focused_block == FocusedBlock::AdapterInfos {
-            app.adapter.render(frame, app.device.address.clone());
+            app.adapter
+                .render(frame, app.device.address.clone(), app.config.clone());
         }
 
         if app.agent.psk_required.load(Ordering::Relaxed) {
@@ -63,7 +64,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         if app.agent.password_required.load(Ordering::Relaxed)
             && let Some(req) = &app.auth.request_password
         {
-            req.render(frame);
+            req.render(frame, app.config.clone());
         }
 
         if app
@@ -78,12 +79,12 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         if let Some(station) = &app.device.station
             && let Some(conn) = &station.connct_hidden_network
         {
-            conn.render(frame);
+            conn.render(frame, app.config.clone());
         }
 
         // Notifications
         for (index, notification) in app.notifications.iter().enumerate() {
-            notification.render(index, frame);
+            notification.render(index, frame, app.config.clone());
         }
     }
 }

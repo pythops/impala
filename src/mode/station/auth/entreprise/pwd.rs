@@ -1,18 +1,18 @@
 use anyhow::{Result, anyhow};
-use std::{fs::OpenOptions, io::Write};
+use std::{fs::OpenOptions, io::Write, sync::Arc};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Stylize},
+    style::Stylize,
     text::{Line, Span},
     widgets::{HighlightSpacing, List, ListState},
 };
 
 use tui_input::{Input, backend::crossterm::EventHandler};
 
-use crate::{iwd_network_name, mode::station::auth::entreprise::ERROR_PADDING};
+use crate::{config::Config, iwd_network_name, mode::station::auth::entreprise::ERROR_PADDING};
 
 fn pad_string(input: &str, length: usize) -> String {
     let current_length = input.chars().count();
@@ -147,7 +147,7 @@ AutoConnect=true",
         }
     }
 
-    pub fn render(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render(&mut self, frame: &mut Frame, area: Rect, config: Arc<Config>) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -172,9 +172,9 @@ AutoConnect=true",
             Line::from(vec![
                 Span::from(pad_string(" Identity", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
-                Span::from(pad_string(self.identity.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.identity.field.value(), 50)).bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.identity.error {
@@ -187,9 +187,9 @@ AutoConnect=true",
             Line::from(vec![
                 Span::from(pad_string(" Password", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
-                Span::from(pad_string(self.password.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.password.field.value(), 50)).bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.password.error {

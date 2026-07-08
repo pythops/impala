@@ -1,11 +1,13 @@
+use crate::config::Config;
 use iwdrs::modes::Mode;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Margin},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::{Line, Span, Text},
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
 };
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Reset {
@@ -23,7 +25,7 @@ impl Reset {
         }
     }
 
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn render(&self, frame: &mut Frame, config: Arc<Config>) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -118,15 +120,15 @@ impl Reset {
 
         let message = Paragraph::new("Select the desired mode:")
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
+            .style(Style::default().fg(config.theme.text_color))
             .block(Block::new().padding(Padding::uniform(1)));
 
         let station_choice = Paragraph::new(station_text)
-            .style(Style::default().fg(Color::White))
+            .style(Style::default().fg(config.theme.text_color))
             .block(Block::new().padding(Padding::horizontal(10)));
 
         let ap_choice = Paragraph::new(ap_text)
-            .style(Style::default().fg(Color::White))
+            .style(Style::default().fg(config.theme.text_color))
             .block(Block::new().padding(Padding::horizontal(10)));
 
         let help = Text::from(Line::from(vec![
@@ -159,7 +161,7 @@ impl Reset {
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(Color::Green)),
+                .style(Style::default().fg(config.theme.border)),
             area,
         );
     }

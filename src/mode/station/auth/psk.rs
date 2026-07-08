@@ -1,12 +1,11 @@
-use std::sync::Arc;
-
 use crate::{agent::AuthAgent, config::Config};
 use anyhow::Result;
+use std::sync::Arc;
 
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Style, Stylize},
+    style::{Style, Stylize},
     text::{Line, Span, Text},
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
 };
@@ -113,7 +112,7 @@ impl Psk {
 
         let text = Paragraph::new(text.centered())
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
+            .style(Style::default().fg(config.theme.text_color))
             .block(Block::new().padding(Padding::uniform(1)));
 
         let passphrase_str = if self.show_password {
@@ -126,8 +125,8 @@ impl Psk {
 
         let passkey = Paragraph::new(passphrase_str)
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White))
-            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+            .style(Style::default().fg(config.theme.text_color))
+            .block(Block::new().style(Style::default().bg(config.theme.background)));
 
         let show_password_icon = if self.show_password {
             Text::from(if config.ascii { "Clear" } else { "󰈈 " }).centered()
@@ -141,8 +140,7 @@ impl Psk {
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Thick)
-                .style(Style::default().green())
-                .border_style(Style::default().fg(Color::Green)),
+                .style(Style::default().fg(config.theme.border)),
             area,
         );
         frame.render_widget(text, text_area);
