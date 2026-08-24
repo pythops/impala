@@ -6,6 +6,7 @@ use crate::config::Config;
 use crate::device::Device;
 use crate::event::Event;
 use crate::mode::ap::APFocusedSection;
+use crate::mode::station::Station;
 use crate::mode::station::hidden_network::ConnectHiddenNetwork;
 use crate::mode::station::share::Share;
 use crate::notification::{self, Notification};
@@ -524,22 +525,10 @@ pub async fn handle_key_events(
                                             if !station.known_networks.is_empty() =>
                                         {
                                             let i = match station.known_networks_state.selected() {
-                                                Some(i) => {
-                                                    let limit = if station
-                                                        .show_unavailable_known_networks
-                                                    {
-                                                        station.known_networks.len()
-                                                            + station
-                                                                .unavailable_known_networks
-                                                                .len()
-                                                            - 1
-                                                    } else {
-                                                        station.known_networks.len() - 1
-                                                    };
-
-                                                    if i < limit { i + 1 } else { i }
+                                                Some(i) if i < known_networks_limit(station) => {
+                                                    i + 1
                                                 }
-                                                None => 0,
+                                                _ => 0,
                                             };
 
                                             station.known_networks_state.select(Some(i));
@@ -548,7 +537,13 @@ pub async fn handle_key_events(
                                             if !station.known_networks.is_empty() =>
                                         {
                                             let i = match station.known_networks_state.selected() {
-                                                Some(i) => i.saturating_sub(1),
+                                                Some(i) => {
+                                                    if i > 0 {
+                                                        i - 1
+                                                    } else {
+                                                        known_networks_limit(station)
+                                                    }
+                                                }
                                                 None => 0,
                                             };
 
@@ -579,17 +574,8 @@ pub async fn handle_key_events(
                                         if !station.new_networks.is_empty() =>
                                     {
                                         let i = match station.new_networks_state.selected() {
-                                            Some(i) => {
-                                                let limit = if station.show_hidden_networks {
-                                                    station.new_networks.len()
-                                                        + station.new_hidden_networks.len()
-                                                        - 1
-                                                } else {
-                                                    station.new_networks.len() - 1
-                                                };
-                                                if i < limit { i + 1 } else { i }
-                                            }
-                                            None => 0,
+                                            Some(i) if i < new_networks_limit(station) => i + 1,
+                                            _ => 0,
                                         };
 
                                         station.new_networks_state.select(Some(i));
@@ -598,7 +584,13 @@ pub async fn handle_key_events(
                                         if !station.new_networks.is_empty() =>
                                     {
                                         let i = match station.new_networks_state.selected() {
-                                            Some(i) => i.saturating_sub(1),
+                                            Some(i) => {
+                                                if i > 0 {
+                                                    i - 1
+                                                } else {
+                                                    new_networks_limit(station)
+                                                }
+                                            }
                                             None => 0,
                                         };
 
@@ -734,4 +726,20 @@ pub async fn handle_key_events(
     }
 
     Ok(())
+}
+
+fn known_networks_limit(station: &Station) -> usize {
+    if station.show_unavailable_known_networks {
+        station.known_networks.len() + station.unavailable_known_networks.len() - 1
+    } else {
+        station.known_networks.len() - 1
+    }
+}
+
+fn new_networks_limit(station: &Station) -> usize {
+    if station.show_hidden_networks {
+        station.new_networks.len() + station.new_hidden_networks.len() - 1
+    } else {
+        station.new_networks.len() - 1
+    }
 }
