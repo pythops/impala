@@ -68,12 +68,24 @@ This will produce an executable file at `target/release/impala` that you can cop
 $ impala
 ```
 
+You can run `impala` with options from the cli:
+
+```
+$ impala --help
+Options:
+  -m, --mode <mode>  Device mode [possible values: station, ap]
+      --ascii        Ascii display
+  -h, --help         Print help
+  -V, --version      Print version
+```
+
 ## 🛠️Custom keybindings
 
 Keybindings can be customized in the config file `$HOME/.config/impala/config.toml`
 
 ```toml
 
+ascii = false # show icons
 switch = "r"
 mode = "station"
 esc_quit = false  # Set to true to enable Esc key to quit the app
