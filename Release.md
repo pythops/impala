@@ -1,3 +1,10 @@
+## 0.8.0 - 2026-08-25
+
+- Add ascii display
+- fix AP input popup flow
+- Make j/k wrap in known and new networks
+- Rscape special characters when sharing qr code
+
 ## v0.7.4 - 2026-02-13
 
 - fix: correct Phase 2 method names for iwd compatibility
