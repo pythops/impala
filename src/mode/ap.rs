@@ -558,6 +558,9 @@ impl AccessPoint {
             frame.render_widget(connected_devices_list, connected_devices_block);
         }
 
+        let tab = Span::from(if config.ascii { "Tab" } else { "⇄" }).bold();
+        let esc = Span::from(if config.ascii { "Tab" } else { "󱊷 " }).bold();
+
         let help_message = match focused_block {
             FocusedBlock::Device => Line::from(vec![
                 Span::from(config.device.infos.to_string()).bold(),
@@ -569,14 +572,14 @@ impl AccessPoint {
                 Span::from("ctrl+r").bold(),
                 Span::from(" Switch Mode"),
                 Span::from(" | "),
-                Span::from("⇄").bold(),
+                tab,
                 Span::from(" Nav"),
             ]),
             FocusedBlock::AdapterInfos | FocusedBlock::AccessPointInput => Line::from(vec![
-                Span::from("󱊷 ").bold(),
+                esc,
                 Span::from(" Discard"),
                 Span::from(" | "),
-                Span::from("⇄").bold(),
+                tab,
                 Span::from(" Nav"),
             ]),
             FocusedBlock::AccessPoint => Line::from(vec![
@@ -589,7 +592,7 @@ impl AccessPoint {
                 Span::from("ctrl+r").bold(),
                 Span::from(" Switch Mode"),
                 Span::from(" | "),
-                Span::from("⇄").bold(),
+                tab,
                 Span::from(" Nav"),
             ]),
             _ => Line::from(""),

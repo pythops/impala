@@ -501,7 +501,7 @@ impl Station {
                 if let Some(connected_net) = &self.connected_network {
                     if connected_net.name == net.name {
                         let row = vec![
-                            Line::from("󰖩 ").centered(),
+                            Line::from(if config.ascii { "*" } else { "󰖩 " }).centered(),
                             Line::from(net.name.clone()).centered(),
                             Line::from(net.network_type.to_string()).centered(),
                             Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
@@ -647,10 +647,36 @@ impl Station {
                             }
                         };
                         match signal {
-                            n if n >= 75 => format!("{signal:3}% 󰤨"),
-                            n if (50..75).contains(&n) => format!("{signal:3}% 󰤥"),
-                            n if (25..50).contains(&n) => format!("{signal:3}% 󰤢"),
-                            _ => format!("{signal:3}% 󰤟"),
+                            n if n >= 75 => {
+                                if config.ascii {
+                                    format!("{signal:3}%")
+                                } else {
+                                    format!("{signal:3}% 󰤨")
+                                }
+                            }
+
+                            n if (50..75).contains(&n) => {
+                                if config.ascii {
+                                    format!("{signal:3}%")
+                                } else {
+                                    format!("{signal:3}% 󰤥")
+                                }
+                            }
+
+                            n if (25..50).contains(&n) => {
+                                if config.ascii {
+                                    format!("{signal:3}%")
+                                } else {
+                                    format!("{signal:3}% 󰤢")
+                                }
+                            }
+                            _ => {
+                                if config.ascii {
+                                    format!("{signal:3}%")
+                                } else {
+                                    format!("{signal:3}% 󰤟")
+                                }
+                            }
                         }
                     })
                     .centered(),
@@ -673,10 +699,36 @@ impl Station {
                                 }
                             };
                             match signal {
-                                n if n >= 75 => format!("{signal:3}% 󰤨"),
-                                n if (50..75).contains(&n) => format!("{signal:3}% 󰤥"),
-                                n if (25..50).contains(&n) => format!("{signal:3}% 󰤢"),
-                                _ => format!("{signal:3}% 󰤟"),
+                                n if n >= 75 => {
+                                    if config.ascii {
+                                        format!("{signal:3}%")
+                                    } else {
+                                        format!("{signal:3}% 󰤨")
+                                    }
+                                }
+
+                                n if (50..75).contains(&n) => {
+                                    if config.ascii {
+                                        format!("{signal:3}%")
+                                    } else {
+                                        format!("{signal:3}% 󰤥")
+                                    }
+                                }
+
+                                n if (25..50).contains(&n) => {
+                                    if config.ascii {
+                                        format!("{signal:3}%")
+                                    } else {
+                                        format!("{signal:3}% 󰤢")
+                                    }
+                                }
+                                _ => {
+                                    if config.ascii {
+                                        format!("{signal:3}%")
+                                    } else {
+                                        format!("{signal:3}% 󰤟")
+                                    }
+                                }
                             }
                         })
                         .centered(),
@@ -752,6 +804,16 @@ impl Station {
             &mut self.new_networks_state,
         );
 
+        let enter_or_space = Span::from(if config.ascii {
+            "Space/Enter"
+        } else {
+            "󱁐  or ↵ "
+        })
+        .bold();
+        let enter = Span::from(if config.ascii { "Enter" } else { " ↵ " }).bold();
+        let tab = Span::from(if config.ascii { "Tab" } else { "⇄" }).bold();
+        let esc = Span::from(if config.ascii { "Tab" } else { "󱊷 " }).bold();
+
         let help_message = match focused_block {
             FocusedBlock::Device => vec![Line::from(vec![
                 Span::from(config.station.start_scanning.to_string()).bold(),
@@ -766,14 +828,14 @@ impl Station {
                 Span::from("ctrl+r").bold(),
                 Span::from(" Switch Mode"),
                 Span::from(" | "),
-                Span::from("⇄").bold(),
+                tab,
                 Span::from(" Nav"),
             ])],
             FocusedBlock::KnownNetworks => {
                 if frame.area().width <= 130 {
                     vec![
                         Line::from(vec![
-                            Span::from("󱁐  or ↵ ").bold(),
+                            enter_or_space,
                             Span::from(" Dis/connect"),
                             Span::from(" | "),
                             Span::from(config.station.known_network.show_all.to_string()).bold(),
@@ -789,14 +851,11 @@ impl Station {
                             Span::from(" Scan"),
                         ]),
                         Line::from(vec![
-                            Span::from("k,").bold(),
+                            Span::from("k,↑").bold(),
                             Span::from("  Up"),
                             Span::from(" | "),
-                            Span::from("j,").bold(),
+                            Span::from("j,↓").bold(),
                             Span::from("  Down"),
-                            Span::from(" | "),
-                            Span::from("⇄").bold(),
-                            Span::from(" Nav"),
                             Span::from(" | "),
                             Span::from("ctrl+r").bold(),
                             Span::from(" Switch Mode"),
@@ -804,17 +863,20 @@ impl Station {
                             Span::from(config.station.known_network.toggle_autoconnect.to_string())
                                 .bold(),
                             Span::from(" Autoconnect"),
+                            Span::from(" | "),
+                            tab,
+                            Span::from(" Nav"),
                         ]),
                     ]
                 } else {
                     vec![Line::from(vec![
-                        Span::from("k,").bold(),
+                        Span::from("k,↑").bold(),
                         Span::from("  Up"),
                         Span::from(" | "),
-                        Span::from("j,").bold(),
+                        Span::from("j,↓").bold(),
                         Span::from("  Down"),
                         Span::from(" | "),
-                        Span::from("󱁐  or ↵ ").bold(),
+                        enter_or_space,
                         Span::from(" Dis/connect"),
                         Span::from(" | "),
                         Span::from(config.station.known_network.show_all.to_string()).bold(),
@@ -836,7 +898,7 @@ impl Station {
                         Span::from("ctrl+r").bold(),
                         Span::from(" Switch Mode"),
                         Span::from(" | "),
-                        Span::from("⇄").bold(),
+                        tab,
                         Span::from(" Nav"),
                     ])]
                 }
@@ -845,7 +907,7 @@ impl Station {
                 if frame.area().width < 108 {
                     vec![
                         Line::from(vec![
-                            Span::from("󱁐  or ↵ ").bold(),
+                            enter_or_space,
                             Span::from(" Connect"),
                             Span::from(" | "),
                             Span::from(config.station.start_scanning.to_string()).bold(),
@@ -856,28 +918,28 @@ impl Station {
                             Span::from(" Connect Hidden"),
                         ]),
                         Line::from(vec![
-                            Span::from("k,").bold(),
+                            Span::from("k,↑").bold(),
                             Span::from("  Up"),
                             Span::from(" | "),
-                            Span::from("j,").bold(),
+                            Span::from("j,↓").bold(),
                             Span::from("  Down"),
                             Span::from(" | "),
                             Span::from("ctrl+r").bold(),
                             Span::from(" Switch Mode"),
                             Span::from(" | "),
-                            Span::from("⇄").bold(),
+                            Span::from(if config.ascii { "Tab" } else { "⇄" }).bold(),
                             Span::from(" Nav"),
                         ]),
                     ]
                 } else {
                     vec![Line::from(vec![
-                        Span::from("k,").bold(),
+                        Span::from("k,↑").bold(),
                         Span::from("  Up"),
                         Span::from(" | "),
-                        Span::from("j,").bold(),
+                        Span::from("j,↓").bold(),
                         Span::from("  Down"),
                         Span::from(" | "),
-                        Span::from("󱁐  or ↵ ").bold(),
+                        enter_or_space,
                         Span::from(" Connect"),
                         Span::from(" | "),
                         Span::from(config.station.new_network.connect_hidden.to_string()).bold(),
@@ -892,46 +954,43 @@ impl Station {
                         Span::from("ctrl+r").bold(),
                         Span::from(" Switch Mode"),
                         Span::from(" | "),
-                        Span::from("⇄").bold(),
+                        tab,
                         Span::from(" Nav"),
                     ])]
                 }
             }
             FocusedBlock::AdapterInfos => {
-                vec![Line::from(vec![
-                    Span::from("󱊷 ").bold(),
-                    Span::from(" Discard"),
-                ])]
+                vec![Line::from(vec![esc, Span::from(" Discard")])]
             }
             FocusedBlock::PskAuthKey => vec![Line::from(vec![
-                Span::from(" ↵ ").bold(),
+                enter,
                 Span::from(" Apply"),
                 Span::from(" | "),
-                Span::from("⇄").bold(),
+                tab,
                 Span::from(" Hide/Show password"),
                 Span::from(" | "),
-                Span::from("󱊷 ").bold(),
+                esc,
                 Span::from(" Discard"),
             ])],
             FocusedBlock::WpaEntrepriseAuth => vec![Line::from(vec![
-                Span::from(" ↵ ").bold(),
+                enter,
                 Span::from(" Apply"),
                 Span::from(" | "),
                 Span::from("h,l,←,→").bold(),
                 Span::from(" Switch EAP/Method"),
                 Span::from(" | "),
-                Span::from("󱊷 ").bold(),
+                esc,
                 Span::from(" Discard"),
                 Span::from(" | "),
-                Span::from("⇄").bold(),
+                tab,
                 Span::from(" Nav"),
             ])],
             FocusedBlock::ConnectHiddenNetwork => {
                 vec![Line::from(vec![
-                    Span::from(" ↵ ").bold(),
+                    enter,
                     Span::from(" Connect"),
                     Span::from(" | "),
-                    Span::from("󱊷 ").bold(),
+                    esc,
                     Span::from(" Discard"),
                 ])]
             }

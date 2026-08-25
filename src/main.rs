@@ -28,7 +28,9 @@ async fn main() -> Result<()> {
 
     rfkill::check()?;
 
-    let config = Arc::new(Config::new());
+    let mut config = Config::new();
+    config.ascii = args.get_flag("ascii");
+    let config = Arc::new(config);
 
     let backend = CrosstermBackend::new(io::stdout());
     let terminal = Terminal::new(backend)?;
