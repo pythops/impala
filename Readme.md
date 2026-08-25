@@ -20,7 +20,7 @@
 - [nerdfonts](https://www.nerdfonts.com/) (Optional) for icons.
 
 > [!IMPORTANT]
-> To avoid conflicts, ensure wireless management services like NetworkManager or wpa_supplicant are disabled.
+> To avoid conflicts, ensure wireless management services like `NetworkManager` or `wpa_supplicant` are disabled.
 
 ## 🚀 Installation
 
@@ -68,7 +68,7 @@ This will produce an executable file at `target/release/impala` that you can cop
 $ impala
 ```
 
-You can run `impala` with options from the cli:
+You can run `impala` with options:
 
 ```
 $ impala --help
@@ -85,7 +85,7 @@ Keybindings can be customized in the config file `$HOME/.config/impala/config.to
 
 ```toml
 
-ascii = false # show icons
+ascii = false # ascii display (false = do not show icons)
 switch = "r"
 mode = "station"
 esc_quit = false  # Set to true to enable Esc key to quit the app
