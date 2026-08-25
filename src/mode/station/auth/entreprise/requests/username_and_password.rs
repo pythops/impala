@@ -1,5 +1,7 @@
-use crate::agent::AuthAgent;
+use std::sync::Arc;
+
 use crate::event::Event;
+use crate::{agent::AuthAgent, config::Config};
 use anyhow::Result;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -108,7 +110,7 @@ impl RequestUsernameAndPassword {
         self.password.reset();
         Ok(())
     }
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn render(&self, frame: &mut Frame, config: Arc<Config>) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -140,7 +142,7 @@ impl RequestUsernameAndPassword {
                 .constraints([
                     Constraint::Percentage(20),
                     Constraint::Fill(1),
-                    Constraint::Length(5),
+                    Constraint::Length(8),
                     Constraint::Percentage(20),
                 ])
                 .flex(ratatui::layout::Flex::Center)
@@ -178,9 +180,19 @@ impl RequestUsernameAndPassword {
         let form = List::new(items);
 
         let show_password_icon = if self.show_password {
-            Text::from("\n\n ").centered()
+            Text::from(if config.ascii {
+                "\n\nClear"
+            } else {
+                "\n\n󰈈 "
+            })
+            .centered()
         } else {
-            Text::from("\n\n ").centered()
+            Text::from(if config.ascii {
+                "\n\nHidden"
+            } else {
+                "\n\n󰈉 "
+            })
+            .centered()
         };
 
         frame.render_widget(Clear, area);

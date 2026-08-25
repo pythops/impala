@@ -44,9 +44,11 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         if app.agent.psk_required.load(Ordering::Relaxed) {
             app.focused_block = FocusedBlock::PskAuthKey;
 
-            app.auth
-                .psk
-                .render(frame, app.network_name_requiring_auth.clone());
+            app.auth.psk.render(
+                frame,
+                app.network_name_requiring_auth.clone(),
+                app.config.clone(),
+            );
         }
 
         if app
@@ -55,7 +57,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             .load(Ordering::Relaxed)
             && let Some(req) = &app.auth.request_key_passphrase
         {
-            req.render(frame);
+            req.render(frame, app.config.clone());
         }
 
         if app.agent.password_required.load(Ordering::Relaxed)
@@ -70,7 +72,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             .load(Ordering::Relaxed)
             && let Some(req) = &app.auth.request_username_and_password
         {
-            req.render(frame);
+            req.render(frame, app.config.clone());
         }
 
         if let Some(station) = &app.device.station

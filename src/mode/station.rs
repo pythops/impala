@@ -814,6 +814,9 @@ impl Station {
         let tab = Span::from(if config.ascii { "Tab" } else { "⇄" }).bold();
         let esc = Span::from(if config.ascii { "Tab" } else { "󱊷 " }).bold();
 
+        let known_network_breakpoint = if config.ascii { 140 } else { 130 };
+        let new_network_breakpoint = if config.ascii { 140 } else { 108 };
+
         let help_message = match focused_block {
             FocusedBlock::Device => vec![Line::from(vec![
                 Span::from(config.station.start_scanning.to_string()).bold(),
@@ -832,7 +835,7 @@ impl Station {
                 Span::from(" Nav"),
             ])],
             FocusedBlock::KnownNetworks => {
-                if frame.area().width <= 130 {
+                if frame.area().width <= known_network_breakpoint {
                     vec![
                         Line::from(vec![
                             enter_or_space,
@@ -904,7 +907,7 @@ impl Station {
                 }
             }
             FocusedBlock::NewNetworks => {
-                if frame.area().width < 108 {
+                if frame.area().width < new_network_breakpoint {
                     vec![
                         Line::from(vec![
                             enter_or_space,
@@ -927,7 +930,7 @@ impl Station {
                             Span::from("ctrl+r").bold(),
                             Span::from(" Switch Mode"),
                             Span::from(" | "),
-                            Span::from(if config.ascii { "Tab" } else { "⇄" }).bold(),
+                            tab,
                             Span::from(" Nav"),
                         ]),
                     ]
@@ -994,10 +997,7 @@ impl Station {
                     Span::from(" Discard"),
                 ])]
             }
-            _ => vec![Line::from(vec![
-                Span::from("󱊷 ").bold(),
-                Span::from(" Discard"),
-            ])],
+            _ => vec![Line::from(vec![esc, Span::from(" Discard")])],
         };
 
         let help_message = Paragraph::new(help_message).centered().blue();

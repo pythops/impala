@@ -1,4 +1,6 @@
-use crate::agent::AuthAgent;
+use std::sync::Arc;
+
+use crate::{agent::AuthAgent, config::Config};
 use anyhow::Result;
 
 use ratatui::{
@@ -44,7 +46,7 @@ impl Psk {
         self.passphrase.reset();
         Ok(())
     }
-    pub fn render(&self, frame: &mut Frame, network_name: Option<String>) {
+    pub fn render(&self, frame: &mut Frame, network_name: Option<String>, config: Arc<Config>) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -91,7 +93,7 @@ impl Psk {
                 .constraints([
                     Constraint::Length(2),
                     Constraint::Fill(1),
-                    Constraint::Length(5),
+                    Constraint::Length(8),
                     Constraint::Length(2),
                 ])
                 .flex(ratatui::layout::Flex::Center)
@@ -128,9 +130,9 @@ impl Psk {
             .block(Block::new().style(Style::default().bg(Color::DarkGray)));
 
         let show_password_icon = if self.show_password {
-            Text::from("󰈈 ").centered()
+            Text::from(if config.ascii { "Clear" } else { "󰈈 " }).centered()
         } else {
-            Text::from("󰈉 ").centered()
+            Text::from(if config.ascii { "Hidden" } else { "󰈉 " }).centered()
         };
 
         frame.render_widget(Clear, area);
