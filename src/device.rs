@@ -166,9 +166,10 @@ impl Device {
                 Span::from(config.device.toggle_power.to_string()).bold(),
                 Span::from(" Toggle Power"),
             ]),
-            FocusedBlock::AdapterInfos => {
-                Line::from(vec![Span::from("󱊷 ").bold(), Span::from(" Discard")])
-            }
+            FocusedBlock::AdapterInfos => Line::from(vec![
+                Span::from(if config.ascii { "Esc" } else { " 󱊷 " }).bold(),
+                Span::from(" Discard"),
+            ]),
             _ => Line::from(""),
         };
 

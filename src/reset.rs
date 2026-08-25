@@ -1,9 +1,9 @@
 use iwdrs::modes::Mode;
 use ratatui::{
     Frame,
-    layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Style},
-    text::Text,
+    layout::{Alignment, Constraint, Direction, Layout, Margin},
+    style::{Color, Style, Stylize},
+    text::{Line, Span, Text},
     widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
 };
 
@@ -96,22 +96,22 @@ impl Reset {
         let (ap_text, station_text) = match self.selected_mode {
             Mode::Ap => match self.current_mode {
                 Mode::Ap => (
-                    Text::from("  Access Point (current)"),
-                    Text::from("   Station"),
+                    Text::from("→ Access Point (current)"),
+                    Text::from("  Station"),
                 ),
                 Mode::Station => (
-                    Text::from("  Access Point"),
-                    Text::from("   Station (current)"),
+                    Text::from("→ Access Point"),
+                    Text::from("  Station (current)"),
                 ),
             },
             Mode::Station => match self.current_mode {
                 Mode::Ap => (
-                    Text::from("   Access Point (current)"),
-                    Text::from("  Station"),
+                    Text::from("  Access Point (current)"),
+                    Text::from("→ Station"),
                 ),
                 Mode::Station => (
-                    Text::from("   Access Point"),
-                    Text::from("  Station (current)"),
+                    Text::from("  Access Point"),
+                    Text::from("→ Station (current)"),
                 ),
             },
         };
@@ -129,27 +129,38 @@ impl Reset {
             .style(Style::default().fg(Color::White))
             .block(Block::new().padding(Padding::horizontal(10)));
 
-        let help = Paragraph::new(
-            Text::from(" Scroll down: j | Scroll up: k | Enter: Confirm ")
-                .style(Style::default().blue()),
-        )
-        .alignment(Alignment::Center)
-        .style(Style::default())
-        .block(Block::new().padding(Padding::horizontal(1)));
+        let help = Text::from(Line::from(vec![
+            Span::from("k,↑").bold(),
+            Span::from("  Up"),
+            Span::from(" | "),
+            Span::from("j,↓").bold(),
+            Span::from("  Down"),
+            Span::from(" | "),
+            Span::from("Enter").bold(),
+            Span::from(" Confirm"),
+        ]))
+        .style(Style::default().blue())
+        .centered();
 
         frame.render_widget(Clear, area);
+
+        frame.render_widget(
+            message,
+            message_area.inner(Margin {
+                horizontal: 1,
+                vertical: 0,
+            }),
+        );
+        frame.render_widget(ap_choice, ap_choice_area);
+        frame.render_widget(station_choice, station_choice_area);
+        frame.render_widget(help, help_area);
 
         frame.render_widget(
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .style(Style::default().green())
                 .border_style(Style::default().fg(Color::Green)),
             area,
         );
-        frame.render_widget(message, message_area);
-        frame.render_widget(ap_choice, ap_choice_area);
-        frame.render_widget(station_choice, station_choice_area);
-        frame.render_widget(help, help_area);
     }
 }

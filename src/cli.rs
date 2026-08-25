@@ -1,4 +1,4 @@
-use clap::{Command, arg, crate_version};
+use clap::{ArgAction, Command, arg, crate_version};
 
 pub fn cli() -> Command {
     Command::new("impala")
@@ -10,5 +10,11 @@ pub fn cli() -> Command {
                 .required(false)
                 .help("Device mode")
                 .value_parser(["station", "ap"]),
+        )
+        .arg(
+            arg!(--ascii)
+                .required(false)
+                .help("Ascii display")
+                .action(ArgAction::SetTrue),
         )
 }

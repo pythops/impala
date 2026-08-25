@@ -1,4 +1,6 @@
-use crate::agent::AuthAgent;
+use std::sync::Arc;
+
+use crate::{agent::AuthAgent, config::Config};
 use anyhow::Result;
 
 use ratatui::{
@@ -43,7 +45,7 @@ impl RequestKeyPassphrase {
         self.passphrase.reset();
         Ok(())
     }
-    pub fn render(&self, frame: &mut Frame) {
+    pub fn render(&self, frame: &mut Frame, config: Arc<Config>) {
         let popup_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -90,7 +92,7 @@ impl RequestKeyPassphrase {
                 .constraints([
                     Constraint::Percentage(20),
                     Constraint::Fill(1),
-                    Constraint::Length(5),
+                    Constraint::Length(8),
                     Constraint::Percentage(20),
                 ])
                 .flex(ratatui::layout::Flex::Center)
@@ -121,9 +123,9 @@ impl RequestKeyPassphrase {
         .block(Block::new().style(Style::default().bg(Color::DarkGray)));
 
         let show_password_icon = if self.show_password {
-            Text::from(" ").centered()
+            Text::from(if config.ascii { "Clear" } else { "󰈈 " }).centered()
         } else {
-            Text::from(" ").centered()
+            Text::from(if config.ascii { "Hidden" } else { "󰈉 " }).centered()
         };
 
         frame.render_widget(Clear, area);
