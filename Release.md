@@ -1,3 +1,7 @@
+## 0.8.1 - 2026-08-26
+
+- fix no station found error when dis/connecting
+
 ## 0.8.0 - 2026-08-25
 
 - Add ascii display
