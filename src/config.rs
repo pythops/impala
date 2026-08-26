@@ -229,21 +229,16 @@ impl Default for Theme {
 }
 
 impl Config {
-    pub fn new() -> Self {
+    pub fn new() -> anyhow::Result<Self> {
         let conf_path = dirs::config_dir()
             .unwrap()
             .join("impala")
             .join("config.toml");
 
-        let config = std::fs::read_to_string(conf_path).unwrap_or_default();
-        let app_config: Config = toml::from_str(&config).unwrap();
+        let config = std::fs::read_to_string(&conf_path).unwrap_or_default();
+        let app_config: Config = toml::from_str(&config)
+            .map_err(|e| anyhow::anyhow!("Invalid config at {}: {e}", conf_path.display()))?;
 
-        app_config
-    }
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self::new()
+        Ok(app_config)
     }
 }

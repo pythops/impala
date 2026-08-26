@@ -81,7 +81,7 @@ Options:
 
 ## 🛠️Custom keybindings and themes
 
-Keybindings and themes can be customized in the config file `$HOME/.config/impala/config.toml`
+Keybindings and themes can be customized in the config file `$HOME/.config/impala/config.toml`. Please refer to the [ratatui Color docs](https://docs.rs/ratatui/latest/ratatui/prelude/enum.Color.html) for valid color configurations.
 
 ```toml
 

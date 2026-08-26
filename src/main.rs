@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
 
     rfkill::check()?;
 
-    let mut config = Config::new();
+    let mut config = Config::new()?;
     config.ascii = args.get_flag("ascii");
     let config = Arc::new(config);
 
