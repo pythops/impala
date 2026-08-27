@@ -161,7 +161,7 @@ impl Reset {
             Block::new()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .style(Style::default().fg(config.theme.border)),
+                .border_style(Style::default().fg(config.theme.border)),
             area,
         );
     }
