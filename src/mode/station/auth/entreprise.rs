@@ -8,9 +8,10 @@ use ratatui::{
     text::Text,
     widgets::{Block, Borders, Clear},
 };
+use std::sync::Arc;
 use tui_input::Input;
 
-use crate::event::Event;
+use crate::{config::Config, event::Event};
 
 pub mod eduroam;
 pub mod peap;
@@ -448,7 +449,7 @@ impl WPAEntreprise {
         }
     }
 
-    pub fn render(&mut self, frame: &mut Frame) {
+    pub fn render(&mut self, frame: &mut Frame, config: Arc<Config>) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -494,7 +495,7 @@ impl WPAEntreprise {
             Block::default()
                 .borders(Borders::ALL)
                 .border_type(ratatui::widgets::BorderType::Thick)
-                .border_style(Style::default().green()),
+                .border_style(Style::default().fg(config.theme.border)),
             block,
         );
 
@@ -512,7 +513,7 @@ impl WPAEntreprise {
         };
 
         let choice = if self.focused_section == FocusedSection::EapChoice {
-            choice.bold().green()
+            choice.bold().fg(config.theme.border)
         } else {
             choice
         };
@@ -527,24 +528,27 @@ impl WPAEntreprise {
 
         match &mut self.eap {
             Eap::TLS(v) => {
-                v.render(frame, eap_block);
+                v.render(frame, eap_block, config.clone());
             }
             Eap::PWD(v) => {
-                v.render(frame, eap_block);
+                v.render(frame, eap_block, config.clone());
             }
             Eap::TTLS(v) => {
-                v.render(frame, eap_block);
+                v.render(frame, eap_block, config.clone());
             }
             Eap::PEAP(v) => {
-                v.render(frame, eap_block);
+                v.render(frame, eap_block, config.clone());
             }
             Eap::Eduroam(v) => {
-                v.render(frame, eap_block);
+                v.render(frame, eap_block, config.clone());
             }
         }
 
         let text = if self.focused_section == FocusedSection::Apply {
-            Text::from("APPLY").centered().green().bold()
+            Text::from("APPLY")
+                .centered()
+                .fg(config.theme.border)
+                .bold()
         } else {
             Text::from("APPLY").centered()
         };

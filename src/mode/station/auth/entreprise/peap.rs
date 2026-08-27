@@ -1,11 +1,11 @@
 use anyhow::{Result, anyhow};
-use std::{fs::OpenOptions, io::Write, path::Path};
+use std::{fs::OpenOptions, io::Write, path::Path, sync::Arc};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     Frame,
     layout::{Margin, Rect},
-    style::{Color, Stylize},
+    style::Stylize,
     text::{Line, Span},
     widgets::{HighlightSpacing, List, ListState},
 };
@@ -13,6 +13,7 @@ use ratatui::{
 use tui_input::backend::crossterm::EventHandler;
 
 use crate::{
+    config::Config,
     iwd_network_name,
     mode::station::auth::entreprise::{ERROR_PADDING, UserInputField},
 };
@@ -340,14 +341,14 @@ EAP-PEAP-Phase2-Password={}
         }
     }
 
-    pub fn render(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render(&mut self, frame: &mut Frame, area: Rect, config: Arc<Config>) {
         let items = [
             Line::from(vec![
                 Span::from(pad_string(" Identity", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
-                Span::from(pad_string(self.identity.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.identity.field.value(), 50)).bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.identity.error {
@@ -360,10 +361,10 @@ EAP-PEAP-Phase2-Password={}
             Line::from(vec![
                 Span::from(pad_string(" Server Domain Mask", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
                 Span::from(pad_string(self.server_domain_mask.field.value(), 50))
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.server_domain_mask.error {
@@ -376,9 +377,9 @@ EAP-PEAP-Phase2-Password={}
             Line::from(vec![
                 Span::from(pad_string(" CA Cert", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
-                Span::from(pad_string(self.ca_cert.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.ca_cert.field.value(), 50)).bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.ca_cert.error {
@@ -391,9 +392,10 @@ EAP-PEAP-Phase2-Password={}
             Line::from(vec![
                 Span::from(pad_string(" Client Cert", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
-                Span::from(pad_string(self.client_cert.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.client_cert.field.value(), 50))
+                    .bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.client_cert.error {
@@ -406,9 +408,10 @@ EAP-PEAP-Phase2-Password={}
             Line::from(vec![
                 Span::from(pad_string(" Client Key", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
-                Span::from(pad_string(self.client_key.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.client_key.field.value(), 50))
+                    .bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.client_key.error {
@@ -421,9 +424,10 @@ EAP-PEAP-Phase2-Password={}
             Line::from(vec![
                 Span::from(pad_string(" Key Passphrase", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
-                Span::from(pad_string(self.key_passphrase.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.key_passphrase.field.value(), 50))
+                    .bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.key_passphrase.error {
@@ -436,7 +440,7 @@ EAP-PEAP-Phase2-Password={}
             Line::from(vec![
                 Span::from(pad_string(" Phase2 Method", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
                 Span::from(format!("< {} >", self.phase2_method)),
             ]),
@@ -444,9 +448,10 @@ EAP-PEAP-Phase2-Password={}
             Line::from(vec![
                 Span::from(pad_string(" Phase2 Identity", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
-                Span::from(pad_string(self.phase2_identity.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.phase2_identity.field.value(), 50))
+                    .bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.phase2_identity.error {
@@ -459,9 +464,10 @@ EAP-PEAP-Phase2-Password={}
             Line::from(vec![
                 Span::from(pad_string(" Phase2 Password", 20))
                     .bold()
-                    .bg(Color::DarkGray),
+                    .bg(config.theme.background),
                 Span::from("  "),
-                Span::from(pad_string(self.phase2_password.field.value(), 50)).bg(Color::DarkGray),
+                Span::from(pad_string(self.phase2_password.field.value(), 50))
+                    .bg(config.theme.background),
             ]),
             Line::from(vec![Span::from(ERROR_PADDING), {
                 if let Some(error) = &self.phase2_password.error {

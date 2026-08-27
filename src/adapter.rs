@@ -7,7 +7,7 @@ use iwdrs::{adapter::Adapter as iwdAdapter, session::Session};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Flex, Layout},
-    style::{Color, Style},
+    style::Style,
     widgets::{Block, BorderType, Borders, Cell, Clear, Padding, Row, Table},
 };
 
@@ -54,7 +54,7 @@ impl Adapter {
         Ok(())
     }
 
-    pub fn render(&self, frame: &mut Frame, device_addr: String) {
+    pub fn render(&self, frame: &mut Frame, device_addr: String, config: Arc<Config>) {
         let popup_layout = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
             .constraints([
@@ -113,11 +113,15 @@ impl Adapter {
                     .title_alignment(Alignment::Center)
                     .padding(Padding::uniform(1))
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::Green))
+                    .border_style(Style::default().fg(config.theme.border))
                     .border_type(BorderType::Thick),
             )
             .column_spacing(3)
-            .row_highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White));
+            .row_highlight_style(
+                Style::default()
+                    .bg(config.theme.background)
+                    .fg(config.theme.text_color),
+            );
 
         frame.render_widget(Clear, area);
         frame.render_widget(device_infos_table, area);
