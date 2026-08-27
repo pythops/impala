@@ -1,3 +1,7 @@
+## 0.9.0 - 2026-08-27
+
+- Add configurable colors
+
 ## 0.8.1 - 2026-08-26
 
 - fix no station found error when dis/connecting
