@@ -3,10 +3,12 @@ pub mod auth;
 pub mod hidden_network;
 pub mod known_network;
 pub mod network;
+pub mod search;
 pub mod share;
 
 use std::sync::Arc;
 
+use crossterm::event::{KeyCode, KeyEvent};
 use futures::future::join_all;
 use iwdrs::{
     error::{IWDError, station::ScanError},
@@ -22,13 +24,18 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, Padding, Paragraph, Row, Table, TableState},
 };
 use tokio::sync::mpsc::UnboundedSender;
+use tui_input::backend::crossterm::EventHandler;
 
 use crate::{
     app::FocusedBlock,
     config::Config,
     device::Device,
     event::Event,
-    mode::station::{known_network::KnownNetwork, share::Share},
+    mode::station::{
+        known_network::KnownNetwork,
+        search::{Search, SearchTarget, name_matches},
+        share::Share,
+    },
     notification::{Notification, NotificationLevel},
 };
 
@@ -51,6 +58,7 @@ pub struct Station {
     pub show_hidden_networks: bool,
     pub share: Option<Share>,
     pub connct_hidden_network: Option<hidden_network::ConnectHiddenNetwork>,
+    pub search: Option<Search>,
 }
 
 impl Station {
@@ -163,6 +171,7 @@ impl Station {
             show_hidden_networks: false,
             share: None,
             connct_hidden_network: None,
+            search: None,
         })
     }
 
@@ -353,6 +362,258 @@ impl Station {
         Ok(())
     }
 
+    pub fn start_search(&mut self, target: SearchTarget, case_sensitive: bool) {
+        let previous_selection = match target {
+            SearchTarget::KnownNetworks => self.known_networks_state.selected(),
+            SearchTarget::NewNetworks => self.new_networks_state.selected(),
+        };
+
+        self.search = Some(Search::new(target, previous_selection, case_sensitive));
+    }
+
+    pub fn handle_search_key_events(&mut self, key_event: KeyEvent) {
+        if self.search.is_none() {
+            return;
+        }
+
+        match key_event.code {
+            KeyCode::Enter => {
+                self.search = None;
+            }
+            KeyCode::Esc => {
+                if let Some(search) = self.search.take() {
+                    let previous = search.previous_selection;
+                    match search.target {
+                        SearchTarget::KnownNetworks => {
+                            self.known_networks_state.select(previous);
+                        }
+                        SearchTarget::NewNetworks => {
+                            self.new_networks_state.select(previous);
+                        }
+                    }
+                }
+            }
+            KeyCode::Char('j') | KeyCode::Down => {
+                self.search_move(1);
+            }
+            KeyCode::Char('k') | KeyCode::Up => {
+                self.search_move(-1);
+            }
+            _ => {
+                if let Some(search) = &mut self.search {
+                    search
+                        .input
+                        .handle_event(&crossterm::event::Event::Key(key_event));
+                }
+                self.search_jump_first_match();
+            }
+        }
+    }
+
+    fn search_move(&mut self, delta: isize) {
+        let (indices, target) = {
+            let Some(search) = &self.search else {
+                return;
+            };
+            let indices = match search.target {
+                SearchTarget::KnownNetworks => self.visible_known_indices(),
+                SearchTarget::NewNetworks => self.visible_new_indices(),
+            };
+            (indices, search.target)
+        };
+
+        if indices.is_empty() {
+            return;
+        }
+
+        let current = match target {
+            SearchTarget::KnownNetworks => self.known_networks_state.selected(),
+            SearchTarget::NewNetworks => self.new_networks_state.selected(),
+        };
+
+        let position = current
+            .and_then(|c| indices.iter().position(|&i| i == c))
+            .unwrap_or(0);
+
+        let new_position = if delta > 0 {
+            (position + 1) % indices.len()
+        } else if position == 0 {
+            indices.len() - 1
+        } else {
+            position - 1
+        };
+
+        let new_index = indices[new_position];
+        match target {
+            SearchTarget::KnownNetworks => self.known_networks_state.select(Some(new_index)),
+            SearchTarget::NewNetworks => self.new_networks_state.select(Some(new_index)),
+        }
+    }
+
+    fn search_jump_first_match(&mut self) {
+        let (indices, target) = {
+            let Some(search) = &self.search else {
+                return;
+            };
+            let indices = match search.target {
+                SearchTarget::KnownNetworks => self.visible_known_indices(),
+                SearchTarget::NewNetworks => self.visible_new_indices(),
+            };
+            (indices, search.target)
+        };
+
+        if indices.is_empty() {
+            match target {
+                SearchTarget::KnownNetworks => self.known_networks_state.select(None),
+                SearchTarget::NewNetworks => self.new_networks_state.select(None),
+            }
+            return;
+        }
+
+        let current = match target {
+            SearchTarget::KnownNetworks => self.known_networks_state.selected(),
+            SearchTarget::NewNetworks => self.new_networks_state.selected(),
+        };
+
+        if !current.is_some_and(|c| indices.contains(&c)) {
+            let first = indices[0];
+            match target {
+                SearchTarget::KnownNetworks => self.known_networks_state.select(Some(first)),
+                SearchTarget::NewNetworks => self.new_networks_state.select(Some(first)),
+            }
+        }
+    }
+
+    fn search_filter(&self, target: SearchTarget) -> Option<(&str, bool)> {
+        self.search.as_ref().and_then(|s| {
+            if s.target == target {
+                Some((s.input.value(), s.case_sensitive))
+            } else {
+                None
+            }
+        })
+    }
+
+    fn visible_known_indices(&self) -> Vec<usize> {
+        let filter = self.search_filter(SearchTarget::KnownNetworks);
+
+        let mut indices: Vec<usize> = self
+            .known_networks
+            .iter()
+            .enumerate()
+            .filter(|(_, (net, _))| match filter {
+                Some((query, cs)) => name_matches(&net.name, query, cs),
+                None => true,
+            })
+            .map(|(i, _)| i)
+            .collect();
+
+        if self.show_unavailable_known_networks {
+            let offset = self.known_networks.len();
+            indices.extend(
+                self.unavailable_known_networks
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, net)| match filter {
+                        Some((query, cs)) => name_matches(&net.name, query, cs),
+                        None => true,
+                    })
+                    .map(|(i, _)| offset + i),
+            );
+        }
+
+        indices
+    }
+
+    fn visible_new_indices(&self) -> Vec<usize> {
+        let filter = self.search_filter(SearchTarget::NewNetworks);
+
+        let mut indices: Vec<usize> = self
+            .new_networks
+            .iter()
+            .enumerate()
+            .filter(|(_, (net, _))| match filter {
+                Some((query, cs)) => name_matches(&net.name, query, cs),
+                None => true,
+            })
+            .map(|(i, _)| i)
+            .collect();
+
+        if self.show_hidden_networks {
+            let offset = self.new_networks.len();
+            indices.extend(
+                self.new_hidden_networks
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, net)| match filter {
+                        Some((query, cs)) => name_matches(&net.address, query, cs),
+                        None => true,
+                    })
+                    .map(|(i, _)| offset + i),
+            );
+        }
+
+        indices
+    }
+
+    fn known_network_row(&self, index: usize, config: &Config) -> Row<'_> {
+        if index < self.known_networks.len() {
+            let (network, signal) = &self.known_networks[index];
+            let net = network.known_network.as_ref().unwrap();
+            let signal = format!("{}%", signal_percentage(*signal));
+
+            let connected_marker = self
+                .connected_network
+                .as_ref()
+                .filter(|connected| connected.name == net.name)
+                .map(|_| if config.ascii { "*" } else { "󰖩 " })
+                .unwrap_or("");
+
+            Row::new(vec![
+                Line::from(connected_marker).centered(),
+                Line::from(net.name.clone()).centered(),
+                Line::from(net.network_type.to_string()).centered(),
+                Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
+                Line::from(if net.is_autoconnect { "Yes" } else { "No" }).centered(),
+                Line::from(signal).centered(),
+            ])
+        } else {
+            let net = &self.unavailable_known_networks[index - self.known_networks.len()];
+            Row::new(vec![
+                Line::from(""),
+                Line::from(net.name.clone()).centered(),
+                Line::from(net.network_type.to_string()).centered(),
+                Line::from(""),
+                Line::from(""),
+                Line::from(""),
+            ])
+            .fg(config.theme.hidden_color)
+        }
+    }
+
+    fn new_network_row(&self, index: usize, config: &Config) -> Row<'_> {
+        if index < self.new_networks.len() {
+            let (net, signal) = &self.new_networks[index];
+            Row::new(vec![
+                Line::from(net.name.clone()).centered(),
+                Line::from(net.network_type.to_string().clone()).centered(),
+                Line::from(signal_string(signal_percentage(*signal), config)).centered(),
+            ])
+        } else {
+            let net = &self.new_hidden_networks[index - self.new_networks.len()];
+            Row::new(vec![
+                Line::from(net.address.clone()).centered(),
+                Line::from(net.network_type.to_string().clone()).centered(),
+                Line::from(signal_string(
+                    signal_percentage(net.signal_strength),
+                    config,
+                ))
+                .centered(),
+            ])
+            .fg(config.theme.hidden_color)
+        }
+    }
+
     pub fn render(
         &mut self,
         frame: &mut Frame,
@@ -487,73 +748,12 @@ impl Station {
         //
         // Known networks
         //
-        let mut rows: Vec<Row> = self
-            .known_networks
+        let visible_known_indices = self.visible_known_indices();
+
+        let rows: Vec<Row> = visible_known_indices
             .iter()
-            .map(|(net, signal)| {
-                let net = net.known_network.as_ref().unwrap();
-                let signal = format!("{}%", {
-                    if *signal / 100 >= -50 {
-                        100
-                    } else {
-                        2 * (100 + signal / 100)
-                    }
-                });
-
-                if let Some(connected_net) = &self.connected_network {
-                    if connected_net.name == net.name {
-                        let row = vec![
-                            Line::from(if config.ascii { "*" } else { "󰖩 " }).centered(),
-                            Line::from(net.name.clone()).centered(),
-                            Line::from(net.network_type.to_string()).centered(),
-                            Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
-                            Line::from(if net.is_autoconnect { "Yes" } else { "No" }).centered(),
-                            Line::from(signal).centered(),
-                        ];
-
-                        Row::new(row)
-                    } else {
-                        let row = vec![
-                            Line::from(""),
-                            Line::from(net.name.clone()).centered(),
-                            Line::from(net.network_type.to_string()).centered(),
-                            Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
-                            Line::from(if net.is_autoconnect { "Yes" } else { "No" }).centered(),
-                            Line::from(signal).centered(),
-                        ];
-
-                        Row::new(row)
-                    }
-                } else {
-                    let row = vec![
-                        Line::from("").centered(),
-                        Line::from(net.name.clone()).centered(),
-                        Line::from(net.network_type.to_string()).centered(),
-                        Line::from(if net.is_hidden { "Yes" } else { "No" }).centered(),
-                        Line::from(if net.is_autoconnect { "Yes" } else { "No" }).centered(),
-                        Line::from(signal).centered(),
-                    ];
-
-                    Row::new(row)
-                }
-            })
+            .map(|&index| self.known_network_row(index, &config))
             .collect();
-
-        if self.show_unavailable_known_networks {
-            self.unavailable_known_networks.iter().for_each(|net| {
-                let row = Row::new(vec![
-                    Line::from(""),
-                    Line::from(net.name.clone()).centered(),
-                    Line::from(net.network_type.to_string()).centered(),
-                    Line::from(""),
-                    Line::from(""),
-                    Line::from(""),
-                ])
-                .fg(config.theme.hidden_color);
-
-                rows.push(row);
-            });
-        }
 
         let widths = [
             Constraint::Length(2),
@@ -626,121 +826,28 @@ impl Station {
                 Style::default()
             });
 
+        let known_selected = self
+            .known_networks_state
+            .selected()
+            .and_then(|c| visible_known_indices.iter().position(|&i| i == c));
+
+        let mut known_networks_state = TableState::default().with_selected(known_selected);
+
         frame.render_stateful_widget(
             known_networks_table,
             known_networks_block,
-            &mut self.known_networks_state,
+            &mut known_networks_state,
         );
 
         //
         // New networks
         //
-        let mut rows: Vec<Row> = self
-            .new_networks
+        let visible_new_indices = self.visible_new_indices();
+
+        let rows: Vec<Row> = visible_new_indices
             .iter()
-            .map(|(net, signal)| {
-                Row::new(vec![
-                    Line::from(net.name.clone()).centered(),
-                    Line::from(net.network_type.to_string().clone()).centered(),
-                    Line::from({
-                        let signal = {
-                            if *signal / 100 >= -50 {
-                                100
-                            } else {
-                                2 * (100 + signal / 100)
-                            }
-                        };
-                        match signal {
-                            n if n >= 75 => {
-                                if config.ascii {
-                                    format!("{signal:3}%")
-                                } else {
-                                    format!("{signal:3}% 󰤨")
-                                }
-                            }
-
-                            n if (50..75).contains(&n) => {
-                                if config.ascii {
-                                    format!("{signal:3}%")
-                                } else {
-                                    format!("{signal:3}% 󰤥")
-                                }
-                            }
-
-                            n if (25..50).contains(&n) => {
-                                if config.ascii {
-                                    format!("{signal:3}%")
-                                } else {
-                                    format!("{signal:3}% 󰤢")
-                                }
-                            }
-                            _ => {
-                                if config.ascii {
-                                    format!("{signal:3}%")
-                                } else {
-                                    format!("{signal:3}% 󰤟")
-                                }
-                            }
-                        }
-                    })
-                    .centered(),
-                ])
-            })
+            .map(|&index| self.new_network_row(index, &config))
             .collect();
-
-        if self.show_hidden_networks {
-            self.new_hidden_networks.iter().for_each(|net| {
-                rows.push(
-                    Row::new(vec![
-                        Line::from(net.address.clone()).centered(),
-                        Line::from(net.network_type.to_string().clone()).centered(),
-                        Line::from({
-                            let signal = {
-                                if net.signal_strength / 100 >= -50 {
-                                    100
-                                } else {
-                                    2 * (100 + net.signal_strength / 100)
-                                }
-                            };
-                            match signal {
-                                n if n >= 75 => {
-                                    if config.ascii {
-                                        format!("{signal:3}%")
-                                    } else {
-                                        format!("{signal:3}% 󰤨")
-                                    }
-                                }
-
-                                n if (50..75).contains(&n) => {
-                                    if config.ascii {
-                                        format!("{signal:3}%")
-                                    } else {
-                                        format!("{signal:3}% 󰤥")
-                                    }
-                                }
-
-                                n if (25..50).contains(&n) => {
-                                    if config.ascii {
-                                        format!("{signal:3}%")
-                                    } else {
-                                        format!("{signal:3}% 󰤢")
-                                    }
-                                }
-                                _ => {
-                                    if config.ascii {
-                                        format!("{signal:3}%")
-                                    } else {
-                                        format!("{signal:3}% 󰤟")
-                                    }
-                                }
-                            }
-                        })
-                        .centered(),
-                    ])
-                    .fg(config.theme.hidden_color),
-                )
-            })
-        };
 
         let widths = [
             Constraint::Length(25),
@@ -804,10 +911,17 @@ impl Station {
                 Style::default()
             });
 
+        let new_selected = self
+            .new_networks_state
+            .selected()
+            .and_then(|c| visible_new_indices.iter().position(|&i| i == c));
+
+        let mut new_networks_state = TableState::default().with_selected(new_selected);
+
         frame.render_stateful_widget(
             new_networks_table,
             new_networks_block,
-            &mut self.new_networks_state,
+            &mut new_networks_state,
         );
 
         let enter_or_space = Span::from(if config.ascii {
@@ -866,6 +980,9 @@ impl Station {
                             Span::from("j,↓").bold(),
                             Span::from("  Down"),
                             Span::from(" | "),
+                            Span::from(config.station.search.to_string()).bold(),
+                            Span::from(" Search"),
+                            Span::from(" | "),
                             Span::from("ctrl+r").bold(),
                             Span::from(" Switch Mode"),
                             Span::from(" | "),
@@ -904,6 +1021,9 @@ impl Station {
                         Span::from(config.station.known_network.share.to_string()).bold(),
                         Span::from(" Share"),
                         Span::from(" | "),
+                        Span::from(config.station.search.to_string()).bold(),
+                        Span::from(" Search"),
+                        Span::from(" | "),
                         Span::from("ctrl+r").bold(),
                         Span::from(" Switch Mode"),
                         Span::from(" | "),
@@ -933,6 +1053,9 @@ impl Station {
                             Span::from("j,↓").bold(),
                             Span::from("  Down"),
                             Span::from(" | "),
+                            Span::from(config.station.search.to_string()).bold(),
+                            Span::from(" Search"),
+                            Span::from(" | "),
                             Span::from("ctrl+r").bold(),
                             Span::from(" Switch Mode"),
                             Span::from(" | "),
@@ -959,6 +1082,9 @@ impl Station {
                         Span::from(" | "),
                         Span::from(config.station.start_scanning.to_string()).bold(),
                         Span::from(" Scan"),
+                        Span::from(" | "),
+                        Span::from(config.station.search.to_string()).bold(),
+                        Span::from(" Search"),
                         Span::from(" | "),
                         Span::from("ctrl+r").bold(),
                         Span::from(" Switch Mode"),
@@ -1006,13 +1132,57 @@ impl Station {
             _ => vec![Line::from(vec![esc, Span::from(" Discard")])],
         };
 
-        let help_message = Paragraph::new(help_message).centered().blue();
-
-        frame.render_widget(help_message, help_block);
+        if let Some(search) = &self.search {
+            search.render(frame, help_block, config.clone());
+        } else {
+            let help_message = Paragraph::new(help_message).centered().blue();
+            frame.render_widget(help_message, help_block);
+        }
 
         // Share
         if let Some(share) = &self.share {
             share.render(frame, config.clone());
+        }
+    }
+}
+
+fn signal_percentage(signal: i16) -> i16 {
+    if signal / 100 >= -50 {
+        100
+    } else {
+        2 * (100 + signal / 100)
+    }
+}
+
+fn signal_string(percentage: i16, config: &Config) -> String {
+    match percentage {
+        n if n >= 75 => {
+            if config.ascii {
+                format!("{n:3}%")
+            } else {
+                format!("{n:3}% 󰤨")
+            }
+        }
+        n if (50..75).contains(&n) => {
+            if config.ascii {
+                format!("{n:3}%")
+            } else {
+                format!("{n:3}% 󰤥")
+            }
+        }
+        n if (25..50).contains(&n) => {
+            if config.ascii {
+                format!("{n:3}%")
+            } else {
+                format!("{n:3}% 󰤢")
+            }
+        }
+        n => {
+            if config.ascii {
+                format!("{n:3}%")
+            } else {
+                format!("{n:3}% 󰤟")
+            }
         }
     }
 }

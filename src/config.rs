@@ -74,6 +74,12 @@ pub struct Station {
     #[serde(default = "default_station_start_scanning")]
     pub start_scanning: char,
 
+    #[serde(default = "default_station_search")]
+    pub search: char,
+
+    #[serde(default)]
+    pub search_case_sensitive: bool,
+
     #[serde(default)]
     pub known_network: KnownNetwork,
 
@@ -85,6 +91,8 @@ impl Default for Station {
     fn default() -> Self {
         Self {
             start_scanning: 's',
+            search: default_station_search(),
+            search_case_sensitive: false,
             known_network: KnownNetwork::default(),
             new_network: NewNetwork::default(),
         }
@@ -93,6 +101,10 @@ impl Default for Station {
 
 fn default_station_start_scanning() -> char {
     's'
+}
+
+fn default_station_search() -> char {
+    '/'
 }
 
 #[derive(Deserialize, Debug)]

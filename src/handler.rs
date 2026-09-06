@@ -8,6 +8,7 @@ use crate::event::Event;
 use crate::mode::ap::APFocusedSection;
 use crate::mode::station::Station;
 use crate::mode::station::hidden_network::ConnectHiddenNetwork;
+use crate::mode::station::search::SearchTarget;
 use crate::mode::station::share::Share;
 use crate::notification::{self, Notification};
 
@@ -222,6 +223,11 @@ pub async fn handle_key_events(
     match app.device.mode {
         Mode::Station => {
             if let Some(station) = &mut app.device.station {
+                if station.search.is_some() {
+                    station.handle_search_key_events(key_event);
+                    return Ok(());
+                }
+
                 match app.focused_block {
                     FocusedBlock::PskAuthKey => match key_event.code {
                         KeyCode::Enter => {
@@ -416,6 +422,13 @@ pub async fn handle_key_events(
 
                                 FocusedBlock::KnownNetworks => {
                                     match key_event.code {
+                                        // Search
+                                        KeyCode::Char(c) if c == config.station.search => {
+                                            station.start_search(
+                                                SearchTarget::KnownNetworks,
+                                                config.station.search_case_sensitive,
+                                            );
+                                        }
                                         // Share
                                         KeyCode::Char(c)
                                             if c == config.station.known_network.share =>
@@ -553,6 +566,13 @@ pub async fn handle_key_events(
                                     }
                                 }
                                 FocusedBlock::NewNetworks => match key_event.code {
+                                    // Search
+                                    KeyCode::Char(c) if c == config.station.search => {
+                                        station.start_search(
+                                            SearchTarget::NewNetworks,
+                                            config.station.search_case_sensitive,
+                                        );
+                                    }
                                     // Connect to hidden network
                                     KeyCode::Char('n') => {
                                         station.connct_hidden_network =

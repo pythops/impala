@@ -100,6 +100,8 @@ stop = 'x'
 
 [station]
 toggle_scanning = "s"
+search = "/"
+search_case_sensitive = false
 
 [station.known_network]
 toggle_autoconnect = "t"
