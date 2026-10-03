@@ -109,7 +109,7 @@ share = "p"
 
 [station.new_network]
 show_all = "a"
-connect_hidden = ""
+connect_hidden = "n"
 
 [theme]
 background = "dark gray"
