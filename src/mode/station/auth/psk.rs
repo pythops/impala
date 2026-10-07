@@ -146,18 +146,13 @@ impl Psk {
         frame.render_widget(text, text_area);
         frame.render_widget(passkey, passkey_area);
 
-        let inner_width = passkey_area.width.saturating_sub(2) as usize;
-        let pad_left = if inner_width > pass_len {
-            inner_width.saturating_sub(pass_len) / 2
-        } else {
-            0
-        };
+        let pad_left = (passkey_area.width as usize / 2).saturating_sub(pass_len / 2);
 
         let visual_cursor = self.passphrase.visual_cursor().min(pass_len);
 
         let x_in_inner = pad_left + visual_cursor;
 
-        let cursor_x = passkey_area.x + 1 + x_in_inner as u16;
+        let cursor_x = passkey_area.x + x_in_inner as u16;
         frame.set_cursor_position((cursor_x, passkey_area.y));
 
         frame.render_widget(show_password_icon, show_password_area);
