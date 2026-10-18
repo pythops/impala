@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=Impala
+TryExec=impala
+Exec=impala
+Keywords=network;wireless;wi-fi;iwd
+Type=Application
+Terminal=true
