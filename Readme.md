@@ -50,6 +50,16 @@ pacman -S impala
 nix-env -iA nixpkgs.impala
 ```
 
+### Gentoo Linux
+
+You can install `impala` from the [lamdness overlay](https://github.com/grouzen/lamdness-overlay).
+
+```shell
+sudo eselect repository enable lamdness
+sudo emaint sync -r lamdness
+sudo emerge --ask net-wireless/impala
+```
+
 ### ⚒️ Build from source
 
 Run the following command:
