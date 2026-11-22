@@ -114,6 +114,7 @@ connect_hidden = "n"
 [theme]
 background = "dark gray"
 border = "green"
+header_color = "yellow"
 text_color = "white"
 hidden_color = "dark gray"
 info_color = "green"

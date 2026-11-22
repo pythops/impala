@@ -136,8 +136,10 @@ impl Device {
         let device_table = Table::new(vec![row], widths)
             .header({
                 Row::new(vec![
-                    Line::from("Name").yellow().centered(),
-                    Line::from("Powered").yellow().centered(),
+                    Line::from("Name").fg(config.theme.header_color).centered(),
+                    Line::from("Powered")
+                        .fg(config.theme.header_color)
+                        .centered(),
                 ])
                 .style(Style::new().bold())
                 .bottom_margin(1)

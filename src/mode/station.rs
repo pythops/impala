@@ -421,13 +421,21 @@ impl Station {
             .header({
                 if focused_block == FocusedBlock::Device {
                     Row::new(vec![
-                        Line::from("Name").yellow().centered(),
-                        Line::from("Mode").yellow().centered(),
-                        Line::from("Powered").yellow().centered(),
-                        Line::from("State").yellow().centered(),
-                        Line::from("Scanning").yellow().centered(),
-                        Line::from("Frequency").yellow().centered(),
-                        Line::from("Security").yellow().centered(),
+                        Line::from("Name").fg(config.theme.header_color).centered(),
+                        Line::from("Mode").fg(config.theme.header_color).centered(),
+                        Line::from("Powered")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("State").fg(config.theme.header_color).centered(),
+                        Line::from("Scanning")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("Frequency")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("Security")
+                            .fg(config.theme.header_color)
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -569,11 +577,19 @@ impl Station {
                 if focused_block == FocusedBlock::KnownNetworks {
                     Row::new(vec![
                         Line::from(""),
-                        Line::from("Name").yellow().centered(),
-                        Line::from("Security").yellow().centered(),
-                        Line::from("Hidden").yellow().centered(),
-                        Line::from("Auto Connect").yellow().centered(),
-                        Line::from("Signal").yellow().centered(),
+                        Line::from("Name").fg(config.theme.header_color).centered(),
+                        Line::from("Security")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("Hidden")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("Auto Connect")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("Signal")
+                            .fg(config.theme.header_color)
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -752,9 +768,13 @@ impl Station {
             .header({
                 if focused_block == FocusedBlock::NewNetworks {
                     Row::new(vec![
-                        Line::from("Name").yellow().centered(),
-                        Line::from("Security").yellow().centered(),
-                        Line::from("Signal").yellow().centered(),
+                        Line::from("Name").fg(config.theme.header_color).centered(),
+                        Line::from("Security")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("Signal")
+                            .fg(config.theme.header_color)
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
