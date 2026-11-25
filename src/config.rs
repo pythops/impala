@@ -170,6 +170,9 @@ pub struct Theme {
     #[serde(default = "default_border")]
     pub border: Color,
 
+    #[serde(default = "default_header_color")]
+    pub header_color: Color,
+
     #[serde(default = "default_text_color")]
     pub text_color: Color,
 
@@ -192,6 +195,10 @@ fn default_background() -> Color {
 
 fn default_border() -> Color {
     Color::Green
+}
+
+fn default_header_color() -> Color {
+    Color::Yellow
 }
 
 fn default_text_color() -> Color {
@@ -219,6 +226,7 @@ impl Default for Theme {
         Self {
             background: default_background(),
             border: default_border(),
+            header_color: default_header_color(),
             text_color: default_text_color(),
             hidden_color: default_hidden_color(),
             info_color: default_info_color(),

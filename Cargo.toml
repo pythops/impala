@@ -6,7 +6,6 @@ license = "GPL-3.0"
 edition = "2024"
 description = "TUI for managing wifi"
 readme = "Readme.md"
-homepage = "https://github.com/pythops/impala"
 repository = "https://github.com/pythops/impala"
 
 [dependencies]

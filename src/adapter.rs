@@ -76,29 +76,30 @@ impl Adapter {
 
         let mut rows = vec![
             Row::new(vec![
-                Cell::from("name").style(Style::default().bold().yellow()),
+                Cell::from("name").style(Style::default().bold().fg(config.theme.header_color)),
                 Cell::from(self.name.clone()),
             ]),
             Row::new(vec![
-                Cell::from("address").style(Style::default().bold().yellow()),
+                Cell::from("address").style(Style::default().bold().fg(config.theme.header_color)),
                 Cell::from(device_addr),
             ]),
             Row::new(vec![
-                Cell::from("Supported modes").style(Style::default().bold().yellow()),
+                Cell::from("Supported modes")
+                    .style(Style::default().bold().fg(config.theme.header_color)),
                 Cell::from(self.supported_modes.clone().join(" ")),
             ]),
         ];
 
         if let Some(model) = &self.model {
             rows.push(Row::new(vec![
-                Cell::from("model").style(Style::default().bold().yellow()),
+                Cell::from("model").style(Style::default().bold().fg(config.theme.header_color)),
                 Cell::from(model.clone()),
             ]));
         }
 
         if let Some(vendor) = &self.vendor {
             rows.push(Row::new(vec![
-                Cell::from("vendor").style(Style::default().bold().yellow()),
+                Cell::from("vendor").style(Style::default().bold().fg(config.theme.header_color)),
                 Cell::from(vendor.clone()),
             ]));
         }

@@ -359,10 +359,14 @@ impl AccessPoint {
             .header({
                 if focused_block == FocusedBlock::Device {
                     Row::new(vec![
-                        Line::from("Name").yellow().centered(),
-                        Line::from("Mode").yellow().centered(),
-                        Line::from("Powered").yellow().centered(),
-                        Line::from("Address").yellow().centered(),
+                        Line::from("Name").fg(config.theme.header_color).centered(),
+                        Line::from("Mode").fg(config.theme.header_color).centered(),
+                        Line::from("Powered")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("Address")
+                            .fg(config.theme.header_color)
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
@@ -464,11 +468,19 @@ impl AccessPoint {
             .header({
                 if focused_block == FocusedBlock::AccessPoint {
                     Row::new(vec![
-                        Line::from("Started").yellow().centered(),
-                        Line::from("SSID").yellow().centered(),
-                        Line::from("Frequency").yellow().centered(),
-                        Line::from("Cipher").yellow().centered(),
-                        Line::from("Scanning").yellow().centered(),
+                        Line::from("Started")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("SSID").fg(config.theme.header_color).centered(),
+                        Line::from("Frequency")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("Cipher")
+                            .fg(config.theme.header_color)
+                            .centered(),
+                        Line::from("Scanning")
+                            .fg(config.theme.header_color)
+                            .centered(),
                     ])
                     .style(Style::new().bold())
                     .bottom_margin(1)
